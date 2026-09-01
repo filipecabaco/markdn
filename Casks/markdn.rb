@@ -1,17 +1,17 @@
 cask "markdn" do
-  version "0.0.0"
+  version "0.1.0"
 
   # Placeholder checksums. The release workflow's cask job rewrites version, both
   # sha256 stanzas and both URL architecture segments once the DMGs are published;
   # verify-cask.sh treats all-zeros as "no release yet" and skips it.
   on_arm do
-    sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+    sha256 "46da95b404a137c66294981832a61a6217edd1ded914c806fe0a28901e2c58b2"
 
     url "https://github.com/filipecabaco/markdn/releases/download/v#{version}/MarkDN_#{version}_aarch64.dmg",
         verified: "github.com/filipecabaco/markdn/"
   end
   on_intel do
-    sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+    sha256 "46b9546166c74c2ae5e3a08964fa502317b8716c1a24b61bd5d33d3d2f3ffb3a"
 
     url "https://github.com/filipecabaco/markdn/releases/download/v#{version}/MarkDN_#{version}_x64.dmg",
         verified: "github.com/filipecabaco/markdn/"
