@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- MarkDN. Blocks of a document with the active one indexed in signal red —
+       the same idea the sync rail draws between the panes. Colours are baked
+       rather than tokenised: a favicon has no stylesheet. Dark panel so it holds
+       its shape against a light or a dark tab strip. -->
+  <rect width="32" height="32" rx="7" fill="#2a2522"/>
+  <rect x="6" y="8.5" width="20" height="3.5" rx="1" fill="#d1492c"/>
+  <rect x="6" y="14.75" width="13" height="3" rx="1" fill="#8d857b"/>
+  <rect x="6" y="20.25" width="16" height="3" rx="1" fill="#8d857b"/>
+</svg>

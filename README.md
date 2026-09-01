@@ -1,8 +1,7 @@
 # MarkDN
 
-A native markdown and MDX editor for your notes folder. Write on the left, see
-it rendered on the right — diagrams, syntax highlighting, and real components
-included. Your files stay plain markdown on your disk.
+**A markdown and MDX editor that renders the whole document.** Diagrams, code,
+components. Your folder, your files, on your machine.
 
 ![MarkDN in split view](docs/screenshots/split-view.png)
 
@@ -24,51 +23,49 @@ curl -fsSL https://raw.githubusercontent.com/filipecabaco/markdn/main/install.sh
 MarkDN currently ships unsigned, so the installer clears the macOS quarantine
 flag for you — otherwise Gatekeeper refuses to open it.
 
-## What it does
+## What you get
 
-**Split, source, or render.** Three views, one keystroke apart — `1`, `2`, `3`.
-The panes scroll together by block, so a three-line diagram and its full-size
-render stay side by side.
+**Source and render, side by side and in step.** Scroll either pane and the
+other follows by block, not by percentage, so a three-line diagram and its
+full-size render stay together. One keystroke switches to source only or render
+only.
 
-**Everything markdown, plus the good parts.** Tables, task lists, and
-strikethrough. Code fences highlighted properly. ` ```mermaid ` blocks drawn as
-real diagrams.
+**The parts other previewers drop.** Tables, task lists, footnotes.
+Syntax-highlighted code. ` ```mermaid ` fences drawn as real diagrams. And MDX
+components — `<Alert>`, `<Callout>`, `<Card>`, `<Tabs>` — appearing in the
+preview as you type.
 
 ![Rendered diagrams, code, and tables](docs/screenshots/render.png)
 
-**Components that actually render.** Drop an `<Alert>`, `<Callout>`, `<Card>`,
-or `<Tabs>` into a document and it appears in the preview as you type. Hit
-`Cmd/Ctrl+Shift+C` to pick one from a menu instead of typing JSX by hand.
+**Find any document by feel.** `Cmd/Ctrl+K` and type roughly what you remember:
+`dsn` finds `work/design-notes.md` three folders down. Open it with no query and
+it lists what you touched last.
+
+**Every command in the same place.** The same palette runs the app: switch view,
+insert a component, change the root, start reading. Type `>` to see only
+commands. Nothing hides in a menu you have to go find.
 
 ![Insert a component](docs/screenshots/component-picker.png)
 
-**Your folder, your files.** Point MarkDN at a directory and it browses it.
-Nothing is imported, converted, or locked in a database — `Cmd/Ctrl+S` writes
-plain text back to the same `.md`, `.markdown`, or `.mdx` file.
+**Long documents scroll themselves.** `Cmd/Ctrl+Space` starts a teleprompter for
+the rendered pane. `+` and `-` set the pace while it runs, space holds it,
+escape ends it. Reach for the arrow keys mid-scroll and it steps aside, then
+picks up again a moment after you stop.
 
-**Find anything, run anything.** `Cmd/Ctrl+K` opens one palette over both: it
-fuzzy-finds documents anywhere under your root — `dsn` finds
-`work/design-notes.md` — and runs every command in the app. Opened with an empty
-query it lists what you touched most recently. `>` narrows it to commands only.
+**Settings, not preferences.** Root folder, theme, default view, text size,
+scroll speed, hidden files. Six things that change how the app behaves, in one
+panel, saved in one small file you can also edit by hand.
 
-**Read it hands-free.** `Cmd/Ctrl+Space` starts auto-scroll, a teleprompter for
-the rendered pane. `+` and `-` change the speed while it runs, space pauses and
-resumes, escape stops. The arrow keys scroll whenever you press them, in a
-session or out of one; auto-scroll holds while you do and picks up again a
-moment after you stop, so the two never fight over the page.
+**Plain files, start to finish.** Nothing is imported, converted, or filed in a
+database. `Cmd/Ctrl+S` writes the same `.md`, `.markdown`, or `.mdx` you opened,
+in place.
 
-**Settings you can read.** `Cmd/Ctrl+,` opens the document root, theme, default
-view, text size, scroll speed, and hidden files. They live in one small JSON
-file the panel names at the bottom — on macOS
-`~/Library/Application Support/app.markdn.desktop/settings.json` — so they can
-also be edited by hand or checked into your dotfiles.
+**Your assistant works on the same file you do.** MarkDN speaks MCP, so Claude
+and other agents can list, read, and write the documents you have open — and the
+window updates the moment they do.
 
-**Open to your AI tools.** MarkDN speaks MCP, so Claude and other assistants can
-list, read, and write your documents. Edits made by an assistant show up in an
-open window immediately.
-
-**Private by default.** Everything runs locally on your machine. Nothing leaves
-your computer, and MDX is rendered — never executed.
+**Private by default.** Everything runs on your machine. Nothing leaves it, and
+MDX is rendered, never executed.
 
 ## Using it
 
@@ -85,13 +82,7 @@ your computer, and MDX is rendered — never executed.
 | `+` `-` | Auto-scroll faster, slower |
 | `Esc` | Stop auto-scroll |
 
-Components available today: `Alert`, `Callout`, `Card`, `Tabs`, `Tab`.
-
-The document root defaults to your home directory. Change it in settings, or pin
-it for a launch with `MARKDN_ROOT=~/notes` — an environment root wins over the
-setting, and the panel says so rather than offering an edit it cannot make.
-
-## Connecting an AI assistant
+## Working with an assistant
 
 Point any MCP client at MarkDN while it is running:
 
@@ -99,10 +90,12 @@ Point any MCP client at MarkDN while it is running:
 http://localhost:43118/mcp
 ```
 
-It exposes four tools — `list_documents`, `read_document`, `write_document`,
-and `list_components`.
+It can list, read, and write your documents, and ask which components are
+available so the MDX it writes is MDX that renders. An assistant editing a file
+you have open is visible immediately, in the window, where you can keep or change
+it.
 
 ## Contributing
 
-Building from source, the desktop packaging, CI, and release process are
-documented in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Building from source, desktop packaging, CI, and the release process are in
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
