@@ -91,4 +91,87 @@ defmodule Markdn.DocumentsTest do
       assert first.type == :directory
     end
   end
+
+  describe "list/1 with showHiddenFiles" do
+    test "shows dotfiles once the setting is on", %{root: root} do
+      fixture(root, ".notes/hidden.md", "h")
+
+      assert {:ok, entries} = Documents.list(".")
+      refute ".notes" in Enum.map(entries, & &1.name)
+
+      {:ok, _} = Markdn.Settings.put(%{"showHiddenFiles" => true})
+
+      assert {:ok, entries} = Documents.list(".")
+      assert ".notes" in Enum.map(entries, & &1.name)
+    end
+  end
+
+  describe "search/2" do
+    test "finds a document nested several directories down", %{root: root} do
+      fixture(root, "work/notes/design-notes.md", "d")
+      fixture(root, "readme.md", "r")
+
+      assert [%{path: "work/notes/design-notes.md"}] = Documents.search("dsn")
+    end
+
+    test "ranks a name match above a match that only lands in the directories",
+         %{root: root} do
+      fixture(root, "api/reference/other.md", "o")
+      fixture(root, "notes/api.md", "a")
+
+      assert [%{path: "notes/api.md"} | _] = Documents.search("api")
+    end
+
+    test "returns the most recently modified documents for a blank query", %{root: root} do
+      old = fixture(root, "old.md", "o")
+      recent = fixture(root, "recent.md", "r")
+
+      # mtime has one-second resolution, so the ordering has to be set explicitly
+      # rather than relying on the order the fixtures were written in.
+      File.touch!(old, System.os_time(:second) - 120)
+      File.touch!(recent, System.os_time(:second))
+
+      assert [%{path: "recent.md"}, %{path: "old.md"}] = Documents.search("")
+    end
+
+    test "returns only markdown", %{root: root} do
+      fixture(root, "notes.txt", "t")
+      fixture(root, "notes.md", "m")
+
+      assert [%{path: "notes.md"}] = Documents.search("notes")
+    end
+
+    test "skips dependency and build directories", %{root: root} do
+      fixture(root, "node_modules/pkg/readme.md", "n")
+      fixture(root, "_build/readme.md", "b")
+      fixture(root, "readme.md", "r")
+
+      assert [%{path: "readme.md"}] = Documents.search("readme")
+    end
+
+    test "does not follow symlinks out of the root", %{root: root} do
+      outside =
+        Path.join(System.tmp_dir!(), "markdn-outside-#{System.unique_integer([:positive])}")
+
+      File.mkdir_p!(outside)
+      File.write!(Path.join(outside, "secret.md"), "s")
+      on_exit(fn -> File.rm_rf!(outside) end)
+
+      File.ln_s!(outside, Path.join(root, "link"))
+
+      assert [] = Documents.search("secret")
+    end
+
+    test "marks which characters matched, for highlighting", %{root: root} do
+      fixture(root, "readme.md", "r")
+
+      assert [%{matches: [0, 1]}] = Documents.search("re")
+    end
+
+    test "honours the limit", %{root: root} do
+      for i <- 1..10, do: fixture(root, "note-#{i}.md", "n")
+
+      assert Documents.search("note", limit: 3) |> length() == 3
+    end
+  end
 end

@@ -54,6 +54,68 @@ export function listComponents(): Promise<{ components: ComponentDoc[] }> {
   return request("/api/components");
 }
 
-export function health(): Promise<{ status: string; root: string }> {
+export function health(): Promise<{
+  status: string;
+  root: string;
+  rootLocked: boolean;
+  settingsPath: string;
+}> {
   return request("/api/health");
+}
+
+export interface SearchHit {
+  name: string;
+  path: string;
+  /** Indices in `path` the query matched, for highlighting. Ranked server-side. */
+  matches: number[];
+  score: number;
+}
+
+/**
+ * Fuzzy-finds documents anywhere under the root.
+ *
+ * The walk happens on the server: the browser never sees the tree, and a home
+ * directory is far too large to ship to it just to filter in JS. A blank query
+ * is valid and answers with the most recently modified documents.
+ */
+export function searchDocuments(query: string, limit = 50, signal?: AbortSignal) {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  return request<{ query: string; results: SearchHit[] }>(`/api/search?${params}`, { signal });
+}
+
+export type Theme = "system" | "light" | "dark";
+export type ViewMode = "split" | "editor" | "preview";
+
+export interface Settings {
+  /** null means "the user's home directory". */
+  root: string | null;
+  theme: Theme;
+  defaultView: ViewMode;
+  editorFontSize: number;
+  showHiddenFiles: boolean;
+  /** Auto-scroll speed in pixels per second. */
+  autoScrollSpeed: number;
+}
+
+export interface SettingsResponse {
+  settings: Settings;
+  defaults: Settings;
+  /** Where settings.json lives, shown in the panel so it can be edited by hand. */
+  path: string;
+  /** The root actually in force, which is the home directory when unset. */
+  root: string;
+  /** True when MARKDN_ROOT pins the root, so the API will refuse to change it. */
+  rootLocked: boolean;
+}
+
+export function getSettings(): Promise<SettingsResponse> {
+  return request("/api/settings");
+}
+
+export function saveSettings(patch: Partial<Settings>): Promise<SettingsResponse> {
+  return request("/api/settings", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(patch),
+  });
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useCallback, useEffect, type RefObject } from "react";
 import { ComponentPicker } from "./ComponentPicker";
 
 /**
@@ -6,15 +6,20 @@ import { ComponentPicker } from "./ComponentPicker";
  *
  * A plain textarea rather than a rich-text surface: this is the pane the preview
  * mirrors, and keeping the source authoritative means what the user types is
- * exactly what lands on disk. Tab inserts two spaces instead of moving focus, and
- * Cmd/Ctrl+Shift+C opens the component picker.
+ * exactly what lands on disk. Tab inserts two spaces instead of moving focus.
+ *
+ * The component picker is opened from outside (Cmd/Ctrl+Shift+C, or the command
+ * palette) but inserts from in here, where the textarea and its caret are: the
+ * shortcut has to work in render view, where this component is not mounted.
  */
 
 interface Props {
   value: string;
   onChange: (value: string) => void;
-  onSave: () => void;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
+  /** Whether the component picker is open. Owned by the app, not by the editor. */
+  picking: boolean;
+  onPickingChange: (open: boolean) => void;
   onScroll?: () => void;
   onCaretChange?: () => void;
   caretLine?: number;
@@ -24,20 +29,20 @@ interface Props {
 export function Editor({
   value,
   onChange,
-  onSave,
   textareaRef,
+  picking,
+  onPickingChange,
   onScroll,
   onCaretChange,
   caretLine,
   lineCount,
 }: Props) {
   const textarea = textareaRef;
-  const [picking, setPicking] = useState(false);
 
   const insert = useCallback(
     (snippet: string) => {
       const element = textarea.current;
-      setPicking(false);
+      onPickingChange(false);
 
       if (!element) {
         onChange(`${value}\n${snippet}\n`);
@@ -55,7 +60,7 @@ export function Editor({
         element.setSelectionRange(caret, caret);
       });
     },
-    [onChange, value],
+    [onChange, onPickingChange, textarea, value],
   );
 
   // React's onSelect misses programmatic selection and some keyboard movement.
@@ -70,23 +75,6 @@ export function Editor({
     document.addEventListener("selectionchange", onSelectionChange);
     return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, [onCaretChange, textarea]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const meta = event.metaKey || event.ctrlKey;
-      if (meta && event.shiftKey && event.key.toLowerCase() === "c") {
-        event.preventDefault();
-        setPicking(true);
-      }
-      if (meta && !event.shiftKey && event.key.toLowerCase() === "s") {
-        event.preventDefault();
-        onSave();
-      }
-    };
-
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onSave]);
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key !== "Tab") return;
@@ -124,9 +112,7 @@ export function Editor({
         <span className="editor__meter-sep">/</span>
         <span>{lineCount ?? 1}</span>
       </div>
-      {picking && (
-        <ComponentPicker onInsert={insert} onClose={() => setPicking(false)} />
-      )}
+      {picking && <ComponentPicker onInsert={insert} onClose={() => onPickingChange(false)} />}
     </div>
   );
 }

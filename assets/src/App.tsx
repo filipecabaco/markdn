@@ -1,10 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { health, readDocument, saveDocument } from "./api";
+import {
+  getSettings,
+  readDocument,
+  saveDocument,
+  saveSettings,
+  type Settings,
+  type SettingsResponse,
+} from "./api";
+import { AutoScrollHud } from "./components/AutoScrollHud";
+import { CommandPalette, type Command } from "./components/CommandPalette";
 import { Editor } from "./components/Editor";
 import { FileTree } from "./components/FileTree";
 import { Preview } from "./components/Preview";
+import { SettingsPanel } from "./components/SettingsPanel";
 import { SyncRail } from "./components/SyncRail";
 import { Wordmark } from "./components/Wordmark";
+import { useAutoScroll } from "./hooks/useAutoScroll";
 import { useLineOffsets } from "./hooks/useLineOffsets";
 import { useLinkedPanes } from "./hooks/useLinkedPanes";
 import { useMediaQuery } from "./hooks/useMediaQuery";
@@ -16,6 +27,9 @@ const VIEWS: { id: View; label: string; key: string }[] = [
   { id: "split", label: "Split", key: "2" },
   { id: "preview", label: "Render", key: "3" },
 ];
+
+/** Settings written this often would be a file write per keypress. */
+const SETTINGS_DEBOUNCE_MS = 500;
 
 const WELCOME = `# MarkDN
 
@@ -33,7 +47,7 @@ flowchart LR
   Source --> Francis --> Render
 \`\`\`
 
-Press <kbd>Cmd</kbd><kbd>Shift</kbd><kbd>C</kbd> to insert a component.
+Press <kbd>Cmd</kbd><kbd>K</kbd> to find a document or run a command.
 `;
 
 export function App() {
@@ -41,8 +55,13 @@ export function App() {
   const [content, setContent] = useState(WELCOME);
   const [saved, setSaved] = useState(true);
   const [requestedView, setView] = useState<View>("split");
-  const [root, setRoot] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [config, setConfig] = useState<SettingsResponse | null>(null);
+  const [palette, setPalette] = useState<null | "all" | "commands">(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [picking, setPicking] = useState(false);
+  // Bumped when the root moves, to throw away a tree that describes the old one.
+  const [treeGeneration, setTreeGeneration] = useState(0);
   const socket = useRef<WebSocket | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -64,6 +83,7 @@ export function App() {
   });
 
   const lineCount = useMemo(() => content.split("\n").length, [content]);
+  const root = config?.root ?? null;
 
   // Shortened from the left: the tail of a path is the part that identifies it,
   // and CSS ellipsis only truncates the other end.
@@ -73,11 +93,71 @@ export function App() {
     return parts.length > 2 ? `…/${parts.slice(-2).join("/")}` : root;
   }, [root]);
 
+  // --- Settings ------------------------------------------------------------
+
+  const settingsTimer = useRef<number | null>(null);
+
   useEffect(() => {
-    health()
-      .then((result) => setRoot(result.root))
+    getSettings()
+      .then((result) => {
+        setConfig(result);
+        setView(result.settings.defaultView);
+      })
       .catch((error: Error) => setStatus(error.message));
   }, []);
+
+  // The palette and the HUD change settings far faster than they should be
+  // written to disk, so the UI takes the new value immediately and the file
+  // catches up once the user stops moving the slider.
+  const updateSettings = useCallback(
+    (patch: Partial<Settings>, debounce = false): Promise<void> => {
+      setConfig((current) =>
+        current ? { ...current, settings: { ...current.settings, ...patch } } : current,
+      );
+
+      const write = () =>
+        saveSettings(patch).then((result) => {
+          setConfig((current) => {
+            // A root change invalidates the open document and the whole tree,
+            // since every path in the UI is relative to it.
+            if (current && current.root !== result.root) {
+              setPath(null);
+              setTreeGeneration((generation) => generation + 1);
+            }
+            return result;
+          });
+        });
+
+      if (!debounce) return write();
+
+      if (settingsTimer.current !== null) window.clearTimeout(settingsTimer.current);
+      settingsTimer.current = window.setTimeout(() => {
+        settingsTimer.current = null;
+        write().catch((error: Error) => setStatus(error.message));
+      }, SETTINGS_DEBOUNCE_MS);
+
+      return Promise.resolve();
+    },
+    [],
+  );
+
+  // Theme and text size are applied to the document element rather than passed
+  // down as props: they are ambient, and the CSS already reads them from :root.
+  useEffect(() => {
+    const theme = config?.settings.theme ?? "system";
+    if (theme === "system") delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = theme;
+  }, [config?.settings.theme]);
+
+  useEffect(() => {
+    const size = config?.settings.editorFontSize;
+    document.documentElement.style.setProperty(
+      "--editor-font-size",
+      size ? `${size}px` : "var(--t-base)",
+    );
+  }, [config?.settings.editorFontSize]);
+
+  // --- Document ------------------------------------------------------------
 
   // One socket for the window's lifetime. Another window (or the MCP server)
   // saving the open document pushes a notification down it, and the document is
@@ -130,19 +210,167 @@ export function App() {
       .catch((error: Error) => setStatus(error.message));
   }, [content, path]);
 
-  // Cmd/Ctrl+1..3 switches panes, matching the numbering in the view control.
+  const reload = useCallback(() => {
+    if (path) open(path);
+  }, [open, path]);
+
+  // --- Auto-scroll ---------------------------------------------------------
+
+  // Whichever pane is actually showing the document is the one that scrolls; in
+  // split view that is the render, which is the side people read.
+  const getScroller = useCallback(
+    () => (view === "editor" ? textareaRef.current : previewRef.current),
+    [view],
+  );
+
+  const autoScroll = useAutoScroll({
+    getScroller,
+    speed: config?.settings.autoScrollSpeed ?? 40,
+    onSpeedChange: (speed) => void updateSettings({ autoScrollSpeed: speed }, true),
+  });
+
+  // --- Commands ------------------------------------------------------------
+
+  const commands = useMemo<Command[]>(() => {
+    const list: Command[] = [
+      {
+        id: "document.save",
+        section: "Document",
+        title: "Save document",
+        hint: "⌘S",
+        run: save,
+      },
+      {
+        id: "document.reload",
+        section: "Document",
+        title: "Reload document from disk",
+        run: reload,
+      },
+      {
+        id: "document.component",
+        section: "Document",
+        title: "Insert component…",
+        hint: "⌘⇧C",
+        run: () => {
+          setView((current) => (current === "preview" ? "split" : current));
+          setPicking(true);
+        },
+      },
+      {
+        id: "reading.autoscroll",
+        section: "Reading",
+        title: !autoScroll.active
+          ? "Start auto-scroll"
+          : autoScroll.paused
+            ? "Resume auto-scroll"
+            : "Pause auto-scroll",
+        hint: "⌘Space",
+        run: autoScroll.toggle,
+      },
+      {
+        id: "reading.stop",
+        section: "Reading",
+        title: "Stop auto-scroll",
+        hint: "esc",
+        run: autoScroll.stop,
+      },
+      {
+        id: "reading.faster",
+        section: "Reading",
+        title: "Auto-scroll faster",
+        hint: "+",
+        run: autoScroll.faster,
+      },
+      {
+        id: "reading.slower",
+        section: "Reading",
+        title: "Auto-scroll slower",
+        hint: "−",
+        run: autoScroll.slower,
+      },
+    ];
+
+    for (const mode of VIEWS) {
+      list.push({
+        id: `view.${mode.id}`,
+        section: "View",
+        title: `${mode.label} view`,
+        hint: `⌘${mode.key}`,
+        run: () => setView(mode.id),
+      });
+    }
+
+    list.push(
+      {
+        id: "settings.open",
+        section: "Settings",
+        title: "Open settings…",
+        hint: "⌘,",
+        run: () => setShowSettings(true),
+      },
+      {
+        id: "settings.theme",
+        section: "Settings",
+        title: "Cycle theme (system, light, dark)",
+        run: () => {
+          const order = ["system", "light", "dark"] as const;
+          const current = config?.settings.theme ?? "system";
+          const next = order[(order.indexOf(current) + 1) % order.length];
+          void updateSettings({ theme: next });
+        },
+      },
+      {
+        id: "settings.hidden",
+        section: "Settings",
+        title: config?.settings.showHiddenFiles ? "Hide hidden files" : "Show hidden files",
+        run: () => {
+          void updateSettings({ showHiddenFiles: !config?.settings.showHiddenFiles });
+          setTreeGeneration((generation) => generation + 1);
+        },
+      },
+    );
+
+    return list;
+  }, [autoScroll, config?.settings, reload, save, updateSettings]);
+
+  // --- Shortcuts -----------------------------------------------------------
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.shiftKey) return;
-      const match = VIEWS.find((v) => v.key === event.key);
-      if (!match) return;
-      event.preventDefault();
-      setView(match.id);
+      const meta = event.metaKey || event.ctrlKey;
+      if (!meta) return;
+
+      const key = event.key.toLowerCase();
+
+      if (key === "k" && !event.shiftKey) {
+        event.preventDefault();
+        setPalette("all");
+      } else if (key === "p" && event.shiftKey) {
+        event.preventDefault();
+        setPalette("commands");
+      } else if (key === ",") {
+        event.preventDefault();
+        setShowSettings(true);
+      } else if (key === "s" && !event.shiftKey) {
+        // Owned here rather than by the editor so it still saves in render view,
+        // where the editor is not mounted at all.
+        event.preventDefault();
+        save();
+      } else if (key === "c" && event.shiftKey) {
+        event.preventDefault();
+        setView((current) => (current === "preview" ? "split" : current));
+        setPicking(true);
+      } else if (!event.shiftKey) {
+        const match = VIEWS.find((mode) => mode.key === event.key);
+        if (!match) return;
+        event.preventDefault();
+        setView(match.id);
+      }
     };
 
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  }, [save]);
 
   return (
     <div className="app">
@@ -178,6 +406,16 @@ export function App() {
           ))}
         </div>
 
+        <button
+          type="button"
+          className="button button--quiet"
+          onClick={() => setShowSettings(true)}
+          title="Settings (⌘,)"
+          aria-label="Settings"
+        >
+          Settings
+        </button>
+
         <button type="button" className="button" onClick={save} disabled={!path || saved}>
           Save
           <kbd className="button__key">⌘S</kbd>
@@ -202,7 +440,15 @@ export function App() {
               {rootLabel}
             </span>
           </div>
-          <FileTree path="." selected={path} onSelect={open} />
+
+          {/* A button dressed as a field: the palette is the search surface, and
+              a real input here would be a second one that behaves differently. */}
+          <button type="button" className="sidebar__search" onClick={() => setPalette("all")}>
+            <span>Find a document…</span>
+            <kbd>⌘K</kbd>
+          </button>
+
+          <FileTree key={treeGeneration} path="." selected={path} onSelect={open} />
         </aside>
 
         <main className={`panes panes--${view}`}>
@@ -212,13 +458,14 @@ export function App() {
               textareaRef={textareaRef}
               caretLine={linked.caretLine}
               lineCount={lineCount}
+              picking={picking}
+              onPickingChange={setPicking}
               onScroll={linked.onEditorScroll}
               onCaretChange={linked.onCaretChange}
               onChange={(next) => {
                 setContent(next);
                 setSaved(false);
               }}
-              onSave={save}
             />
           )}
 
@@ -241,6 +488,25 @@ export function App() {
           )}
         </main>
       </div>
+
+      <AutoScrollHud autoScroll={autoScroll} />
+
+      {palette && (
+        <CommandPalette
+          commands={commands}
+          commandsOnly={palette === "commands"}
+          onOpenFile={open}
+          onClose={() => setPalette(null)}
+        />
+      )}
+
+      {showSettings && config && (
+        <SettingsPanel
+          state={config}
+          onChange={updateSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

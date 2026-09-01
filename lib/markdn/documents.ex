@@ -8,7 +8,23 @@ defmodule Markdn.Documents do
   `../../.ssh/id_rsa` is rejected rather than followed.
   """
 
+  alias Markdn.Fuzzy
+  alias Markdn.Settings
+
   @extensions ~w(.md .markdown .mdx)
+
+  # Search walks the tree rather than one level, so it needs its own brakes: a
+  # home directory is not a project checkout. Depth and entry budget together
+  # bound the work regardless of what is under the root, including a symlink
+  # cycle (symlinks are skipped outright — see `visit/6`).
+  @max_depth 8
+  @max_entries 20_000
+  @default_limit 50
+
+  # Directories that are never worth walking for documents and are expensive to
+  # walk: dependency and build trees, plus macOS's ~/Library, which is enormous
+  # and is not hidden, so the dotfile rule below does not catch it.
+  @skip_dirs ~w(node_modules _build deps target dist build .git .svn .hg Library)
 
   # Images a document may reference. Kept separate from @extensions: the document
   # API must not hand back arbitrary binaries, and the image API must not hand
@@ -23,11 +39,29 @@ defmodule Markdn.Documents do
     ".svg" => "image/svg+xml"
   }
 
-  @doc "Root directory the document API is confined to."
+  @doc """
+  Root directory the document API is confined to.
+
+  Three sources, in falling precedence: `MARKDN_ROOT` (via application env), the
+  `root` setting, then the user's home directory. The environment wins because it
+  is the documented way to *narrow* what the app may touch when launching it —
+  a settings file the app itself writes must not be able to widen that again.
+  """
   @spec root() :: String.t()
   def root do
-    Application.get_env(:markdn, :root) || System.user_home!()
+    pinned_root() || Settings.get("root") || System.user_home!()
   end
+
+  @doc """
+  Whether the root is pinned by `MARKDN_ROOT` and so cannot be changed at runtime.
+
+  The settings UI reads this to disable the field rather than offer an edit that
+  the API would then refuse.
+  """
+  @spec root_locked?() :: boolean()
+  def root_locked?, do: not is_nil(pinned_root())
+
+  defp pinned_root, do: Application.get_env(:markdn, :root)
 
   @doc "Markdown extensions treated as editable documents."
   @spec extensions() :: [String.t()]
@@ -90,7 +124,7 @@ defmodule Markdn.Documents do
          {:ok, names} <- File.ls(abs) do
       entries =
         names
-        |> Enum.reject(&String.starts_with?(&1, "."))
+        |> Enum.reject(&hidden?/1)
         |> Enum.map(&entry(abs, &1))
         |> Enum.reject(&is_nil/1)
         |> Enum.sort_by(&{&1.type != :directory, String.downcase(&1.name)})
@@ -112,6 +146,107 @@ defmodule Markdn.Documents do
   defp relative(abs), do: Path.relative_to(abs, root())
 
   defp markdown?(name), do: Path.extname(name) in @extensions
+
+  # Dotfiles are noise in a document tree by default, but a notes directory that
+  # lives in a dotfolder is a real thing, so it is a setting rather than a rule.
+  defp hidden?(name), do: String.starts_with?(name, ".") and not Settings.get("showHiddenFiles")
+
+  @doc """
+  Fuzzy-searches markdown documents anywhere under the root.
+
+  `query` matches as a subsequence of the document's path, so `dsn` finds
+  `docs/design-notes.md`. Results are ranked by `Markdn.Fuzzy`, with a match in
+  the file name preferred over one that only lands in the directories above it —
+  a name is what the user is thinking of when they type.
+
+  An empty query is not an error: it returns the most recently modified
+  documents, which is what a palette should show before anything is typed.
+
+  Each result carries `matches`, the indices in `path` that the query hit, so the
+  caller can highlight them without re-running the match.
+
+  ## Options
+
+    * `:limit` - results to return (default #{@default_limit})
+  """
+  @spec search(String.t(), keyword()) :: [map()]
+  def search(query, opts \\ []) when is_binary(query) do
+    limit = Keyword.get(opts, :limit, @default_limit)
+    trimmed = String.trim(query)
+
+    documents =
+      root()
+      |> crawl("", @max_depth, {[], @max_entries})
+      |> elem(0)
+
+    documents |> rank(trimmed) |> Enum.take(limit)
+  end
+
+  defp rank(documents, "") do
+    documents
+    |> Enum.sort_by(& &1.mtime, :desc)
+    |> Enum.map(&Map.merge(&1, %{score: 0, matches: []}))
+  end
+
+  defp rank(documents, query) do
+    documents
+    |> Enum.map(&scored(&1, query))
+    |> Enum.reject(&is_nil/1)
+    # Ties broken by the shorter path: with two equally good matches, the one
+    # nearer the root is the one the user is more likely to mean.
+    |> Enum.sort_by(&{-&1.score, String.length(&1.path), &1.path})
+  end
+
+  defp scored(document, query) do
+    case Fuzzy.match(document.path, query) do
+      :nomatch ->
+        nil
+
+      {:ok, score, matches} ->
+        # The name is a suffix of the path, so a hit inside it is worth more than
+        # the same hit spread across parent directories.
+        name_bonus = if Fuzzy.score(document.name, query), do: 30, else: 0
+        Map.merge(document, %{score: score + name_bonus, matches: matches})
+    end
+  end
+
+  defp crawl(_dir, _rel, depth, acc) when depth < 0, do: acc
+
+  defp crawl(dir, rel, depth, acc) do
+    case File.ls(dir) do
+      {:ok, names} -> Enum.reduce(names, acc, &visit(&1, dir, rel, depth, &2))
+      # An unreadable directory (permissions, a dangling mount) must not abort the
+      # search — the rest of the tree is still worth returning.
+      {:error, _} -> acc
+    end
+  end
+
+  defp visit(_name, _dir, _rel, _depth, {_found, 0} = acc), do: acc
+
+  defp visit(name, dir, rel, depth, {found, budget} = acc) do
+    if hidden?(name) or name in @skip_dirs do
+      acc
+    else
+      full = Path.join(dir, name)
+      relative = if rel == "", do: name, else: rel <> "/" <> name
+
+      # lstat, not stat: a symlink is never followed. That both bounds the walk
+      # against cycles and keeps a link out of the root from surfacing files the
+      # editor would refuse to open anyway.
+      case File.lstat(full, time: :posix) do
+        {:ok, %File.Stat{type: :directory}} ->
+          crawl(full, relative, depth - 1, {found, budget - 1})
+
+        {:ok, %File.Stat{type: :regular, mtime: mtime}} ->
+          if markdown?(name),
+            do: {[%{name: name, path: relative, mtime: mtime} | found], budget - 1},
+            else: {found, budget - 1}
+
+        _ ->
+          {found, budget - 1}
+      end
+    end
+  end
 
   @doc """
   Reads an image a document references, confined to the same root.
