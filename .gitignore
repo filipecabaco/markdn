@@ -1,0 +1,20 @@
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+/tmp/
+/burrito_out/
+/legacy/
+/src-tauri/target/
+/assets/node_modules/
+# priv/static is entirely build output (vite writes index.html, assets/ and
+# anything in assets/public into it). Keep the directory, ignore its contents.
+/priv/static/*
+!/priv/static/.gitkeep
+.DS_Store
+/priv/plts/
+/tmp/
+src-tauri/gen/

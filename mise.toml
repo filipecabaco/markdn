@@ -1,0 +1,16 @@
+[tools]
+erlang = "27.3.4.16"
+elixir = "1.20.4-otp-27"
+node = "26"
+# Project-scoped so it overrides the global pnpm pin only here. Matches the
+# pnpm/action-setup major in both workflows.
+pnpm = "11"
+# Burrito shells out to Zig to wrap the release and rejects any version but the
+# exact one it wants — burrito 1.6.0 needs 0.16.0 and refuses 0.15.2. A bare mise
+# shim with nothing installed reports an empty version and fails the same way.
+# Keep in sync with the setup-zig pin in .github/workflows/release.yml.
+zig = "0.16.0"
+
+# OTP 27, not the system's OTP 29: Burrito (used to wrap the desktop release
+# into a single binary) only publishes prebuilt ERTS up to OTP 27. Plain dev
+# runs via `mix ex_tauri.dev` work on newer OTP, but `mix ex_tauri.build` does not.

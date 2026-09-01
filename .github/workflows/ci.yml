@@ -1,0 +1,285 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on a branch; never cancel main.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  # OTP 27, pinned to an exact patch: the desktop release is Burrito-wrapped, and
+  # Burrito can only fetch an ERTS the BEAM Machine CDN has built. Newer OTP has
+  # no prebuilt ERTS, so the release job fails at the wrap step rather than at
+  # compile time. Keep in sync with release.yml and mise.toml.
+  OTP_VERSION: "27.3.4.16"
+  ELIXIR_VERSION: "1.20.4"
+
+jobs:
+  # ── 1. Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (format · credo · dialyzer)
+    runs-on: ubuntu-latest
+    env:
+      MIX_ENV: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        id: setup-beam
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          version-type: strict
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        id: deps-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Restore _build cache
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: ${{ runner.os }}-build-dev-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('lib/**/*.ex') }}
+          restore-keys: |
+            ${{ runner.os }}-build-dev-${{ hashFiles('**/mix.lock') }}-
+            ${{ runner.os }}-build-dev-
+
+      # Keyed on the OTP/Elixir pair as well as the lock: a PLT built against a
+      # different OTP is unusable, and reusing one silently reruns the whole build.
+      - name: Restore PLT cache
+        uses: actions/cache@v4
+        with:
+          path: priv/plts
+          key: ${{ runner.os }}-plts-${{ steps.setup-beam.outputs.otp-version }}-${{ steps.setup-beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-plts-${{ steps.setup-beam.outputs.otp-version }}-${{ steps.setup-beam.outputs.elixir-version }}-
+
+      - name: Install dependencies
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      - name: Run Credo
+        run: mix credo --strict
+
+      # priv/plts is gitignored, so it does not exist on a fresh checkout and the
+      # cache restore is a no-op on the first run.
+      - name: Run Dialyzer
+        run: |
+          mkdir -p priv/plts
+          mix dialyzer --format github
+
+  # ── 2. Test ──────────────────────────────────────────────────────────────────
+  test:
+    name: Test (Elixir)
+    runs-on: ubuntu-latest
+    env:
+      MIX_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          version-type: strict
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        id: deps-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Restore _build cache
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: ${{ runner.os }}-build-test-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('lib/**/*.ex', 'test/**/*.ex') }}
+          restore-keys: |
+            ${{ runner.os }}-build-test-${{ hashFiles('**/mix.lock') }}-
+            ${{ runner.os }}-build-test-
+
+      - name: Install dependencies
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+
+      - name: Compile (warnings as errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Run tests
+        run: mix test
+
+  # ── 3. Frontend ──────────────────────────────────────────────────────────────
+  # The MDX pipeline is the part most likely to break silently, so this gate is
+  # separate from the Elixir one and runs on every push.
+  frontend:
+    name: Frontend (typecheck · test · build)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+          cache: pnpm
+          cache-dependency-path: assets/pnpm-lock.yaml
+
+      # --frozen-lockfile: a lockfile that does not match package.json is a bug
+      # to surface here, not to paper over by silently resolving new versions.
+      - name: Install
+        working-directory: assets
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        working-directory: assets
+        run: pnpm check
+
+      - name: Test
+        working-directory: assets
+        run: pnpm test
+
+      - name: Build
+        working-directory: assets
+        run: pnpm build
+
+  # ── 4. Shell scripts ─────────────────────────────────────────────────────────
+  # The installer is the one artefact users run before anything of ours is on
+  # their machine, so it is linted and actually executed here. `test-install.sh`
+  # stubs curl and uname to run install.sh's real Linux path against a canned
+  # release, and asserts a tampered payload is refused — a checksum check that
+  # never rejects anything passes every happy-path test while protecting nobody.
+  scripts:
+    name: Shell (shellcheck · installer e2e)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The version is echoed because runners and developer machines do not ship
+      # the same shellcheck, and the same finding changes code between releases
+      # (SC2317 became SC2329 for functions in 0.11). Scripts here are kept clean
+      # under 0.9 through 0.11 rather than pinning one version.
+      - name: Shellcheck
+        run: |
+          shellcheck --version
+          shellcheck -s sh install.sh
+          shellcheck .github/scripts/*.sh
+
+      - name: Installer end-to-end
+        run: bash .github/scripts/test-install.sh
+
+  # ── 5. Desktop build + smoke test ────────────────────────────────────────────
+  # Compiling is not enough: the sidecar has to actually boot and serve from
+  # inside an assembled release, which is where static-asset paths break. The
+  # release copies priv/ in, and `:code.priv_dir` resolution differs from the
+  # cwd-relative path that works in dev — a regression there yields a blank
+  # window with no error, and only a booted smoke test catches it.
+  #
+  # BURRITO_SKIP=true builds a plain release: the Burrito wrap is slow, needs Zig,
+  # and is exercised for real by release.yml.
+  desktop:
+    name: Desktop build + smoke test
+    runs-on: macos-14
+    needs: [lint, test, frontend, scripts]
+    env:
+      MIX_ENV: prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          version-type: strict
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+          cache: pnpm
+          cache-dependency-path: assets/pnpm-lock.yaml
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        id: deps-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Restore _build cache
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: ${{ runner.os }}-build-prod-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('lib/**/*.ex') }}
+          restore-keys: |
+            ${{ runner.os }}-build-prod-${{ hashFiles('**/mix.lock') }}-
+            ${{ runner.os }}-build-prod-
+
+      - name: Cache Cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Elixir deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get --only prod
+
+      # The :desktop release runs `pnpm run build` itself via the build_assets
+      # step in mix.exs; installing here just primes node_modules for it.
+      - name: Frontend deps
+        working-directory: assets
+        run: pnpm install --frozen-lockfile
+
+      - name: Build sidecar release
+        run: BURRITO_SKIP=true mix release desktop --overwrite
+
+      - name: Boot sidecar and smoke test
+        run: bash .github/scripts/smoke-sidecar.sh
+
+      # tauri.conf.json declares the sidecar as `externalBin: ../burrito_out/desktop`,
+      # and Tauri's build script refuses to run when that resource is missing — so
+      # `cargo build` cannot even start without it. This job skips the Burrito wrap
+      # on purpose (it is slow, needs Zig, and release.yml exercises it for real),
+      # so the plain release's launcher is staged at the path Tauri looks for.
+      #
+      # It is the actual sidecar entrypoint, just not self-contained, which is
+      # enough to make the resource resolve and let the Rust shell compile. This
+      # produces nothing shippable: the real wrap and the sidecar's name are
+      # validated by the release workflow's `mix ex_tauri.build`.
+      - name: Stage the sidecar path so the Rust build can resolve it
+        run: |
+          set -euo pipefail
+          triple="$(rustc -vV | sed -n 's/^host: //p')"
+          mkdir -p burrito_out
+          cp _build/prod/rel/desktop/bin/desktop "burrito_out/desktop-${triple}"
+          chmod +x "burrito_out/desktop-${triple}"
+          ls -l burrito_out
+
+      - name: Compile Tauri shell
+        run: cargo build --release --manifest-path src-tauri/Cargo.toml

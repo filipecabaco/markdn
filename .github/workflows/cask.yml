@@ -1,0 +1,26 @@
+name: Cask
+
+# The release workflow verifies the cask at the moment it bumps it. This catches
+# drift introduced *after* that: a release deleted and re-cut produces a DMG that
+# does not hash the same, and the cask then points at a live URL serving different
+# bytes. `brew install` fails with "Cask reports different checksum" and nothing
+# in the release path ever notices, because it only ever checksums what it built.
+on:
+  schedule:
+    # Daily, off the hour to avoid the top-of-hour scheduling backlog.
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "Casks/**"
+      - ".github/scripts/verify-cask.sh"
+      - ".github/workflows/cask.yml"
+
+jobs:
+  verify:
+    name: Verify cask matches the published release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify
+        run: bash .github/scripts/verify-cask.sh Casks/markdn.rb
