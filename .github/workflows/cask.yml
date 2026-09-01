@@ -21,6 +21,6 @@ jobs:
     name: Verify cask matches the published release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verify
         run: bash .github/scripts/verify-cask.sh Casks/markdn.rb

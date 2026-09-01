@@ -64,7 +64,7 @@ jobs:
     steps:
       # fetch-depth: 0 brings the full history *and* the tags the bump reads. The
       # SHA is pinned so `$LAST..HEAD` is measured against the commit that ships.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -176,7 +176,7 @@ jobs:
       VERSION: ${{ needs.version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
@@ -208,17 +208,20 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: "11"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "26"
           cache: pnpm
           cache-dependency-path: assets/pnpm-lock.yaml
 
       # Burrito wraps the sidecar with Zig and needs `xz` on PATH.
+      # Node 20 holdout: setup-zig has no node24 release yet (latest is v2.2.1,
+      # `runs.using: node20`), so this step still emits the deprecation warning.
+      # Bump to the first node24 tag when upstream cuts one.
       - uses: mlugg/setup-zig@v2
         with:
           version: "0.16.0"
@@ -241,7 +244,7 @@ jobs:
 
       - name: Cache Tauri CLI
         id: tauri-cli
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: _build/_tauri
           key: ${{ runner.os }}-${{ matrix.target }}-tauri-cli-${{ env.TAURI_CLI_VERSION }}
@@ -283,7 +286,7 @@ jobs:
           ls -l
 
       - name: Upload bundle artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-${{ matrix.target }}
           path: dist/*
@@ -299,7 +302,7 @@ jobs:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
       - name: Download every bundle
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: dist-*
           merge-multiple: true
@@ -342,7 +345,7 @@ jobs:
       # target_commitish is explicit: the action otherwise tags the default
       # branch's *current* HEAD, and main can move while the bundles build.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ needs.version.outputs.version }}
           target_commitish: ${{ github.sha }}
@@ -368,7 +371,7 @@ jobs:
     env:
       MARKDN_VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
@@ -404,7 +407,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
