@@ -29,6 +29,7 @@ defmodule Markdn do
   alias Markdn.Documents
   alias Markdn.MCP.Components
   alias Markdn.MCP.Handler
+  alias Markdn.Settings
 
   # Runs before every route. Must be declared before the route macros.
   plug(Markdn.Plugs.LocalGuard)
@@ -90,7 +91,14 @@ defmodule Markdn do
 
   # --- Document API --------------------------------------------------------
 
-  get("/api/health", fn _conn -> %{status: "ok", root: Documents.root()} end)
+  get("/api/health", fn _conn ->
+    %{
+      status: "ok",
+      root: Documents.root(),
+      rootLocked: Documents.root_locked?(),
+      settingsPath: Settings.path()
+    }
+  end)
 
   get("/api/components", fn _conn -> %{components: Components.all()} end)
 
@@ -101,6 +109,30 @@ defmodule Markdn do
     |> case do
       {:ok, entries} -> %{entries: entries}
       {:error, reason} -> api_error(conn, reason)
+    end
+  end)
+
+  # Fuzzy file finder behind the command palette. A blank query is legitimate —
+  # it asks for the most recently touched documents, which is what the palette
+  # shows before the user types.
+  get("/api/search", fn conn ->
+    query = conn.params["q"] || ""
+
+    %{query: query, results: Documents.search(query, limit: search_limit(conn.params["limit"]))}
+  end)
+
+  # --- Settings ------------------------------------------------------------
+
+  get("/api/settings", fn _conn -> settings_payload() end)
+
+  post("/api/settings", fn conn ->
+    with %{} = attrs <- conn.body_params,
+         :ok <- allow_root_change(attrs),
+         {:ok, _settings} <- Settings.put(attrs) do
+      settings_payload()
+    else
+      {:error, reason} -> api_error(conn, reason)
+      _ -> api_error(conn, :invalid_settings)
     end
   end)
 
@@ -222,6 +254,36 @@ defmodule Markdn do
     broadcast(Jason.encode!(%{type: "saved", path: path}), nil)
   end
 
+  defp settings_payload do
+    %{
+      settings: Settings.all(),
+      defaults: Settings.defaults(),
+      path: Settings.path(),
+      root: Documents.root(),
+      rootLocked: Documents.root_locked?()
+    }
+  end
+
+  # A settings file must never be able to widen the confinement an operator set
+  # with MARKDN_ROOT, so a root change is refused outright while it is pinned
+  # rather than written and then ignored.
+  defp allow_root_change(attrs) do
+    if Map.has_key?(attrs, "root") and Documents.root_locked?(),
+      do: {:error, :root_locked},
+      else: :ok
+  end
+
+  # Clamped rather than rejected: an out-of-range limit is a client bug, and the
+  # palette is more useful showing fewer results than an error.
+  defp search_limit(nil), do: 50
+
+  defp search_limit(value) do
+    case Integer.parse(to_string(value)) do
+      {limit, _} -> limit |> max(1) |> min(200)
+      :error -> 50
+    end
+  end
+
   defp api_error(conn, reason) do
     {status, message} = describe(reason)
     json(conn, status, %{error: message})
@@ -230,6 +292,12 @@ defmodule Markdn do
   defp describe(:outside_root), do: {403, "path is outside the MarkDN root"}
   defp describe(:unsupported_extension), do: {415, "not a markdown document"}
   defp describe(:missing_path), do: {400, "missing \"path\""}
+  defp describe(:invalid_settings), do: {400, "settings must be a JSON object"}
+  defp describe({:invalid, key}), do: {422, "invalid value for \"#{key}\""}
+
+  defp describe(:root_locked),
+    do: {409, "root is pinned by MARKDN_ROOT and cannot be changed from settings"}
+
   defp describe(:enoent), do: {404, "no such file or directory"}
   defp describe(:eacces), do: {403, "permission denied"}
   defp describe(other), do: {500, to_string(other)}

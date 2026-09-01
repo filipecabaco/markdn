@@ -89,4 +89,72 @@ defmodule Markdn.RouterTest do
       assert conn.status == 200
     end
   end
+
+  describe "GET /api/search" do
+    test "finds documents fuzzily", %{root: root} do
+      fixture(root, "work/design-notes.md", "d")
+      fixture(root, "other.md", "o")
+
+      conn = call(:get, "/api/search?q=dsn")
+      assert conn.status == 200
+      assert %{"results" => [%{"path" => "work/design-notes.md"}]} = Jason.decode!(conn.resp_body)
+    end
+
+    test "a blank query lists documents rather than erroring", %{root: root} do
+      fixture(root, "a.md", "a")
+
+      conn = call(:get, "/api/search?q=")
+      assert %{"results" => [%{"path" => "a.md"}]} = Jason.decode!(conn.resp_body)
+    end
+
+    test "clamps a nonsense limit", %{root: root} do
+      for i <- 1..5, do: fixture(root, "n#{i}.md", "n")
+
+      conn = call(:get, "/api/search?q=n&limit=banana")
+      assert %{"results" => results} = Jason.decode!(conn.resp_body)
+      assert length(results) == 5
+    end
+  end
+
+  describe "/api/settings" do
+    test "reports the settings, their file and whether the root is pinned" do
+      conn = call(:get, "/api/settings")
+      assert conn.status == 200
+
+      assert %{"settings" => settings, "path" => path, "rootLocked" => true} =
+               Jason.decode!(conn.resp_body)
+
+      assert settings["theme"] == "system"
+      assert String.ends_with?(path, "settings.json")
+    end
+
+    test "saves a setting" do
+      conn = call(:post, "/api/settings", %{theme: "dark", editorFontSize: 15})
+      assert conn.status == 200
+
+      assert %{"settings" => %{"theme" => "dark", "editorFontSize" => 15}} =
+               Jason.decode!(conn.resp_body)
+    end
+
+    test "rejects a value that does not fit" do
+      conn = call(:post, "/api/settings", %{editorFontSize: 400})
+      assert conn.status == 422
+      assert %{"error" => "invalid value for \"editorFontSize\""} = Jason.decode!(conn.resp_body)
+    end
+
+    test "refuses to change a root pinned by MARKDN_ROOT", %{root: root} do
+      conn = call(:post, "/api/settings", %{root: root})
+      assert conn.status == 409
+    end
+
+    test "accepts a root once nothing is pinning it", %{root: root} do
+      notes = Path.join(root, "notes")
+      File.mkdir_p!(notes)
+      unpin_root()
+
+      conn = call(:post, "/api/settings", %{root: notes})
+      assert conn.status == 200
+      assert %{"root" => ^notes, "rootLocked" => false} = Jason.decode!(conn.resp_body)
+    end
+  end
 end

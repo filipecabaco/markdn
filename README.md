@@ -46,6 +46,23 @@ or `<Tabs>` into a document and it appears in the preview as you type. Hit
 Nothing is imported, converted, or locked in a database — `Cmd/Ctrl+S` writes
 plain text back to the same `.md`, `.markdown`, or `.mdx` file.
 
+**Find anything, run anything.** `Cmd/Ctrl+K` opens one palette over both: it
+fuzzy-finds documents anywhere under your root — `dsn` finds
+`work/design-notes.md` — and runs every command in the app. Opened with an empty
+query it lists what you touched most recently. `>` narrows it to commands only.
+
+**Read it hands-free.** `Cmd/Ctrl+Space` starts auto-scroll, a teleprompter for
+the rendered pane. `+` and `-` change the speed while it runs, space pauses and
+resumes, escape stops. The arrow keys scroll whenever you press them, in a
+session or out of one; auto-scroll holds while you do and picks up again a
+moment after you stop, so the two never fight over the page.
+
+**Settings you can read.** `Cmd/Ctrl+,` opens the document root, theme, default
+view, text size, scroll speed, and hidden files. They live in one small JSON
+file the panel names at the bottom — on macOS
+`~/Library/Application Support/app.markdn.desktop/settings.json` — so they can
+also be edited by hand or checked into your dotfiles.
+
 **Open to your AI tools.** MarkDN speaks MCP, so Claude and other assistants can
 list, read, and write your documents. Edits made by an assistant show up in an
 open window immediately.
@@ -57,11 +74,22 @@ your computer, and MDX is rendered — never executed.
 
 | | |
 | --- | --- |
-| `1` `2` `3` | Source, split, render |
+| `Cmd/Ctrl+K` | Find a document, or run a command |
+| `Cmd/Ctrl+Shift+P` | Commands only |
+| `Cmd/Ctrl+1` `2` `3` | Source, split, render |
 | `Cmd/Ctrl+S` | Save |
 | `Cmd/Ctrl+Shift+C` | Insert a component |
+| `Cmd/Ctrl+,` | Settings |
+| `Cmd/Ctrl+Space` | Start, pause, resume auto-scroll |
+| `↑` `↓` | Scroll by hand, any time |
+| `+` `-` | Auto-scroll faster, slower |
+| `Esc` | Stop auto-scroll |
 
 Components available today: `Alert`, `Callout`, `Card`, `Tabs`, `Tab`.
+
+The document root defaults to your home directory. Change it in settings, or pin
+it for a launch with `MARKDN_ROOT=~/notes` — an environment root wins over the
+setting, and the panel says so rather than offering an edit it cannot make.
 
 ## Connecting an AI assistant
 
