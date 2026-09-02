@@ -3,9 +3,12 @@ import { resolveAssetUrl } from "../resolveAssetUrl";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMdx from "remark-mdx";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { CodeBlock } from "./CodeBlock";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { MdxNode } from "./mdx/MdxNode";
+import { COMPONENT_NAMES } from "./mdx/registry";
 import { remarkComponentRegistry } from "./mdx/remarkRegistry";
 import { rehypeSourcePositions } from "./mdx/rehypeSourcePositions";
 
@@ -13,10 +16,46 @@ import { rehypeSourcePositions } from "./mdx/rehypeSourcePositions";
  * Renders a document.
  *
  * Two pipelines. The MDX one understands `<Alert>` and friends; the plain one is
- * GFM only. MDX is tried first for every document — components should work in
- * `.md` too — and a parse failure falls back to plain rendering rather than
- * showing nothing, because a stray `<` or `{` is valid markdown but invalid MDX.
+ * GFM plus raw HTML. MDX is tried first for every document — components should
+ * work in `.md` too — and a parse failure falls back to plain rendering rather
+ * than showing nothing, because a stray `<` or `{` is valid markdown but invalid
+ * MDX.
+ *
+ * The fallback renders HTML rather than printing it, because a README full of
+ * `<p align="center">` and unclosed `<img>` tags is *correct* markdown — it is
+ * only MDX that requires every tag to close — and showing its source is showing
+ * the wrong document. Raw HTML from a file the user opened is still untrusted:
+ * this window can read and write their disk through the local API, so a
+ * `<script>` or an `onerror=` in a document would be running with those hands.
+ * Everything raw is therefore sanitised before it is rendered.
  */
+
+// GitHub's schema, plus the layout attributes that decorate a README. `align`
+// and `width` on an image cannot execute anything; they are the difference
+// between a centred badge row and a ragged column of icons.
+const SCHEMA = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    img: [...(defaultSchema.attributes?.img ?? []), "width", "height", "align"],
+    p: [...(defaultSchema.attributes?.p ?? []), "align"],
+    div: [...(defaultSchema.attributes?.div ?? []), "align"],
+    h1: [...(defaultSchema.attributes?.h1 ?? []), "align"],
+    h2: [...(defaultSchema.attributes?.h2 ?? []), "align"],
+    h3: [...(defaultSchema.attributes?.h3 ?? []), "align"],
+  },
+};
+
+// An MDX parse error is only worth reporting on a document that meant to be MDX.
+// A `.md` file whose HTML does not close every tag is not broken, and a banner
+// over it is the interface being wrong out loud.
+const COMPONENT_TAG = new RegExp(`</?(${COMPONENT_NAMES.join("|")})[\\s/>]`);
+const ESM = /^(import|export)\s/m;
+
+function intendsMdx(content: string, path: string | null): boolean {
+  if (path !== null && /\.mdx$/i.test(path)) return true;
+  return COMPONENT_TAG.test(content) || ESM.test(content);
+}
 
 interface CodeProps {
   className?: string;
@@ -97,11 +136,14 @@ export function Preview({
     [documentPath],
   ) as never;
 
+  // Order is load-bearing: raw HTML has to become elements before it can be
+  // sanitised, and the source positions are stamped last so the sanitiser does
+  // not strip the `data-line` attributes the sync rail navigates by.
   const plain = useMemo(
     () => (
       <Markdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeSourcePositions]}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, SCHEMA], rehypeSourcePositions]}
         components={components}
       >
         {content}
@@ -121,10 +163,12 @@ export function Preview({
         key={content}
         fallback={(error) => (
           <>
-            <div className="mdx-warning" role="note">
-              <strong>MDX could not be parsed — showing plain markdown.</strong>
-              <span>{error.message}</span>
-            </div>
+            {intendsMdx(content, documentPath) && (
+              <div className="mdx-warning" role="note">
+                <strong>MDX could not be parsed — showing plain markdown.</strong>
+                <span>{error.message}</span>
+              </div>
+            )}
             {plain}
           </>
         )}

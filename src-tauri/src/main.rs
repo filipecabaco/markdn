@@ -155,6 +155,14 @@ fn main() {
             )?;
             Menu::with_items(handle, &[&app_menu, &edit_menu])
         })
+        // The native title bar is hidden (titleBarStyle: Overlay), so the app
+        // header stands in for it. The frontend is served from http://localhost
+        // rather than the tauri:// origin, so it cannot tell on its own that it
+        // is running in the shell -- the marker is stamped here, and styles.css
+        // uses it to inset the header past the traffic lights.
+        .on_page_load(|webview, _payload| {
+            let _ = webview.eval("document.documentElement.classList.add('is-desktop')");
+        })
         .setup(|app| {
             let port = resolve_port();
             // Set when the sidecar exits, so the wait below stops with a reason

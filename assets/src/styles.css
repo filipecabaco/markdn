@@ -26,6 +26,17 @@
   --ink-muted: oklch(0.495 0.008 70);
   --ink-faint: oklch(0.505 0.008 70);
 
+  /* Source syntax. Two low-chroma hues past the neutrals, at a chroma an order
+     of magnitude under the signal so a highlighted document still reads as a
+     document rather than as a paint chart. Marker is the punctuation the author
+     typed and the reader mostly does not need: the quietest thing on screen. */
+  --syn-marker: oklch(0.620 0.008 70);
+  --syn-heading: oklch(0.245 0.010 70);
+  --syn-code: oklch(0.450 0.070 160);
+  --syn-link: oklch(0.450 0.090 250);
+  --syn-url: oklch(0.510 0.050 250);
+  --syn-html: oklch(0.470 0.070 300);
+
   /* Signal red. Selection, focus, active state, primary action. Nothing else. */
   --signal: oklch(0.508 0.185 30);
   --signal-ink: oklch(0.985 0.004 80);
@@ -61,6 +72,13 @@
     --ink-muted: oklch(0.665 0.007 75);
     --ink-faint: oklch(0.635 0.008 75);
 
+    --syn-marker: oklch(0.560 0.008 70);
+    --syn-heading: oklch(0.940 0.006 80);
+    --syn-code: oklch(0.780 0.080 160);
+    --syn-link: oklch(0.760 0.090 250);
+    --syn-url: oklch(0.700 0.050 250);
+    --syn-html: oklch(0.780 0.080 300);
+
     --signal: oklch(0.660 0.180 33);
     --signal-ink: oklch(0.165 0.006 70);
     --signal-tint: oklch(0.660 0.180 33 / 0.14);
@@ -85,6 +103,13 @@
   --ink: oklch(0.920 0.006 80);
   --ink-muted: oklch(0.665 0.007 75);
   --ink-faint: oklch(0.635 0.008 75);
+
+  --syn-marker: oklch(0.560 0.008 70);
+  --syn-heading: oklch(0.940 0.006 80);
+  --syn-code: oklch(0.780 0.080 160);
+  --syn-link: oklch(0.760 0.090 250);
+  --syn-url: oklch(0.700 0.050 250);
+  --syn-html: oklch(0.780 0.080 300);
 
   --signal: oklch(0.660 0.180 33);
   --signal-ink: oklch(0.165 0.006 70);
@@ -144,6 +169,14 @@ body {
   background: var(--panel);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
+}
+
+/* With the native title bar hidden, this header is the title bar. The left
+   inset clears the traffic lights parked over it; dragging comes from
+   data-tauri-drag-region on the header itself, since WKWebView has no
+   -webkit-app-region. */
+.is-desktop .app__header {
+  padding-left: 80px;
 }
 
 .wordmark {
@@ -432,6 +465,12 @@ body {
 .panes--preview {
   grid-template-columns: minmax(0, 1fr);
 }
+/* The multibuffer takes the pane area over. The panes are hidden rather than
+   unmounted, so coming back lands on the same caret and the same scroll
+   position; `display: grid` above would otherwise win over [hidden]. */
+.panes[hidden] {
+  display: none;
+}
 
 .editor {
   position: relative;
@@ -455,26 +494,128 @@ body {
 .editor:focus-within::after {
   opacity: 1;
 }
-.editor__textarea {
+/* ── Source surface ────────────────────────────────────────────────────── */
+
+/* A textarea with its own text painted transparent, over a layer holding the
+   same characters in colour. The caret, the selection, undo and IME stay the
+   browser's; only the paint is ours.
+
+   The two boxes share one declaration list on purpose. Every property below
+   moves a glyph, so two rules that merely look alike are two rules that will
+   drift, and a highlight one character off the caret is worse than none. */
+.source {
+  position: relative;
+  display: flex;
   flex: 1;
+  min-width: 0;
+}
+.source__layer,
+.source__input {
+  margin: 0;
   border: 0;
-  outline: none;
-  resize: none;
-  padding: 18px 20px 40px;
-  background: var(--surface);
-  color: var(--ink);
+  padding: var(--source-pad, 18px 20px 40px);
   font-family: var(--font-mono);
   /* Set on :root from settings; the token default keeps a plain page honest. */
-  font-size: var(--editor-font-size, var(--t-base));
+  font-size: var(--source-size, var(--editor-font-size, var(--t-base)));
   line-height: 1.7;
   tab-size: 2;
-  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
-.editor__textarea::placeholder {
+.source--nowrap .source__layer,
+.source--nowrap .source__input {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+.source__layer {
+  position: absolute;
+  inset: 0;
+  color: var(--ink);
+  pointer-events: none;
+  /* Its own scrollbar is never used — the sync sets scrollTop — but the gutter
+     it reserves has to exist, because the textarea's does. Where scrollbars
+     take layout width (anything but macOS overlay scrollbars), a gutter on one
+     box and not the other narrows one of them, and every wrapped line lands a
+     few pixels off the text under it. Hence `scroll` on both, not `auto`. */
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-color: transparent transparent;
+}
+.source__input {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--ink);
+  overflow-x: auto;
+  overflow-y: scroll;
+}
+/* An excerpt is sized to its content and never scrolls vertically, so neither
+   box reserves a gutter; not wrapping, a horizontal one cannot move a glyph. */
+.source--nowrap .source__layer,
+.source--nowrap .source__input {
+  overflow-y: hidden;
+}
+/* Past the size where highlighting pays for itself the layer is dropped and the
+   textarea paints its own text again. Nothing else changes. */
+.source--plain .source__layer {
+  display: none;
+}
+.source--plain .source__input {
+  color: var(--ink);
+  -webkit-text-fill-color: currentColor;
+}
+.source__input::placeholder {
   color: var(--ink-faint);
+  -webkit-text-fill-color: var(--ink-faint);
 }
-.editor__textarea::selection {
+.source__input::selection {
   background: var(--signal-tint);
+}
+
+/* Syntax. Colour and, in a monospace family where bold and italic keep the same
+   advance width, weight — never anything that would move a character out from
+   under the caret sitting on it. */
+.md-marker,
+.md-rule {
+  color: var(--syn-marker);
+}
+.md-heading {
+  color: var(--syn-heading);
+  font-weight: 600;
+}
+.md-strong {
+  font-weight: 600;
+}
+.md-emphasis {
+  font-style: italic;
+}
+.md-strike {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+.md-code {
+  color: var(--syn-code);
+}
+.md-link {
+  color: var(--syn-link);
+}
+.md-url {
+  color: var(--syn-url);
+  text-decoration: underline;
+}
+.md-html {
+  color: var(--syn-html);
+}
+/* A search hit. Signal, because a match is state. */
+.source__hit {
+  background: var(--signal-tint);
+  box-shadow: 0 0 0 1px var(--signal-tint);
 }
 
 /* Line readout. An instrument shows its index. */
@@ -1335,4 +1476,159 @@ body {
   font-family: var(--font-mono);
   font-size: var(--t-micro);
   color: var(--ink-faint);
+}
+
+/* ── Multibuffer ───────────────────────────────────────────────────────── */
+
+/* Project-wide search whose results are the editor. It replaces the panes
+   rather than floating over them: this is a place to work, not a dialog to
+   dismiss, and an overlay would put the thing being edited behind a scrim. */
+.multibuffer {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--surface);
+}
+
+.mb__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 7px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.mb__field {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--line-control);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-small);
+}
+.mb__field::placeholder {
+  color: var(--ink-faint);
+}
+.mb__field--replace {
+  flex: 1 1 140px;
+}
+.mb__toggle {
+  padding: 3px 7px;
+  border: 1px solid var(--line-control);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: var(--t-small);
+  cursor: pointer;
+  transition:
+    border-color var(--fast) var(--ease),
+    color var(--fast) var(--ease);
+}
+.mb__toggle.is-active {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+.mb__count {
+  margin-left: auto;
+  color: var(--ink-faint);
+  font-size: var(--t-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unsaved edits are state, so the strip carries signal. It is the only place in
+   the multibuffer that does. */
+.mb__notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--signal-tint-soft);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-small);
+}
+.mb__notice > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.mb__results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+.mb__empty {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: var(--t-small);
+}
+
+.mb__file {
+  margin-bottom: 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mb__file-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.mb__path {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-small);
+  cursor: pointer;
+}
+.mb__path:hover {
+  color: var(--signal);
+}
+.mb__dirty {
+  color: var(--signal);
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Elided lines. A hairline says "there is more here" without pretending to
+   summarise what it is. */
+.mb__gap {
+  border-top: 1px dashed var(--line);
+}
+
+.mb__excerpt {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+}
+.mb__gutter {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  border-right: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: var(--t-small);
+  line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  user-select: none;
+}
+/* Matches the gutter exactly: same size, same line-height, same vertical
+   padding. An excerpt does not wrap, so one line is one row in both. */
+.source--excerpt {
+  --source-pad: 6px 10px;
+  --source-size: var(--t-small);
 }

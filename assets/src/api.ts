@@ -83,6 +83,34 @@ export function searchDocuments(query: string, limit = 50, signal?: AbortSignal)
   return request<{ query: string; results: SearchHit[] }>(`/api/search?${params}`, { signal });
 }
 
+export interface SearchFile {
+  path: string;
+  name: string;
+  /** The whole document, not the matching lines — the multibuffer writes it back. */
+  contents: string;
+}
+
+/**
+ * Finds documents containing `query` literally.
+ *
+ * Not fuzzy, and not a regular expression: the multibuffer re-finds the same
+ * matches in the text it gets back, to underline and to replace them, so client
+ * and server have to mean exactly the same thing by "matches".
+ */
+export function searchContents(
+  query: string,
+  options: { caseSensitive?: boolean; limit?: number; signal?: AbortSignal } = {},
+) {
+  const params = new URLSearchParams({ q: query });
+  if (options.caseSensitive) params.set("case", "1");
+  if (options.limit) params.set("limit", String(options.limit));
+
+  return request<{ query: string; files: SearchFile[]; truncated: boolean }>(
+    `/api/search/contents?${params}`,
+    { signal: options.signal },
+  );
+}
+
 export type Theme = "system" | "light" | "dark";
 export type ViewMode = "split" | "editor" | "preview";
 

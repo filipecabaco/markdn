@@ -116,6 +116,36 @@ defmodule Markdn.RouterTest do
     end
   end
 
+  describe "GET /api/search/contents" do
+    test "answers with the whole document, not with the matching line", %{root: root} do
+      fixture(root, "notes.md", "intro\nthe needle\noutro\n")
+
+      conn = call(:get, "/api/search/contents?q=needle")
+      assert conn.status == 200
+
+      assert %{"files" => [file], "truncated" => false, "query" => "needle"} =
+               Jason.decode!(conn.resp_body)
+
+      assert file["contents"] == "intro\nthe needle\noutro\n"
+    end
+
+    test "case sensitivity is off unless asked for", %{root: root} do
+      fixture(root, "notes.md", "Needle")
+
+      assert %{"files" => [_]} =
+               Jason.decode!(call(:get, "/api/search/contents?q=needle").resp_body)
+
+      assert %{"files" => []} =
+               Jason.decode!(call(:get, "/api/search/contents?q=needle&case=1").resp_body)
+    end
+
+    test "a blank query answers empty rather than every document", %{root: root} do
+      fixture(root, "a.md", "a")
+
+      assert %{"files" => []} = Jason.decode!(call(:get, "/api/search/contents?q=").resp_body)
+    end
+  end
+
   describe "/api/settings" do
     test "reports the settings, their file and whether the root is pinned" do
       conn = call(:get, "/api/settings")

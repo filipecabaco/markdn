@@ -1,12 +1,14 @@
 import { useCallback, useEffect, type RefObject } from "react";
 import { ComponentPicker } from "./ComponentPicker";
+import { SourceArea } from "./SourceArea";
 
 /**
  * Markdown source editor.
  *
- * A plain textarea rather than a rich-text surface: this is the pane the preview
+ * A textarea rather than a rich-text surface: this is the pane the preview
  * mirrors, and keeping the source authoritative means what the user types is
- * exactly what lands on disk. Tab inserts two spaces instead of moving focus.
+ * exactly what lands on disk. `SourceArea` paints the syntax behind it without
+ * taking that over. Tab inserts two spaces instead of moving focus.
  *
  * The component picker is opened from outside (Cmd/Ctrl+Shift+C, or the command
  * palette) but inserts from in here, where the textarea and its caret are: the
@@ -91,21 +93,20 @@ export function Editor({
 
   return (
     <div className="editor">
-      <textarea
-        ref={textarea}
-        className="editor__textarea"
+      <SourceArea
+        className="source--editor"
+        textareaRef={textarea}
         value={value}
-        spellCheck={false}
-        onChange={(event) => {
-          onChange(event.target.value);
+        ariaLabel="Markdown source"
+        placeholder="# Start writing…"
+        onChange={(next) => {
+          onChange(next);
           onCaretChange?.();
         }}
         onKeyDown={onKeyDown}
         onScroll={onScroll}
         onSelect={onCaretChange}
         onClick={onCaretChange}
-        placeholder="# Start writing…"
-        aria-label="Markdown source"
       />
       <div className="editor__meter" aria-hidden="true">
         <span>{caretLine ?? 1}</span>

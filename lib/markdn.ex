@@ -29,6 +29,7 @@ defmodule Markdn do
   alias Markdn.Documents
   alias Markdn.MCP.Components
   alias Markdn.MCP.Handler
+  alias Markdn.Search
   alias Markdn.Settings
 
   # Runs before every route. Must be declared before the route macros.
@@ -119,6 +120,21 @@ defmodule Markdn do
     query = conn.params["q"] || ""
 
     %{query: query, results: Documents.search(query, limit: search_limit(conn.params["limit"]))}
+  end)
+
+  # Content search behind the multibuffer. Answers with whole documents, not with
+  # matching lines — see `Markdn.Search` for why the editor needs the rest of the
+  # file it is about to write back.
+  get("/api/search/contents", fn conn ->
+    query = conn.params["q"] || ""
+
+    result =
+      Search.run(query,
+        limit: search_limit(conn.params["limit"]),
+        case_sensitive: truthy?(conn.params["case"])
+      )
+
+    Map.put(result, :query, query)
   end)
 
   # --- Settings ------------------------------------------------------------
@@ -283,6 +299,10 @@ defmodule Markdn do
       :error -> 50
     end
   end
+
+  # Query-string flags arrive as strings. Anything but an explicit yes is off:
+  # a toggle the client did not send must not be on.
+  defp truthy?(value), do: value in ["1", "true", "yes"]
 
   defp api_error(conn, reason) do
     {status, message} = describe(reason)

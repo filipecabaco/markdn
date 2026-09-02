@@ -174,12 +174,22 @@ defmodule Markdn.Documents do
     limit = Keyword.get(opts, :limit, @default_limit)
     trimmed = String.trim(query)
 
-    documents =
-      root()
-      |> crawl("", @max_depth, {[], @max_entries})
-      |> elem(0)
+    walk() |> rank(trimmed) |> Enum.take(limit)
+  end
 
-    documents |> rank(trimmed) |> Enum.take(limit)
+  @doc """
+  Every markdown document under the root, as `%{name:, path:, mtime:}`.
+
+  Bounded by depth and by an entry budget, and never follows a symlink, so the
+  cost is the same whether the root is a project checkout or a home directory.
+  Public because content search walks the same tree the fuzzy finder does —
+  duplicating the brakes in a second module is how the two drift apart.
+  """
+  @spec walk() :: [%{name: String.t(), path: String.t(), mtime: integer()}]
+  def walk do
+    root()
+    |> crawl("", @max_depth, {[], @max_entries})
+    |> elem(0)
   end
 
   defp rank(documents, "") do
