@@ -56,7 +56,22 @@ and pass straight through, so they are not reported as unknown components.
 
 MDX is tried for every document, including `.md`. If it fails to parse — a stray
 `<` or `{` is valid markdown but invalid MDX — the preview falls back to plain
-GFM rendering and says so, rather than blanking.
+GFM rendering rather than blanking.
+
+The fallback pipeline is `remark-gfm` → `rehype-raw` → `rehype-sanitize` →
+`rehypeSourcePositions`, in that order. Raw HTML has to become elements before it
+can be sanitised, and the positions are stamped last so the sanitiser does not
+strip the `data-line` attributes the sync rail navigates by. Rendering the HTML
+matters: a README of `<p align="center">` and unclosed `<img>` tags is correct
+markdown — only MDX demands every tag close — so printing its source would be
+showing the wrong document. Sanitising it matters just as much: this window
+reads and writes the user's disk over the local API, so a `<script>` in a
+document would run with those hands. The schema is `rehype-sanitize`'s default
+plus `align`, `width` and `height`, which decorate a README and cannot execute.
+
+The parse error is only reported when the document meant to be MDX: a `.mdx`
+extension, a registered component tag, or a top-level `import`/`export`. A `.md`
+file that is simply not MDX renders as markdown with nothing said about it.
 
 ### Adding a component
 
@@ -64,6 +79,28 @@ GFM rendering and says so, rather than blanking.
 2. Register it in `assets/src/components/mdx/registry.tsx`.
 3. Mirror it in `lib/markdn/mcp/components.ex` so MCP clients know it exists.
 4. Add an insert snippet in `assets/src/components/ComponentPicker.tsx`.
+
+## Search and the multibuffer
+
+Two endpoints, two different jobs. `GET /api/search` is the palette's fuzzy file
+finder, ranked by `Markdn.Fuzzy` over paths. `GET /api/search/contents` is the
+multibuffer's: it walks the same tree (`Markdn.Documents.walk/0`, so the depth,
+entry budget and symlink rules are shared rather than duplicated) and returns the
+**whole contents** of each matching file.
+
+Whole files, because the multibuffer edits its results and writes them back — the
+lines it does not show are the ones it must not lose. Matching is literal on both
+sides, never a regular expression: the server decides which files come back and
+the client re-finds the same matches to underline and replace them, and two
+dialects of regex would eventually disagree about a file whose excerpts are then
+empty.
+
+Client-side (`assets/src/multibuffer.ts`), a file is split into alternating
+segments — the excerpts around each match, editable, and the gaps between them,
+held but never shown. Editing rewrites one excerpt's text and nothing else, so
+the file is always exactly `join(segments)` no matter how many lines an edit
+added or removed. `excerpts/3` → `join/1` round-trips any document; that test is
+the one worth keeping.
 
 ## MCP
 
