@@ -34,6 +34,24 @@ and metal rather than as television static.
 | `--ink-faint` | `0.505 0.008 70` | `0.635 0.008 75` | Labels, metadata |
 | `--signal` | `0.508 0.185 30` | `0.660 0.180 33` | Selection, focus, active, primary |
 
+Source highlighting is the one place with hues past the neutrals, and it gets six
+tokens rather than a theme:
+
+| Token | Light | Dark | Role |
+|---|---|---|---|
+| `--syn-marker` | `0.620 0.008 70` | `0.560 0.008 70` | `#`, `>`, bullets, fences, `**` |
+| `--syn-heading` | `0.245 0.010 70` | `0.940 0.006 80` | Heading text |
+| `--syn-code` | `0.450 0.070 160` | `0.780 0.080 160` | Code spans and fenced blocks |
+| `--syn-link` | `0.450 0.090 250` | `0.760 0.090 250` | Link and image labels |
+| `--syn-url` | `0.510 0.050 250` | `0.700 0.050 250` | Destinations |
+| `--syn-html` | `0.470 0.070 300` | `0.780 0.080 300` | HTML and component tags |
+
+Chroma stays at 0.05–0.09 against the signal's 0.18, so a highlighted document
+still reads as a document. The quietest token is the punctuation the author typed
+and the reader mostly does not need; the loudest is the text itself. Highlighting
+never uses `--signal`, which in the source pane means the caret's block and a
+search hit — state, as everywhere else.
+
 `--line-control` exists separately from `--line-strong` because WCAG 1.4.11 wants
 3:1 for the boundary that identifies a control, while a hairline that merely
 separates two regions should stay quiet. Collapsing them makes one of the two
@@ -65,7 +83,9 @@ are separated by 1px lines, which is what makes it read as one instrument rather
 than a tray of floating objects.
 
 Split view withdraws below 760px and the control is disabled, rather than offering
-a mode that cannot be honoured.
+a mode that cannot be honoured. The multibuffer takes the pane area over on the
+same terms: while it is up the view control is disabled, because the panes behind
+it are not the thing on screen.
 
 ## Motion
 
@@ -81,6 +101,12 @@ strip on scroll rather than re-rendering ticks, so scrolling stays at frame rate
 Every interactive element carries default, hover, focus-visible, active and
 disabled. Focus is a 2px `--signal` outline at 1px offset; the source pane, which
 suppresses its own outline, indexes focus with a 2px rule along its top edge.
+
+The source pane is a textarea painted transparent over a highlight layer holding
+the same characters. Nothing about the caret, the selection, undo or IME is
+reimplemented, and the two boxes share one CSS rule so a glyph cannot land in one
+place in the layer and another under the caret. Multibuffer excerpts are the same
+surface at `--t-small`, gutter-numbered and not wrapped, so one line is one row.
 
 MDX components (`Alert`, `Callout`, `Card`, `Tabs`) are full hairline boxes with a
 tinted header strip. Deliberately **not** a coloured left border: that pattern is

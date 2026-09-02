@@ -41,6 +41,17 @@ preview as you type.
 `dsn` finds `work/design-notes.md` three folders down. Open it with no query and
 it lists what you touched last.
 
+**Search across every document, and edit what you find.** `Cmd/Ctrl+Shift+F`
+searches the whole folder and shows each match with the lines around it — as
+editable source, not as a preview. Fix a dozen files in one pass, replace across
+all of them at once, and save the lot with one `Cmd/Ctrl+S`. The lines a result
+does not show are still there: what gets written back is the document.
+
+**The source pane is highlighted too.** Headings, emphasis, code fences, links
+and component tags are coloured as you type, in a plain textarea — so the caret,
+the selection, and undo behave exactly the way they do everywhere else on your
+machine.
+
 **Every command in the same place.** The same palette runs the app: switch view,
 insert a component, change the root, start reading. Type `>` to see only
 commands. Nothing hides in a menu you have to go find.
@@ -73,6 +84,7 @@ MDX is rendered, never executed.
 | --- | --- |
 | `Cmd/Ctrl+K` | Find a document, or run a command |
 | `Cmd/Ctrl+Shift+P` | Commands only |
+| `Cmd/Ctrl+Shift+F` | Search and edit across documents |
 | `Cmd/Ctrl+1` `2` `3` | Source, split, render |
 | `Cmd/Ctrl+S` | Save |
 | `Cmd/Ctrl+Shift+C` | Insert a component |

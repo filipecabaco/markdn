@@ -2,7 +2,15 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main application window",
-  "windows": ["main", "*"],
+  "windows": [
+    "main",
+    "*"
+  ],
+  "remote": {
+    "urls": [
+      "http://localhost:*"
+    ]
+  },
   "permissions": [
     "core:default",
     "notification:default",

@@ -11,6 +11,7 @@ import { AutoScrollHud } from "./components/AutoScrollHud";
 import { CommandPalette, type Command } from "./components/CommandPalette";
 import { Editor } from "./components/Editor";
 import { FileTree } from "./components/FileTree";
+import { MultiBuffer, type MultiBufferHandle } from "./components/MultiBuffer";
 import { Preview } from "./components/Preview";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { SyncRail } from "./components/SyncRail";
@@ -60,12 +61,14 @@ export function App() {
   const [palette, setPalette] = useState<null | "all" | "commands">(null);
   const [showSettings, setShowSettings] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [searching, setSearching] = useState(false);
   // Bumped when the root moves, to throw away a tree that describes the old one.
   const [treeGeneration, setTreeGeneration] = useState(0);
   const socket = useRef<WebSocket | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const multibuffer = useRef<MultiBufferHandle>(null);
 
   // Below this, two panes plus the rail leave each side too narrow to read, so
   // split is withdrawn rather than offered and then not honoured. The control is
@@ -196,6 +199,13 @@ export function App() {
   }, []);
 
   const save = useCallback(() => {
+    // While the multibuffer is up it owns the edits on screen, and ⌘S means the
+    // same thing there: write everything that was changed.
+    if (searching) {
+      multibuffer.current?.saveAll();
+      return;
+    }
+
     if (!path) {
       setStatus("No file open — nothing to save.");
       return;
@@ -208,11 +218,38 @@ export function App() {
         socket.current?.send(JSON.stringify({ type: "saved", path }));
       })
       .catch((error: Error) => setStatus(error.message));
-  }, [content, path]);
+  }, [content, path, searching]);
 
   const reload = useCallback(() => {
     if (path) open(path);
   }, [open, path]);
+
+  /**
+   * Writes one document on the multibuffer's behalf.
+   *
+   * Refuses to write over the open document while it has unsaved edits of its
+   * own: two working copies of one file, and this would silently pick the one
+   * the user is not looking at.
+   */
+  const saveFromSearch = useCallback(
+    (target: string, contents: string) => {
+      if (target === path && !saved) {
+        return Promise.reject(
+          new Error(`${target} is open with unsaved changes — save or reload it first.`),
+        );
+      }
+
+      return saveDocument(target, contents).then(() => {
+        socket.current?.send(JSON.stringify({ type: "saved", path: target }));
+
+        if (target === path) {
+          setContent(contents);
+          setSaved(true);
+        }
+      });
+    },
+    [path, saved],
+  );
 
   // --- Auto-scroll ---------------------------------------------------------
 
@@ -245,6 +282,13 @@ export function App() {
         section: "Document",
         title: "Reload document from disk",
         run: reload,
+      },
+      {
+        id: "document.search",
+        section: "Document",
+        title: "Search across documents…",
+        hint: "⌘⇧F",
+        run: () => setSearching(true),
       },
       {
         id: "document.component",
@@ -356,13 +400,19 @@ export function App() {
         // where the editor is not mounted at all.
         event.preventDefault();
         save();
+      } else if (key === "f" && event.shiftKey) {
+        event.preventDefault();
+        setSearching(true);
       } else if (key === "c" && event.shiftKey) {
         event.preventDefault();
         setView((current) => (current === "preview" ? "split" : current));
         setPicking(true);
       } else if (!event.shiftKey) {
+        // The panes are behind the multibuffer, so switching them would change a
+        // mode nothing on screen is in. The control is disabled for the same
+        // reason.
         const match = VIEWS.find((mode) => mode.key === event.key);
-        if (!match) return;
+        if (!match || searching) return;
         event.preventDefault();
         setView(match.id);
       }
@@ -370,14 +420,16 @@ export function App() {
 
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [save]);
+  }, [save, searching]);
 
   return (
     <div className="app">
-      <header className="app__header">
+      {/* The desktop shell hides the native title bar, so this header is one:
+          a mousedown on the bar itself (not on a control) drags the window. */}
+      <header className="app__header" data-tauri-drag-region>
         <Wordmark />
 
-        <div className="app__doc">
+        <div className="app__doc" data-tauri-drag-region>
           <span className="app__path">{path ?? "untitled"}</span>
           <span
             className={`app__state${saved ? "" : " is-dirty"}`}
@@ -394,9 +446,13 @@ export function App() {
               type="button"
               className={`segmented__item${view === mode.id ? " is-active" : ""}`}
               aria-pressed={view === mode.id}
-              disabled={mode.id === "split" && !canSplit}
+              disabled={searching || (mode.id === "split" && !canSplit)}
               title={
-                mode.id === "split" && !canSplit ? "Window too narrow for split view" : undefined
+                searching
+                  ? "Close the search to change view"
+                  : mode.id === "split" && !canSplit
+                    ? "Window too narrow for split view"
+                    : undefined
               }
               onClick={() => setView(mode.id)}
             >
@@ -448,10 +504,31 @@ export function App() {
             <kbd>⌘K</kbd>
           </button>
 
+          <button
+            type="button"
+            className={`sidebar__search${searching ? " is-active" : ""}`}
+            onClick={() => setSearching(true)}
+          >
+            <span>Search in documents…</span>
+            <kbd>⌘⇧F</kbd>
+          </button>
+
           <FileTree key={treeGeneration} path="." selected={path} onSelect={open} />
         </aside>
 
-        <main className={`panes panes--${view}`}>
+        {searching && (
+          <MultiBuffer
+            ref={multibuffer}
+            onSave={saveFromSearch}
+            onOpen={(next) => {
+              open(next);
+              setSearching(false);
+            }}
+            onClose={() => setSearching(false)}
+          />
+        )}
+
+        <main className={`panes panes--${view}`} hidden={searching}>
           {view !== "preview" && (
             <Editor
               value={content}

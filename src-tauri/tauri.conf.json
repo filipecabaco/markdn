@@ -10,7 +10,10 @@
         "width": 1400,
         "fullscreen": false,
         "height": 900,
-        "resizable": true
+        "resizable": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 14, "y": 19 }
       }
     ],
     "withGlobalTauri": true
