@@ -1,0 +1,1895 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MarkDN — a markdown and MDX editor that renders the whole document</title>
+    <meta
+      name="description"
+      content="A native markdown and MDX editor for your notes folder. Diagrams, components and code rendered live, a fuzzy palette over every document, a teleprompter for long reads, and MCP so your assistant edits the file you have open."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:title" content="MarkDN" />
+    <meta
+      property="og:description"
+      content="A markdown and MDX editor that renders the whole document. Your folder, your files, on your machine."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://filipecabaco.github.io/markdn/screenshots/split-view.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=Chivo+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /*
+       * MarkDN — the product's own instrument palette, at brand scale.
+       *
+       * Warm graphite on paper, hairlines instead of shadows, near-zero radii,
+       * and one signal red that only ever marks state. The page is built as a
+       * spec sheet for an instrument: a visible grid, engraved section indices,
+       * and demonstrations rather than descriptions.
+       */
+
+      :root {
+        --paper: oklch(0.963 0.004 78);
+        --panel: oklch(0.932 0.005 75);
+        --surface: oklch(0.988 0.003 80);
+        --line: oklch(0.868 0.006 75);
+        --line-strong: oklch(0.782 0.008 75);
+        --line-control: oklch(0.592 0.01 70);
+
+        --ink: oklch(0.235 0.01 70);
+        --ink-muted: oklch(0.462 0.008 70);
+        --ink-faint: oklch(0.545 0.008 70);
+
+        --signal: oklch(0.505 0.19 30);
+        --signal-ink: oklch(0.985 0.004 80);
+        --signal-tint: oklch(0.505 0.19 30 / 0.09);
+
+        --font-ui: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --font-mono: "Chivo Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+        --measure: 62ch;
+        --gutter: clamp(1.25rem, 4vw, 4rem);
+        --frame: min(1240px, 100%);
+
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        --fast: 120ms;
+        --base: 200ms;
+
+        color-scheme: light;
+      }
+
+      /* Dark is a designed surface here too, not an inversion: the panels get
+         warmer and heavier, and red lifts in lightness to stay legible on them. */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: oklch(0.183 0.005 70);
+          --panel: oklch(0.222 0.006 70);
+          --surface: oklch(0.158 0.005 70);
+          --line: oklch(0.298 0.007 70);
+          --line-strong: oklch(0.392 0.008 70);
+          --line-control: oklch(0.525 0.009 70);
+
+          --ink: oklch(0.925 0.006 80);
+          --ink-muted: oklch(0.688 0.007 75);
+          --ink-faint: oklch(0.632 0.008 75);
+
+          --signal: oklch(0.672 0.178 33);
+          --signal-ink: oklch(0.16 0.006 70);
+          --signal-tint: oklch(0.672 0.178 33 / 0.13);
+
+          color-scheme: dark;
+        }
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-ui);
+        font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.0625rem);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.02;
+        text-wrap: balance;
+      }
+
+      p {
+        margin: 0;
+        text-wrap: pretty;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--signal);
+        outline-offset: 2px;
+        border-radius: 1px;
+      }
+
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 100;
+        padding: 10px 14px;
+        background: var(--signal);
+        color: var(--signal-ink);
+        font: 500 0.8125rem var(--font-mono);
+      }
+      .skip:focus {
+        left: 0;
+      }
+
+      /* ── Frame ─────────────────────────────────────────────────────────── */
+
+      .shell {
+        width: var(--frame);
+        margin-inline: auto;
+        padding-inline: var(--gutter);
+      }
+
+      /* Section indices are an engraved system, not a decorative kicker: they
+         number the panels of one instrument and appear nowhere else. */
+      .band {
+        border-top: 1px solid var(--line);
+      }
+      .band__inner {
+        width: var(--frame);
+        margin-inline: auto;
+        padding: clamp(3rem, 7vw, 6rem) var(--gutter);
+      }
+      .index {
+        display: block;
+        margin-bottom: 1.1rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        color: var(--ink-faint);
+      }
+      .index b {
+        color: var(--signal);
+        font-weight: 500;
+      }
+
+      /* ── Header ────────────────────────────────────────────────────────── */
+
+      .head {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: color-mix(in oklch, var(--paper) 88%, transparent);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid var(--line);
+      }
+      .head__inner {
+        width: var(--frame);
+        margin-inline: auto;
+        padding: 0.65rem var(--gutter);
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+      }
+      .mark {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+      .mark svg {
+        display: block;
+      }
+      .mark span b {
+        font-weight: 600;
+        color: var(--ink-faint);
+      }
+      .head nav {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: clamp(0.75rem, 2vw, 1.75rem);
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+      }
+      .head nav a {
+        text-decoration: none;
+        color: var(--ink-muted);
+        transition: color var(--fast) var(--ease);
+      }
+      .head nav a:hover {
+        color: var(--ink);
+      }
+      .head nav a.is-cta {
+        color: var(--ink);
+        border: 1px solid var(--line-control);
+        border-radius: 2px;
+        padding: 0.25rem 0.6rem;
+      }
+      .head nav a.is-cta:hover {
+        border-color: var(--signal);
+        color: var(--signal);
+      }
+      @media (max-width: 600px) {
+        .head nav a.is-hideable {
+          display: none;
+        }
+      }
+
+      /* ── Hero ──────────────────────────────────────────────────────────── */
+
+      .hero {
+        padding: clamp(3.5rem, 9vw, 7.5rem) 0 clamp(2rem, 4vw, 3.5rem);
+      }
+      .hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.14em;
+        color: var(--ink-faint);
+      }
+      .hero__eyebrow::before {
+        content: "";
+        width: 26px;
+        height: 2px;
+        background: var(--signal);
+      }
+      .hero h1 {
+        font-size: clamp(2.6rem, 8.2vw, 6.2rem);
+        max-width: 16ch;
+      }
+      .hero h1 em {
+        font-style: normal;
+        color: var(--signal);
+      }
+      .hero__lede {
+        margin-top: clamp(1.5rem, 3vw, 2rem);
+        max-width: 54ch;
+        font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.375rem);
+        line-height: 1.45;
+        color: var(--ink-muted);
+      }
+      .hero__actions {
+        margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1.25rem;
+      }
+
+      .command {
+        display: flex;
+        align-items: stretch;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        background: var(--surface);
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        overflow: hidden;
+      }
+      .command code {
+        padding: 0.6rem 0.9rem;
+        white-space: nowrap;
+        overflow-x: auto;
+      }
+      .command code::before {
+        content: "$ ";
+        color: var(--signal);
+      }
+      .command button {
+        border: 0;
+        border-left: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink-muted);
+        font: inherit;
+        padding: 0 0.85rem;
+        cursor: pointer;
+        transition:
+          color var(--fast) var(--ease),
+          background var(--fast) var(--ease);
+      }
+      .command button:hover {
+        color: var(--ink);
+        background: var(--signal-tint);
+      }
+      .link-quiet {
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        color: var(--ink-muted);
+        text-decoration-color: var(--line-strong);
+        text-underline-offset: 4px;
+      }
+      .link-quiet:hover {
+        color: var(--signal);
+      }
+
+      /* ── Instrument panel: the shared frame every demo sits in ─────────── */
+
+      .panel {
+        border: 1px solid var(--line-strong);
+        border-radius: 3px;
+        background: var(--surface);
+        overflow: hidden;
+      }
+      .panel__bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.4rem 0.7rem;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--ink-faint);
+      }
+      .panel__bar strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .panel__bar .spacer {
+        margin-left: auto;
+      }
+
+      .seg {
+        display: flex;
+        border: 1px solid var(--line-control);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .seg button {
+        border: 0;
+        border-right: 1px solid var(--line-control);
+        background: transparent;
+        color: var(--ink-muted);
+        font: inherit;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        padding: 0.15rem 0.5rem;
+        cursor: pointer;
+      }
+      .seg button:last-child {
+        border-right: 0;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--signal);
+        color: var(--signal-ink);
+      }
+
+      /* ── Split demo ────────────────────────────────────────────────────── */
+
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+        height: clamp(320px, 52vh, 460px);
+      }
+      .split[data-view="source"] {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .split[data-view="render"] {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .split[data-view="source"] .rail,
+      .split[data-view="source"] .render,
+      .split[data-view="render"] .rail,
+      .split[data-view="render"] .source {
+        display: none;
+      }
+
+      .source,
+      .render {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scroll-behavior: auto;
+      }
+      .source {
+        border-right: 1px solid var(--line);
+        padding: 14px 16px 60%;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        line-height: 1.75;
+        color: var(--ink-muted);
+        white-space: pre-wrap;
+      }
+      .split[data-view="source"] .source {
+        border-right: 0;
+      }
+      .source .blk {
+        display: block;
+        padding: 1px 4px;
+        margin: 0 -4px;
+        border-radius: 2px;
+        transition: background var(--base) var(--ease);
+      }
+      .source .blk.is-active {
+        background: var(--signal-tint);
+        color: var(--ink);
+      }
+
+      /* The rail is the product's own idea: one strip of ticks, the block under
+         the reader marked in red, drawn between the two views of one document. */
+      .rail {
+        position: relative;
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+      }
+      .rail__tick {
+        position: absolute;
+        left: 50%;
+        translate: -50% 0;
+        width: 12px;
+        height: 2px;
+        background: var(--line-strong);
+        transition:
+          width var(--base) var(--ease),
+          background var(--base) var(--ease);
+      }
+      .rail__tick.is-active {
+        width: 22px;
+        background: var(--signal);
+      }
+
+      .render {
+        padding: 14px 18px 60%;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+      .render h3 {
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.35rem;
+      }
+      .render p {
+        margin-bottom: 0.9rem;
+        color: var(--ink-muted);
+        max-width: 46ch;
+      }
+      .render .blk {
+        display: block;
+        padding: 2px 6px;
+        margin: 0 -6px 0.2rem;
+        border-radius: 2px;
+        transition: background var(--base) var(--ease);
+      }
+      .render .blk.is-active {
+        background: var(--signal-tint);
+      }
+      .render table {
+        border-collapse: collapse;
+        font-size: 0.8rem;
+        margin-bottom: 0.9rem;
+      }
+      .render th,
+      .render td {
+        border: 1px solid var(--line);
+        padding: 3px 9px;
+        text-align: left;
+      }
+      .render th {
+        background: var(--panel);
+        font-weight: 500;
+      }
+      .render .callout {
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        margin-bottom: 0.9rem;
+        overflow: hidden;
+      }
+      .render .callout__head {
+        background: var(--signal-tint);
+        border-bottom: 1px solid var(--line);
+        padding: 3px 9px;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: var(--signal);
+      }
+      .render .callout p {
+        padding: 7px 9px 0;
+        margin-bottom: 7px;
+      }
+      .render figure {
+        margin: 0 0 0.9rem;
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .render .node {
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        background: var(--panel);
+        padding: 5px 11px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+      }
+      .render .arrow {
+        color: var(--ink-faint);
+      }
+      .render code {
+        font-family: var(--font-mono);
+        font-size: 0.82em;
+        color: var(--signal);
+      }
+
+      /* ── Two-column section body ───────────────────────────────────────── */
+
+      .lede-grid {
+        display: grid;
+        gap: clamp(1.25rem, 3vw, 2.5rem) clamp(2rem, 5vw, 5rem);
+        grid-template-columns: minmax(0, 1fr);
+        margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
+      }
+      @media (min-width: 860px) {
+        .lede-grid {
+          grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+          align-items: end;
+        }
+      }
+      .lede-grid h2 {
+        font-size: clamp(1.9rem, 4vw, 3.1rem);
+        max-width: 14ch;
+      }
+      .lede-grid p {
+        max-width: var(--measure);
+        color: var(--ink-muted);
+      }
+      .lede-grid p + p {
+        margin-top: 0.85rem;
+      }
+
+      /* ── Palette demo ──────────────────────────────────────────────────── */
+
+      .palette-stage {
+        display: grid;
+        gap: clamp(1rem, 2.5vw, 1.75rem);
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+      }
+      @media (min-width: 860px) {
+        .palette-stage {
+          grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        }
+      }
+      .palette__input {
+        width: 100%;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: 0.95rem;
+        padding: 0.85rem 1rem;
+      }
+      .palette__input:focus {
+        outline: none;
+        box-shadow: inset 0 -2px 0 var(--signal);
+      }
+      .palette__input::placeholder {
+        color: var(--ink-faint);
+      }
+      .palette__list {
+        max-height: 300px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+      .palette__section {
+        padding: 8px 14px 3px;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.14em;
+        color: var(--ink-faint);
+      }
+      .palette__row {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        text-align: left;
+        padding: 5px 14px;
+        cursor: pointer;
+      }
+      .palette__row.is-active {
+        background: var(--signal-tint);
+      }
+      .palette__row .name {
+        font-size: 0.875rem;
+        flex-shrink: 0;
+      }
+      .palette__row .path {
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--ink-faint);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .palette__row mark {
+        background: none;
+        color: var(--signal);
+        font-weight: 500;
+      }
+      .palette__empty {
+        padding: 14px;
+        font-size: 0.85rem;
+        color: var(--ink-faint);
+      }
+      .palette__foot {
+        display: flex;
+        gap: 14px;
+        padding: 6px 14px;
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--ink-faint);
+      }
+
+      .try {
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: clamp(0.9rem, 2vw, 1.25rem);
+      }
+      .try h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 0.6rem;
+      }
+      .try ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+      .try button {
+        border: 1px solid var(--line-control);
+        border-radius: 2px;
+        background: var(--surface);
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        padding: 0.25rem 0.55rem;
+        cursor: pointer;
+        transition:
+          border-color var(--fast) var(--ease),
+          color var(--fast) var(--ease);
+      }
+      .try button:hover {
+        border-color: var(--signal);
+        color: var(--signal);
+      }
+      .try p {
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        color: var(--ink-muted);
+      }
+
+      /* ── Auto-scroll demo ──────────────────────────────────────────────── */
+
+      .reader {
+        position: relative;
+      }
+      .reader__pane {
+        height: clamp(280px, 46vh, 420px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 16px 20px 40%;
+        font-size: 0.92rem;
+        line-height: 1.65;
+        color: var(--ink-muted);
+      }
+      .reader__pane h3 {
+        color: var(--ink);
+        font-size: 1rem;
+        margin: 1.4rem 0 0.4rem;
+      }
+      .reader__pane h3:first-child {
+        margin-top: 0;
+      }
+      .reader__pane p {
+        max-width: 58ch;
+        margin-bottom: 0.85rem;
+      }
+      .hud {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 8px 5px 10px;
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+        font-size: 0.78rem;
+      }
+      .hud__pulse {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--signal);
+        animation: pulse 1.6s var(--ease) infinite;
+      }
+      .hud.is-held .hud__pulse {
+        background: var(--ink-faint);
+        animation: none;
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.25;
+        }
+      }
+      .hud__label {
+        color: var(--ink-muted);
+        min-width: 5.5em;
+      }
+      .hud__speed {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        min-width: 4.5em;
+        text-align: center;
+      }
+      .hud button {
+        border: 1px solid var(--line-control);
+        border-radius: 2px;
+        background: var(--surface);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.78rem;
+        padding: 2px 8px;
+        line-height: 1.4;
+        cursor: pointer;
+      }
+      .hud button:hover {
+        border-color: var(--signal);
+      }
+      .hud button.step {
+        width: 24px;
+        padding: 2px 0;
+        font-family: var(--font-mono);
+      }
+
+      /* ── Feature list ──────────────────────────────────────────────────── */
+
+      .facts {
+        display: grid;
+        gap: 0;
+        grid-template-columns: minmax(0, 1fr);
+        border-top: 1px solid var(--line);
+      }
+      @media (min-width: 760px) {
+        .facts {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .facts > div:nth-child(odd) {
+          padding-right: clamp(1rem, 3vw, 3rem);
+          border-right: 1px solid var(--line);
+        }
+        .facts > div:nth-child(even) {
+          padding-left: clamp(1rem, 3vw, 3rem);
+        }
+      }
+      .facts > div {
+        padding-block: clamp(1.1rem, 2.5vw, 1.6rem);
+        border-bottom: 1px solid var(--line);
+      }
+      .facts h3 {
+        font-size: 1.0625rem;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        margin-bottom: 0.4rem;
+      }
+      .facts p {
+        color: var(--ink-muted);
+        font-size: 0.95rem;
+        max-width: 46ch;
+      }
+
+      /* ── Shot ──────────────────────────────────────────────────────────── */
+
+      .shot {
+        border: 1px solid var(--line-strong);
+        border-radius: 3px;
+        overflow: hidden;
+        background: var(--panel);
+      }
+      .shot img {
+        width: 100%;
+      }
+      figcaption {
+        margin-top: 0.7rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--ink-faint);
+      }
+
+      /* ── MCP band: the one drenched surface ────────────────────────────── */
+
+      .mcp {
+        background: var(--signal);
+        color: var(--signal-ink);
+        border-top: 1px solid var(--signal);
+      }
+      .mcp .index,
+      .mcp .index b {
+        color: color-mix(in oklch, var(--signal-ink) 72%, transparent);
+      }
+      .mcp h2 {
+        font-size: clamp(1.9rem, 4.2vw, 3.1rem);
+        max-width: 18ch;
+      }
+      .mcp p {
+        color: color-mix(in oklch, var(--signal-ink) 88%, transparent);
+        max-width: var(--measure);
+      }
+      .mcp .endpoint {
+        display: inline-block;
+        margin-top: 1.5rem;
+        border: 1px solid color-mix(in oklch, var(--signal-ink) 45%, transparent);
+        border-radius: 2px;
+        padding: 0.5rem 0.85rem;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+      }
+      .flow {
+        display: grid;
+        gap: 0.5rem;
+        margin-top: clamp(1.5rem, 3vw, 2rem);
+      }
+      .flow__row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+      }
+      .flow__box {
+        border: 1px solid color-mix(in oklch, var(--signal-ink) 45%, transparent);
+        border-radius: 2px;
+        padding: 0.3rem 0.7rem;
+      }
+      .flow__box.is-file {
+        background: color-mix(in oklch, var(--signal-ink) 16%, transparent);
+      }
+
+      /* ── Spec table ────────────────────────────────────────────────────── */
+
+      .spec {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .spec caption {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.14em;
+        color: var(--ink-faint);
+        padding-bottom: 0.6rem;
+      }
+      .spec th,
+      .spec td {
+        text-align: left;
+        padding: 0.5rem 0.75rem 0.5rem 0;
+        border-bottom: 1px solid var(--line);
+        vertical-align: baseline;
+      }
+      .spec th {
+        font-weight: 400;
+        white-space: nowrap;
+        width: 1%;
+        padding-right: 2rem;
+      }
+      .spec td {
+        color: var(--ink-muted);
+      }
+      kbd {
+        display: inline-block;
+        border: 1px solid var(--line-control);
+        border-radius: 2px;
+        background: var(--surface);
+        padding: 0.05em 0.4em;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--ink);
+      }
+      .spec-grid {
+        display: grid;
+        gap: clamp(2rem, 5vw, 4rem);
+        grid-template-columns: minmax(0, 1fr);
+      }
+      @media (min-width: 860px) {
+        .spec-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      /* ── Install ───────────────────────────────────────────────────────── */
+
+      .install-grid {
+        display: grid;
+        gap: clamp(1.25rem, 3vw, 2rem);
+        grid-template-columns: minmax(0, 1fr);
+      }
+      @media (min-width: 760px) {
+        .install-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      .install-card h3 {
+        font-size: 0.8125rem;
+        font-family: var(--font-mono);
+        font-weight: 400;
+        letter-spacing: 0.12em;
+        color: var(--ink-faint);
+        margin-bottom: 0.6rem;
+      }
+      .note {
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--ink-faint);
+        max-width: var(--measure);
+      }
+
+      /* ── Footer ────────────────────────────────────────────────────────── */
+
+      footer {
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+      }
+      .foot__inner {
+        width: var(--frame);
+        margin-inline: auto;
+        padding: 2rem var(--gutter);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem 2rem;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+      }
+      .foot__inner a {
+        color: var(--ink-muted);
+        text-decoration-color: var(--line-strong);
+        text-underline-offset: 4px;
+      }
+      .foot__inner a:hover {
+        color: var(--signal);
+      }
+      .foot__inner .spacer {
+        margin-left: auto;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="head">
+      <div class="head__inner">
+        <a class="mark" href="#top">
+          <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="oklch(0.235 0.01 70)" />
+            <rect x="6" y="8.5" width="20" height="3.5" rx="1" fill="oklch(0.63 0.19 33)" />
+            <rect x="6" y="14.75" width="13" height="3" rx="1" fill="oklch(0.62 0.012 70)" />
+            <rect x="6" y="20.25" width="16" height="3" rx="1" fill="oklch(0.62 0.012 70)" />
+          </svg>
+          <span>Mark<b>DN</b></span>
+        </a>
+        <nav aria-label="Sections">
+          <a class="is-hideable" href="#panes">Panes</a>
+          <a class="is-hideable" href="#find">Find</a>
+          <a class="is-hideable" href="#read">Read</a>
+          <a class="is-hideable" href="#mcp">Assistants</a>
+          <a class="is-cta" href="#install">Install</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="shell hero" id="top">
+        <span class="hero__eyebrow">Markdown · MDX · macOS and Linux</span>
+        <h1>Every part of the document, <em>rendered</em>.</h1>
+        <p class="hero__lede">
+          Diagrams, components and highlighted code, live beside the source you are typing.
+          A native window over a folder of plain files that stay plain files.
+        </p>
+        <div class="hero__actions">
+          <div class="command">
+            <code id="hero-cmd">curl -fsSL https://raw.githubusercontent.com/filipecabaco/markdn/main/install.sh | sh</code>
+            <button type="button" data-copy="hero-cmd">copy</button>
+          </div>
+          <a class="link-quiet" href="#install">Homebrew, and what it needs →</a>
+        </div>
+      </section>
+
+      <!-- 01 · Two panes ------------------------------------------------- -->
+      <section class="band" id="panes">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>01</b> / SYNC</span>
+              <h2>Two panes, one document.</h2>
+            </div>
+            <div>
+              <p>
+                Scroll either side. The other follows by block, not by percentage, so a
+                three-line mermaid fence and the 200px diagram it draws stay level with each
+                other. The rail between them marks where you are in both at once.
+              </p>
+              <p>Try it: scroll either pane below, or switch which one you want.</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__bar">
+              <strong>design-notes.md</strong>
+              <span>saved</span>
+              <span class="spacer"></span>
+              <div class="seg" role="group" aria-label="View">
+                <button type="button" data-view="source" aria-pressed="false">Source</button>
+                <button type="button" data-view="split" aria-pressed="true">Split</button>
+                <button type="button" data-view="render" aria-pressed="false">Render</button>
+              </div>
+            </div>
+            <div class="split" id="split" data-view="split">
+              <div class="source" id="source" tabindex="0" aria-label="Markdown source"></div>
+              <div class="rail" id="rail" aria-hidden="true"></div>
+              <div class="render" id="render" tabindex="0" aria-label="Rendered document"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 · Find ------------------------------------------------------ -->
+      <section class="band" id="find">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>02</b> / PALETTE</span>
+              <h2>Type roughly what you remember.</h2>
+            </div>
+            <div>
+              <p>
+                One palette over every document under your folder and every command in the
+                app. <code>dsn</code> finds <code>work/design-notes.md</code> three folders
+                down. Open it with nothing typed and it shows what you touched last.
+              </p>
+            </div>
+          </div>
+
+          <div class="palette-stage">
+            <div class="panel">
+              <input
+                class="palette__input"
+                id="pal-input"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Search documents, or type > for commands…"
+                aria-label="Search documents or commands"
+              />
+              <div class="palette__list" id="pal-list" role="listbox" aria-label="Results"></div>
+              <div class="palette__foot">
+                <span>↑↓ move</span><span>↵ open</span><span>&gt; commands</span>
+              </div>
+            </div>
+
+            <div class="try">
+              <h3>Things to type</h3>
+              <ul>
+                <li><button type="button" data-q="dsn">dsn</button></li>
+                <li><button type="button" data-q="rel">rel</button></li>
+                <li><button type="button" data-q="api">api</button></li>
+                <li><button type="button" data-q="&gt;auto">&gt;auto</button></li>
+                <li><button type="button" data-q="">clear</button></li>
+              </ul>
+              <p>
+                Matching is by subsequence, ranked: a run of letters beats scattered ones, and
+                a hit in the file name beats one in the folders above it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 · Read ------------------------------------------------------ -->
+      <section class="band" id="read">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>03</b> / TELEPROMPTER</span>
+              <h2>Long documents scroll themselves.</h2>
+            </div>
+            <div>
+              <p>
+                Auto-scroll paces the rendered pane at whatever speed suits the material.
+                Change it while it runs, hold it to read a paragraph twice, or reach for the
+                arrow keys: it steps aside for you and picks up a moment after you stop.
+              </p>
+            </div>
+          </div>
+
+          <div class="panel reader">
+            <div class="panel__bar">
+              <strong>release-notes.md</strong>
+              <span class="spacer"></span>
+              <span>1 / 42</span>
+            </div>
+            <div class="reader__pane" id="reader" tabindex="0" aria-label="Rendered document"></div>
+            <div class="hud" id="hud" role="status">
+              <span class="hud__pulse" aria-hidden="true"></span>
+              <span class="hud__label" id="hud-label">Idle</span>
+              <button type="button" class="step" id="hud-slower" aria-label="Slower">−</button>
+              <span class="hud__speed" id="hud-speed">40 px/s</span>
+              <button type="button" class="step" id="hud-faster" aria-label="Faster">+</button>
+              <button type="button" id="hud-toggle">Start</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Renders everything --------------------------------------------- -->
+      <section class="band">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>04</b> / RENDER</span>
+              <h2>The parts other previewers drop.</h2>
+            </div>
+            <div>
+              <p>
+                Tables, task lists and footnotes. Code fences highlighted properly.
+                <code>mermaid</code> fences drawn as diagrams. And MDX components resolved
+                from a registry, so what appears in the preview is what publishes — nothing
+                in the document is ever executed.
+              </p>
+            </div>
+          </div>
+
+          <figure style="margin: 0">
+            <div class="shot">
+              <img
+                src="screenshots/render.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                decoding="async"
+                alt="MarkDN rendering a document with a mermaid flowchart, a syntax-highlighted code fence and a table"
+              />
+            </div>
+            <figcaption>Render view. Mermaid, Shiki-highlighted code, tables, MDX components.</figcaption>
+          </figure>
+
+          <div class="facts" style="margin-top: clamp(2rem, 4vw, 3rem)">
+            <div>
+              <h3>Your folder, untouched</h3>
+              <p>
+                Nothing is imported or filed in a database. Save writes the same
+                <code>.md</code>, <code>.markdown</code> or <code>.mdx</code> you opened, in
+                place.
+              </p>
+            </div>
+            <div>
+              <h3>Components that render</h3>
+              <p>
+                <code>Alert</code>, <code>Callout</code>, <code>Card</code> and
+                <code>Tabs</code>, insertable from a menu so you are never typing JSX by hand.
+              </p>
+            </div>
+            <div>
+              <h3>Two designed themes</h3>
+              <p>
+                Light and dark are drawn separately, not one palette inverted. Pick either, or
+                follow the system.
+              </p>
+            </div>
+            <div>
+              <h3>Settings, not preferences</h3>
+              <p>
+                Six things that change what the app does: folder, theme, default view, text
+                size, scroll speed, hidden files.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MCP ------------------------------------------------------------- -->
+      <section class="mcp" id="mcp">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>05</b> / MCP</span>
+              <h2>Your assistant edits the file you have open.</h2>
+            </div>
+            <div>
+              <p>
+                MarkDN serves the documents it is showing you over MCP. Ask Claude to
+                restructure a spec, fold review notes into a draft, or write the changelog for
+                a release, and the change lands in the window you are already reading — no
+                paste back, no second copy of the file, no guessing whether the agent saw the
+                latest version.
+              </p>
+              <p style="margin-top: 0.85rem">
+                It can also ask which components exist, so the MDX it writes is MDX that
+                renders. And it only ever sees the folder you pointed the app at.
+              </p>
+            </div>
+          </div>
+
+          <div class="flow" aria-hidden="true">
+            <div class="flow__row">
+              <span class="flow__box">You, editing</span>
+              <span>→</span>
+              <span class="flow__box is-file">notes/spec.md</span>
+              <span>←</span>
+              <span class="flow__box">Claude, via MCP</span>
+            </div>
+            <div class="flow__row">
+              <span class="flow__box">list · read · write · components</span>
+              <span>within your folder, and nowhere else</span>
+            </div>
+          </div>
+
+          <p class="endpoint">http://localhost:43118/mcp</p>
+        </div>
+      </section>
+
+      <!-- Spec ------------------------------------------------------------ -->
+      <section class="band">
+        <div class="band__inner">
+          <div class="spec-grid">
+            <table class="spec">
+              <caption>KEYS</caption>
+              <tbody>
+                <tr>
+                  <th><kbd>⌘K</kbd></th>
+                  <td>Find a document, or run a command</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘⇧P</kbd></th>
+                  <td>Commands only</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘1</kbd> <kbd>2</kbd> <kbd>3</kbd></th>
+                  <td>Source, split, render</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘S</kbd></th>
+                  <td>Save</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘⇧C</kbd></th>
+                  <td>Insert a component</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘,</kbd></th>
+                  <td>Settings</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘Space</kbd></th>
+                  <td>Start, pause, resume auto-scroll</td>
+                </tr>
+                <tr>
+                  <th><kbd>↑</kbd> <kbd>↓</kbd></th>
+                  <td>Scroll by hand, any time</td>
+                </tr>
+                <tr>
+                  <th><kbd>+</kbd> <kbd>−</kbd></th>
+                  <td>Auto-scroll faster, slower</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <table class="spec">
+              <caption>SPECIFICATION</caption>
+              <tbody>
+                <tr>
+                  <th>Formats</th>
+                  <td>.md · .markdown · .mdx</td>
+                </tr>
+                <tr>
+                  <th>Renders</th>
+                  <td>GFM, mermaid, highlighted code, MDX components, images</td>
+                </tr>
+                <tr>
+                  <th>Components</th>
+                  <td>Alert, Callout, Card, Tabs, Tab</td>
+                </tr>
+                <tr>
+                  <th>Platforms</th>
+                  <td>macOS 13+ (Apple silicon and Intel), Linux x86-64</td>
+                </tr>
+                <tr>
+                  <th>Agents</th>
+                  <td>MCP over local HTTP</td>
+                </tr>
+                <tr>
+                  <th>Network</th>
+                  <td>None. Everything stays on the machine</td>
+                </tr>
+                <tr>
+                  <th>Source</th>
+                  <td>Elixir and React, on GitHub</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Install --------------------------------------------------------- -->
+      <section class="band" id="install">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>06</b> / INSTALL</span>
+              <h2>Two commands, one window.</h2>
+            </div>
+            <div>
+              <p>
+                MarkDN opens on your home folder and you point it wherever your notes live.
+                Nothing to sign in to, nothing to sync.
+              </p>
+            </div>
+          </div>
+
+          <div class="install-grid">
+            <div class="install-card">
+              <h3>MACOS · HOMEBREW</h3>
+              <div class="command">
+                <code id="cmd-brew">brew tap filipecabaco/markdn https://github.com/filipecabaco/markdn &amp;&amp; brew install --cask markdn</code>
+                <button type="button" data-copy="cmd-brew">copy</button>
+              </div>
+            </div>
+            <div class="install-card">
+              <h3>MACOS AND LINUX · ONE LINE</h3>
+              <div class="command">
+                <code id="cmd-curl">curl -fsSL https://raw.githubusercontent.com/filipecabaco/markdn/main/install.sh | sh</code>
+                <button type="button" data-copy="cmd-curl">copy</button>
+              </div>
+            </div>
+          </div>
+
+          <p class="note">
+            MarkDN ships unsigned for now, so the installer clears the macOS quarantine flag
+            for you. Building from source is documented in the repository.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="foot__inner">
+        <span>MarkDN</span>
+        <a href="https://github.com/filipecabaco/markdn">Source</a>
+        <a href="https://github.com/filipecabaco/markdn/releases">Releases</a>
+        <a href="https://github.com/filipecabaco/markdn/blob/main/docs/DEVELOPMENT.md">Build it</a>
+        <span class="spacer">Local software. Nothing leaves your machine.</span>
+      </div>
+    </footer>
+
+    <script>
+      "use strict";
+
+      /* ── Copy buttons ─────────────────────────────────────────────────── */
+
+      for (const button of document.querySelectorAll("[data-copy]")) {
+        button.addEventListener("click", async () => {
+          const source = document.getElementById(button.dataset.copy);
+          try {
+            await navigator.clipboard.writeText(source.textContent.trim());
+            button.textContent = "copied";
+          } catch {
+            // Clipboard access can be refused; the command is on screen either way.
+            button.textContent = "select it";
+          }
+          setTimeout(() => (button.textContent = "copy"), 1600);
+        });
+      }
+
+      /* ── 01 · Linked panes ────────────────────────────────────────────────
+       *
+       * The claim on this page is that the two views are one document, so the
+       * demo is the mechanism rather than a video of it: every block exists on
+       * both sides, the rail knows where each one sits, and scrolling either
+       * pane resolves a block and aligns the other to it.
+       */
+
+      const BLOCKS = [
+        {
+          src: "# Sync rail",
+          html: "<h3>Sync rail</h3>",
+        },
+        {
+          src: "The panes are two views of one document, so a\nposition in either resolves to the same block.",
+          html: "<p>The panes are two views of one document, so a position in either resolves to the same block.</p>",
+        },
+        {
+          src: "```mermaid\nflowchart LR\n  Source --> Rail --> Render\n```",
+          html: '<figure><span class="node">Source</span><span class="arrow">→</span><span class="node">Rail</span><span class="arrow">→</span><span class="node">Render</span></figure>',
+        },
+        {
+          src: "Three lines of fence, one diagram. Percentage\nscrolling drifts here; block mapping does not.",
+          html: "<p>Three lines of fence, one diagram. Percentage scrolling drifts here; block mapping does not.</p>",
+        },
+        {
+          src: '<Callout type="tip" title="Components">\n  Resolved from a registry, never evaluated.\n</Callout>',
+          html: '<div class="callout"><div class="callout__head">TIP · COMPONENTS</div><p>Resolved from a registry, never evaluated.</p></div>',
+        },
+        {
+          src: "## Formats",
+          html: "<h3>Formats</h3>",
+        },
+        {
+          src: "| Extension | Rendered |\n| --- | --- |\n| .md | yes |\n| .mdx | yes, with components |",
+          html: "<table><thead><tr><th>Extension</th><th>Rendered</th></tr></thead><tbody><tr><td>.md</td><td>yes</td></tr><tr><td>.mdx</td><td>yes, with components</td></tr></tbody></table>",
+        },
+        {
+          src: "Tables render at their own height. The source is\nfour short lines; the render is not.",
+          html: "<p>Tables render at their own height. The source is four short lines; the render is not.</p>",
+        },
+        {
+          src: "## Saving",
+          html: "<h3>Saving</h3>",
+        },
+        {
+          src: "`Cmd+S` writes the file you opened, in place, as\nplain text. Nothing is converted on the way in\nor on the way out.",
+          html: "<p><code>Cmd+S</code> writes the file you opened, in place, as plain text. Nothing is converted on the way in or on the way out.</p>",
+        },
+      ];
+
+      const source = document.getElementById("source");
+      const render = document.getElementById("render");
+      const rail = document.getElementById("rail");
+      const split = document.getElementById("split");
+
+      source.innerHTML = BLOCKS.map(
+        (block, i) => `<span class="blk" data-i="${i}">${escapeHtml(block.src)}\n\n</span>`,
+      ).join("");
+      render.innerHTML = BLOCKS.map(
+        (block, i) => `<span class="blk" data-i="${i}">${block.html}</span>`,
+      ).join("");
+      rail.innerHTML = BLOCKS.map(
+        (_block, i) => `<span class="rail__tick" data-i="${i}"></span>`,
+      ).join("");
+
+      function escapeHtml(text) {
+        return text.replace(
+          /[&<>]/g,
+          (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[character],
+        );
+      }
+
+      const sourceBlocks = [...source.querySelectorAll(".blk")];
+      const renderBlocks = [...render.querySelectorAll(".blk")];
+      const ticks = [...rail.querySelectorAll(".rail__tick")];
+
+      let syncing = false;
+      let activeBlock = -1;
+
+      function layoutRail() {
+        const height = rail.clientHeight;
+        const total = render.scrollHeight || 1;
+        ticks.forEach((tick, i) => {
+          const top = renderBlocks[i].offsetTop / total;
+          tick.style.top = `${Math.min(Math.max(top, 0), 0.97) * height + 8}px`;
+        });
+      }
+
+      function setActive(index) {
+        if (index === activeBlock) return;
+        activeBlock = index;
+        sourceBlocks.forEach((block, i) => block.classList.toggle("is-active", i === index));
+        renderBlocks.forEach((block, i) => block.classList.toggle("is-active", i === index));
+        ticks.forEach((tick, i) => tick.classList.toggle("is-active", i === index));
+      }
+
+      /** Index of the last block whose top is at or above the pane's top edge. */
+      function blockAtTop(pane, blocks) {
+        const edge = pane.scrollTop + 12;
+        let found = 0;
+        for (let i = 0; i < blocks.length; i += 1) {
+          if (blocks[i].offsetTop <= edge) found = i;
+          else break;
+        }
+        return found;
+      }
+
+      function link(from, fromBlocks, to, toBlocks) {
+        from.addEventListener(
+          "scroll",
+          () => {
+            if (syncing) return;
+            const index = blockAtTop(from, fromBlocks);
+            setActive(index);
+
+            // Align the counterpart block, carrying the offset within the block
+            // so a slow scroll through a long paragraph stays continuous.
+            const within = from.scrollTop - fromBlocks[index].offsetTop;
+            const height = fromBlocks[index].offsetHeight || 1;
+            const target = toBlocks[index];
+            const ratio = Math.min(Math.max(within / height, 0), 1);
+
+            syncing = true;
+            to.scrollTop = target.offsetTop + target.offsetHeight * ratio;
+            requestAnimationFrame(() => (syncing = false));
+          },
+          { passive: true },
+        );
+      }
+
+      link(source, sourceBlocks, render, renderBlocks);
+      link(render, renderBlocks, source, sourceBlocks);
+
+      for (const button of document.querySelectorAll(".seg button")) {
+        button.addEventListener("click", () => {
+          for (const other of document.querySelectorAll(".seg button")) {
+            other.setAttribute("aria-pressed", String(other === button));
+          }
+          split.dataset.view = button.dataset.view;
+          requestAnimationFrame(layoutRail);
+        });
+      }
+
+      window.addEventListener("resize", layoutRail);
+      window.addEventListener("load", layoutRail);
+      layoutRail();
+      setActive(0);
+
+      /* ── 02 · Palette ─────────────────────────────────────────────────────
+       *
+       * The same scoring the app uses: a run of matched characters is worth far
+       * more than scattered ones, a word start more than a mid-word letter, and
+       * a hit in the file name more than one in the folders above it.
+       */
+
+      const SEPARATORS = new Set(["/", "-", "_", ".", " "]);
+
+      function fuzzy(target, query) {
+        if (query === "") return { score: 0, matches: [] };
+        const haystack = target.toLowerCase();
+        const needle = query.toLowerCase();
+        const matches = [];
+        let score = 0;
+        let last = -2;
+        let cursor = 0;
+
+        for (let i = 0; i < haystack.length && cursor < needle.length; i += 1) {
+          if (haystack[i] !== needle[cursor]) {
+            score -= 1;
+            continue;
+          }
+          if (last === i - 1) score += 10;
+          else if (i === 0) score += 9;
+          else if (SEPARATORS.has(haystack[i - 1])) score += 8;
+          score += 1;
+          matches.push(i);
+          last = i;
+          cursor += 1;
+        }
+
+        return cursor === needle.length ? { score, matches } : null;
+      }
+
+      const DOCS = [
+        "work/design-notes.md",
+        "work/release-notes.md",
+        "work/deep/api-reference.md",
+        "journal/2026-08-standup.md",
+        "journal/2026-09-retro.md",
+        "recipes/sourdough.md",
+        "readme.md",
+        "specs/sync-rail.mdx",
+        "specs/palette.mdx",
+      ];
+
+      const COMMANDS = [
+        ["Start auto-scroll", "⌘Space"],
+        ["Auto-scroll faster", "+"],
+        ["Insert component…", "⌘⇧C"],
+        ["Open settings…", "⌘,"],
+        ["Save document", "⌘S"],
+        ["Render view", "⌘3"],
+      ];
+
+      const palInput = document.getElementById("pal-input");
+      const palList = document.getElementById("pal-list");
+      let palActive = 0;
+      let palRows = [];
+
+      function mark(text, matches) {
+        if (!matches.length) return escapeHtml(text);
+        const hit = new Set(matches);
+        let out = "";
+        let open = false;
+        for (let i = 0; i < text.length; i += 1) {
+          const on = hit.has(i);
+          if (on && !open) {
+            out += "<mark>";
+            open = true;
+          }
+          if (!on && open) {
+            out += "</mark>";
+            open = false;
+          }
+          out += escapeHtml(text[i]);
+        }
+        return open ? out + "</mark>" : out;
+      }
+
+      function renderPalette() {
+        const raw = palInput.value;
+        const commandMode = raw.startsWith(">");
+        const term = (commandMode ? raw.slice(1) : raw).trim();
+
+        const commands = commandMode
+          ? COMMANDS.map(([title, hint]) => {
+              const match = fuzzy(title, term);
+              return match ? { title, hint, ...match } : null;
+            })
+              .filter(Boolean)
+              .sort((a, b) => b.score - a.score)
+          : [];
+
+        const docs = commandMode
+          ? []
+          : DOCS.map((path) => {
+              const match = fuzzy(path, term);
+              if (!match) return null;
+              const name = path.split("/").pop();
+              const bonus = fuzzy(name, term) ? 30 : 0;
+              return { path, name, score: match.score + bonus, matches: match.matches };
+            })
+              .filter(Boolean)
+              .sort((a, b) => b.score - a.score || a.path.length - b.path.length);
+
+        let html = "";
+        if (commands.length) {
+          html += '<div class="palette__section">COMMANDS</div>';
+          html += commands
+            .map(
+              (command, i) =>
+                `<button type="button" role="option" class="palette__row" data-i="${i}">
+                   <span class="name">${mark(command.title, command.matches)}</span>
+                   <span class="path">${command.hint}</span>
+                 </button>`,
+            )
+            .join("");
+        }
+        if (docs.length) {
+          html += `<div class="palette__section">${term === "" ? "RECENT" : "DOCUMENTS"}</div>`;
+          html += docs
+            .map(
+              (doc, i) =>
+                `<button type="button" role="option" class="palette__row" data-i="${i}">
+                   <span class="name">${escapeHtml(doc.name)}</span>
+                   <span class="path">${mark(doc.path, doc.matches)}</span>
+                 </button>`,
+            )
+            .join("");
+        }
+        if (!html) html = '<div class="palette__empty">No documents or commands match.</div>';
+
+        palList.innerHTML = html;
+        palRows = [...palList.querySelectorAll(".palette__row")];
+        palActive = 0;
+        paintActive();
+      }
+
+      function paintActive() {
+        palRows.forEach((row, i) => {
+          row.classList.toggle("is-active", i === palActive);
+          row.setAttribute("aria-selected", String(i === palActive));
+        });
+      }
+
+      palInput.addEventListener("input", renderPalette);
+      palInput.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          event.preventDefault();
+          if (!palRows.length) return;
+          const step = event.key === "ArrowDown" ? 1 : -1;
+          palActive = (palActive + step + palRows.length) % palRows.length;
+          paintActive();
+          palRows[palActive].scrollIntoView({ block: "nearest" });
+        }
+      });
+
+      for (const button of document.querySelectorAll(".try button")) {
+        button.addEventListener("click", () => {
+          palInput.value = button.dataset.q;
+          renderPalette();
+          palInput.focus();
+        });
+      }
+
+      renderPalette();
+
+      /* ── 03 · Auto-scroll ─────────────────────────────────────────────────
+       *
+       * One rAF loop over a fractional position, delta-timed, exactly as the app
+       * runs it: a slow speed has to advance every frame rather than stutter a
+       * whole pixel every few. Arrows take over and the loop holds for them.
+       */
+
+      const READER = [
+        ["Release notes", "Every part of the document is rendered here the same way it renders in the app, which is the point of reading it in a preview at all."],
+        ["Sync", "The panes track by block. A three-line fence and its full-size diagram stay level, and the rail marks where you are in both."],
+        ["Palette", "One surface over documents and commands. Type roughly what you remember; a run of letters outranks scattered ones."],
+        ["Reading", "Auto-scroll paces the render pane. Adjust the speed while it runs, hold it where you want to stay, and the arrow keys always work."],
+        ["Components", "Alert, Callout, Card and Tabs resolve from a registry. Nothing in the document is executed to draw them."],
+        ["Assistants", "An MCP client reads and writes the same files. Edits show up in the window immediately, where you can keep or change them."],
+        ["Files", "Plain markdown in a folder you chose. Save writes the file you opened, in place."],
+      ];
+
+      const reader = document.getElementById("reader");
+      reader.innerHTML = READER.map(
+        ([heading, body]) => `<h3>${heading}</h3><p>${body}</p>`,
+      )
+        .join("")
+        .repeat(2);
+
+      const hud = document.getElementById("hud");
+      const hudLabel = document.getElementById("hud-label");
+      const hudSpeed = document.getElementById("hud-speed");
+      const hudToggle = document.getElementById("hud-toggle");
+
+      const NUDGE_TAU = 0.07;
+      const RESUME_AFTER_NUDGE_MS = 700;
+
+      let speed = 40;
+      let running = false;
+      let frame = null;
+      let position = 0;
+      let lastTime = 0;
+      let pending = 0;
+      let lastNudge = Number.NEGATIVE_INFINITY;
+
+      function paintHud(held) {
+        hudSpeed.textContent = `${speed} px/s`;
+        hudToggle.textContent = running ? "Pause" : "Start";
+        hudLabel.textContent = !running ? "Idle" : held ? "Manual" : "Auto-scroll";
+        hud.classList.toggle("is-held", !running || Boolean(held));
+      }
+
+      function tick(time) {
+        const delta = Math.min((time - lastTime) / 1000, 0.1);
+        lastTime = time;
+
+        if (Math.abs(reader.scrollTop - position) > 2) position = reader.scrollTop;
+
+        let move = 0;
+        if (pending !== 0) {
+          let step = pending * (1 - Math.exp(-delta / NUDGE_TAU));
+          if (Math.abs(pending - step) < 0.5) step = pending;
+          pending -= step;
+          move += step;
+        }
+
+        const held = pending !== 0 || time - lastNudge < RESUME_AFTER_NUDGE_MS;
+        if (running && !held) move += speed * delta;
+
+        const limit = Math.max(reader.scrollHeight - reader.clientHeight, 0);
+        position = Math.min(Math.max(position + move, 0), limit);
+        reader.scrollTop = position;
+        paintHud(held);
+
+        if (running && !held && position >= limit - 0.5) {
+          // Reaching the end ends the session rather than sitting there claiming
+          // to scroll a document that has run out.
+          frame = null;
+          running = false;
+          paintHud(false);
+          return;
+        }
+        if (!running && pending === 0) {
+          frame = null;
+          paintHud(false);
+          return;
+        }
+        frame = requestAnimationFrame(tick);
+      }
+
+      function ensureLoop() {
+        if (frame !== null) return;
+        position = reader.scrollTop;
+        lastTime = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+
+      hudToggle.addEventListener("click", () => {
+        running = !running;
+        if (running) ensureLoop();
+        paintHud(false);
+      });
+
+      document.getElementById("hud-faster").addEventListener("click", () => {
+        speed = Math.min(400, Math.round(speed * 1.25));
+        paintHud(false);
+      });
+      document.getElementById("hud-slower").addEventListener("click", () => {
+        speed = Math.max(5, Math.round(speed / 1.25));
+        paintHud(false);
+      });
+
+      // Arrows work whenever the reading pane has focus, running or not, and the
+      // session holds while they are in use.
+      reader.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+        event.preventDefault();
+        const step = Math.max(reader.clientHeight * 0.12, 40);
+        pending += (event.key === "ArrowDown" ? 1 : -1) * step;
+        lastNudge = performance.now();
+        ensureLoop();
+      });
+
+      paintHud(false);
+    </script>
+  </body>
+</html>
