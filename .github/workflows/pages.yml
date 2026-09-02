@@ -1,0 +1,39 @@
+# Publishes docs/ (the markdn landing page) to GitHub Pages via the gh-pages
+# branch:
+#   https://filipecabaco.github.io/markdn/
+#
+# Branch-based publishing is used deliberately: pushing a gh-pages branch
+# auto-provisions the Pages site, whereas the Actions-based deploy
+# (actions/deploy-pages) requires the site to be created first — something
+# the workflow token is not allowed to do on this repository
+# ("Resource not accessible by integration").
+
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Disable Jekyll processing
+        run: touch docs/.nojekyll
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs
+          publish_branch: gh-pages
