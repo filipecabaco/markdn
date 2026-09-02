@@ -2,11 +2,16 @@
 # branch:
 #   https://filipecabaco.github.io/markdn/
 #
-# Branch-based publishing is used deliberately: pushing a gh-pages branch
-# auto-provisions the Pages site, whereas the Actions-based deploy
-# (actions/deploy-pages) requires the site to be created first — something
-# the workflow token is not allowed to do on this repository
+# Branch-based publishing is used deliberately: the Actions-based deploy
+# (actions/deploy-pages) needs the Pages site to already exist, and the
+# workflow token is not allowed to create it on this repository
 # ("Resource not accessible by integration").
+#
+# The site itself was enabled once, by hand, against this branch:
+#   gh api -X POST repos/filipecabaco/markdn/pages \
+#     -f 'source[branch]=gh-pages' -f 'source[path]=/'
+# Pushing the branch alone does NOT provision the site; if Pages is ever
+# turned off, that command has to be re-run.
 
 name: pages
 
