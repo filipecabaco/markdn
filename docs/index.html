@@ -6,7 +6,7 @@
     <title>MarkDN — a markdown and MDX editor that renders the whole document</title>
     <meta
       name="description"
-      content="A native markdown and MDX editor for your notes folder. Diagrams, components and code rendered live, a fuzzy palette over every document, a teleprompter for long reads, and MCP so your assistant edits the file you have open."
+      content="A native markdown and MDX editor for your notes folder. Diagrams, components and code rendered live, a fuzzy palette over every document, search-and-edit across the whole folder, a teleprompter for long reads, and MCP so your assistant edits the file you have open."
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 
@@ -1043,6 +1043,7 @@
         <nav aria-label="Sections">
           <a class="is-hideable" href="#panes">Panes</a>
           <a class="is-hideable" href="#find">Find</a>
+          <a class="is-hideable" href="#search">Search</a>
           <a class="is-hideable" href="#read">Read</a>
           <a class="is-hideable" href="#mcp">Assistants</a>
           <a class="is-cta" href="#install">Install</a>
@@ -1078,10 +1079,10 @@
             <div>
               <p>
                 Scroll either side. The other follows by block, not by percentage, so a
-                three-line mermaid fence and the 200px diagram it draws stay level with each
-                other. The rail between them marks where you are in both at once.
+                three-line mermaid fence and the 200px diagram it draws stay level. The rail
+                between them marks where you are in both at once.
               </p>
-              <p>Try it: scroll either pane below, or switch which one you want.</p>
+              <p>Try it: scroll either pane, or switch views.</p>
             </div>
           </div>
 
@@ -1149,27 +1150,64 @@
                 <li><button type="button" data-q="">clear</button></li>
               </ul>
               <p>
-                Matching is by subsequence, ranked: a run of letters beats scattered ones, and
-                a hit in the file name beats one in the folders above it.
+                Matching is by subsequence: a run of letters beats scattered ones, and a hit
+                in the file name beats one in the folders above it.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- 03 · Read ------------------------------------------------------ -->
+      <!-- 03 · Search across documents ----------------------------------- -->
+      <section class="band" id="search">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>03</b> / MULTIBUFFER</span>
+              <h2>Fix it in twelve files without opening twelve files.</h2>
+            </div>
+            <div>
+              <p>
+                <kbd>⌘⇧F</kbd> searches every document under your folder and stacks the hits
+                in one buffer, each with the lines around it. The excerpts are editable
+                source: type into a result and you are typing into the file, or replace across
+                all of them at once. One <kbd>⌘S</kbd> writes the lot, and the lines an excerpt
+                never showed you come back untouched.
+              </p>
+            </div>
+          </div>
+
+          <figure style="margin: clamp(1.5rem, 3vw, 2.25rem) 0 0">
+            <div class="shot">
+              <img
+                src="screenshots/multibuffer.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                decoding="async"
+                alt="Search across documents: six matches for &quot;design spec&quot; in five files, stacked as gutter-numbered editable excerpts, one marked EDITED with a Save all button"
+              />
+            </div>
+            <figcaption>
+              Six matches, five files, one edited. Save all writes every changed document.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 04 · Read ------------------------------------------------------ -->
       <section class="band" id="read">
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>03</b> / TELEPROMPTER</span>
+              <span class="index"><b>04</b> / TELEPROMPTER</span>
               <h2>Long documents scroll themselves.</h2>
             </div>
             <div>
               <p>
-                Auto-scroll paces the rendered pane at whatever speed suits the material.
-                Change it while it runs, hold it to read a paragraph twice, or reach for the
-                arrow keys: it steps aside for you and picks up a moment after you stop.
+                Auto-scroll paces the rendered pane. Change the speed while it runs, hold it
+                to read a paragraph twice, or reach for the arrow keys: it steps aside and
+                picks up a moment after you stop.
               </p>
             </div>
           </div>
@@ -1198,15 +1236,15 @@
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>04</b> / RENDER</span>
+              <span class="index"><b>05</b> / RENDER</span>
               <h2>The parts other previewers drop.</h2>
             </div>
             <div>
               <p>
                 Tables, task lists and footnotes. Code fences highlighted properly.
                 <code>mermaid</code> fences drawn as diagrams. And MDX components resolved
-                from a registry, so what appears in the preview is what publishes — nothing
-                in the document is ever executed.
+                from a registry, so what appears in the preview is what publishes. Nothing in
+                the document is ever executed.
               </p>
             </div>
           </div>
@@ -1229,7 +1267,7 @@
             <div>
               <h3>Your folder, untouched</h3>
               <p>
-                Nothing is imported or filed in a database. Save writes the same
+                Nothing is imported or filed in a database. Save writes the
                 <code>.md</code>, <code>.markdown</code> or <code>.mdx</code> you opened, in
                 place.
               </p>
@@ -1264,20 +1302,19 @@
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>05</b> / MCP</span>
+              <span class="index"><b>06</b> / MCP</span>
               <h2>Your assistant edits the file you have open.</h2>
             </div>
             <div>
               <p>
                 MarkDN serves the documents it is showing you over MCP. Ask Claude to
-                restructure a spec, fold review notes into a draft, or write the changelog for
-                a release, and the change lands in the window you are already reading — no
-                paste back, no second copy of the file, no guessing whether the agent saw the
-                latest version.
+                restructure a spec or fold review notes into a draft, and the change lands in
+                the window you are already reading. No paste back, no second copy of the file
+                drifting out of date.
               </p>
               <p style="margin-top: 0.85rem">
-                It can also ask which components exist, so the MDX it writes is MDX that
-                renders. And it only ever sees the folder you pointed the app at.
+                It can ask which components exist, so the MDX it writes is MDX that renders.
+                And it only ever sees the folder you pointed the app at.
               </p>
             </div>
           </div>
@@ -1314,6 +1351,10 @@
                 <tr>
                   <th><kbd>⌘⇧P</kbd></th>
                   <td>Commands only</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘⇧F</kbd></th>
+                  <td>Search and edit across documents</td>
                 </tr>
                 <tr>
                   <th><kbd>⌘1</kbd> <kbd>2</kbd> <kbd>3</kbd></th>
@@ -1388,7 +1429,7 @@
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>06</b> / INSTALL</span>
+              <span class="index"><b>07</b> / INSTALL</span>
               <h2>Two commands, one window.</h2>
             </div>
             <div>
@@ -1418,7 +1459,7 @@
 
           <p class="note">
             MarkDN ships unsigned for now, so the installer clears the macOS quarantine flag
-            for you. Building from source is documented in the repository.
+            for you. Building from source is documented in the repo.
           </p>
         </div>
       </section>

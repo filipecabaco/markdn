@@ -170,13 +170,20 @@ fn main() {
             let died = Arc::new(AtomicBool::new(false));
             start_server(app.handle(), port, died.clone());
 
-            match await_server(port, &died) {
+            // Off the main thread. `setup` runs inside
+            // applicationDidFinishLaunching, so any wait here stalls the AppKit
+            // run loop — bounding it at 60s stopped the freeze being permanent
+            // but not from happening: a first launch unpacks the ERTS tree
+            // before Phoenix binds, and macOS files a hang report after ~5s of
+            // an unresponsive main thread.
+            let handle = app.handle().clone();
+            std::thread::spawn(move || match await_server(port, &died) {
                 Ok(()) => {
-                    navigate_main_window(app.handle(), port);
-                    start_channel(app.handle().clone());
+                    navigate_main_window(&handle, port);
+                    start_channel(handle.clone());
                 }
-                Err(reason) => show_startup_error(app.handle(), &reason),
-            }
+                Err(reason) => show_startup_error(&handle, &reason),
+            });
             Ok(())
         })
         // Intercept menu events (especially CMD+Q on macOS)
@@ -332,8 +339,8 @@ fn start_server(app: &tauri::AppHandle, port: u16, died: Arc<AtomicBool>) {
 
 /// Waits for the sidecar to start listening, and gives up with a reason.
 ///
-/// Runs on the setup thread, before the window is shown, so an unbounded wait
-/// here is indistinguishable from a freeze.
+/// Runs on a worker thread — never the main one — so a slow or dead sidecar
+/// costs a late window rather than a beachballed app.
 fn await_server(port: u16, died: &Arc<AtomicBool>) -> Result<(), String> {
     let sleep_interval = Duration::from_millis(200);
     let addr = format!("localhost:{}", port);
