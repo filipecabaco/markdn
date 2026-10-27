@@ -142,6 +142,40 @@ desktop release is Burrito-wrapped, and Burrito can only fetch an ERTS the BEAM
 Machine CDN has built — there is none for OTP 28+. On a newer OTP the build fails
 at the wrap step, not at compile time.
 
+### Installing a local build over another
+
+Burrito unpacks the backend once, into
+`~/Library/Application Support/.burrito/desktop_erts-<erts>_<version>/`, and
+reuses that directory for as long as the version matches. Local builds all carry
+the placeholder version from `mix.exs`, so a freshly built `MarkDN.app` silently
+runs the *previous* build's backend — old API, old frontend bundle. Releases are
+unaffected: the release workflow stamps a new version every time. After quitting
+the app, move that one directory aside before launching the new build:
+
+```bash
+trash "$HOME/Library/Application Support/.burrito/"desktop_erts-*_0.1.0
+```
+
+Match on the version suffix: other Burrito apps on the machine can share the
+`desktop_erts-` prefix.
+
+### The loading screen
+
+The window opens on `src-tauri/loading/index.html`, bundled into the app as
+`frontendDist` in `tauri.conf.json`, not on the backend's URL: in a release the
+port is OS-assigned and nothing is listening yet — on a first launch Burrito is
+still unpacking the runtime. `main.rs` navigates to `http://localhost:<port>` once
+the port answers, or calls the page's `markdnStartupFailed(reason)` if the
+backend exits or never answers, so a failed start reads in the app's design with
+the real log path instead of a blank window.
+
+The page is self-contained (inline styles and script, DESIGN.md tokens inlined)
+because nothing it needs can come from the server it is waiting for. Dev runs are
+unaffected: `mix ex_tauri.dev` opens on `devUrl`.
+
+`mix ex_tauri.install` rewrites `tauri.conf.json`; if you re-run it, put
+`"frontendDist": "loading"` back.
+
 ### Re-running `mix ex_tauri.install`
 
 ex_tauri 0.2.0 reuses `config :ex_tauri, :version` for two unrelated things: the

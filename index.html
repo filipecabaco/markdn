@@ -16,48 +16,66 @@
       content="A markdown and MDX editor that renders the whole document. Your folder, your files, on your machine."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://filipecabaco.github.io/markdn/screenshots/split-view.png" />
+    <meta property="og:image" content="https://filipecabaco.github.io/markdn/screenshots/ipad-split.png" />
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=Chivo+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=Chivo+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
     <style>
       /*
-       * MarkDN — the product's own instrument palette, at brand scale.
+       * MarkDN — Midnight Line, at brand scale.
        *
-       * Warm graphite on paper, hairlines instead of shadows, near-zero radii,
-       * and one signal red that only ever marks state. The page is built as a
-       * spec sheet for an instrument: a visible grid, engraved section indices,
-       * and demonstrations rather than descriptions.
+       * The app's world: a document is a line. The page is the same transit
+       * diagram fired in midnight-blue enamel — enamel for the header, the hero
+       * and the closing bands, porcelain for the reading surfaces, four line
+       * inks that each mark one section's line bullet and nothing decorative.
+       * Signage is set in Barlow Condensed, uppercase; reading in Barlow.
        */
 
       :root {
-        --paper: oklch(0.963 0.004 78);
-        --panel: oklch(0.932 0.005 75);
-        --surface: oklch(0.988 0.003 80);
-        --line: oklch(0.868 0.006 75);
-        --line-strong: oklch(0.782 0.008 75);
-        --line-control: oklch(0.592 0.01 70);
+        --enamel: oklch(0.205 0.068 271);
+        --enamel-raised: oklch(0.26 0.066 270);
+        --enamel-line: oklch(0.39 0.052 270);
+        --on-enamel: oklch(0.965 0.004 95);
+        --on-enamel-muted: oklch(0.8 0.025 268);
 
-        --ink: oklch(0.235 0.01 70);
-        --ink-muted: oklch(0.462 0.008 70);
-        --ink-faint: oklch(0.545 0.008 70);
+        --scarlet: oklch(0.585 0.215 27);
+        --cobalt: oklch(0.585 0.205 262);
+        --amber: oklch(0.84 0.165 85);
+        --green: oklch(0.655 0.165 145);
+        --band-ink: var(--scarlet);
+        --band-ink-on: oklch(0.985 0.003 95);
 
-        --signal: oklch(0.505 0.19 30);
-        --signal-ink: oklch(0.985 0.004 80);
-        --signal-tint: oklch(0.505 0.19 30 / 0.09);
+        --paper: oklch(0.968 0.004 95);
+        --panel: oklch(0.925 0.008 265);
+        --surface: oklch(0.985 0.003 95);
+        --line: oklch(0.875 0.01 265);
+        --line-strong: oklch(0.775 0.014 265);
+        --line-control: oklch(0.565 0.025 265);
 
-        --font-ui: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --ink: oklch(0.235 0.04 268);
+        --ink-muted: oklch(0.455 0.03 268);
+        --ink-faint: oklch(0.48 0.025 268);
+
+        --signal: oklch(0.54 0.205 27);
+        --signal-ink: oklch(0.985 0.003 95);
+        --signal-tint: oklch(0.54 0.205 27 / 0.1);
+        --focus: oklch(0.53 0.21 262);
+
+        --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --font-sign: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
         --font-mono: "Chivo Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
         --measure: 62ch;
         --gutter: clamp(1.25rem, 4vw, 4rem);
         --frame: min(1240px, 100%);
+        --radius-card: 14px;
+        --radius-control: 10px;
 
         --ease: cubic-bezier(0.22, 1, 0.36, 1);
         --fast: 120ms;
@@ -66,24 +84,24 @@
         color-scheme: light;
       }
 
-      /* Dark is a designed surface here too, not an inversion: the panels get
-         warmer and heavier, and red lifts in lightness to stay legible on them. */
+      /* Dark: the reading surfaces become deep enamel; the shell stays enamel. */
       @media (prefers-color-scheme: dark) {
         :root {
-          --paper: oklch(0.183 0.005 70);
-          --panel: oklch(0.222 0.006 70);
-          --surface: oklch(0.158 0.005 70);
-          --line: oklch(0.298 0.007 70);
-          --line-strong: oklch(0.392 0.008 70);
-          --line-control: oklch(0.525 0.009 70);
+          --paper: oklch(0.185 0.055 270);
+          --panel: oklch(0.265 0.055 270);
+          --surface: oklch(0.235 0.052 270);
+          --line: oklch(0.33 0.048 270);
+          --line-strong: oklch(0.42 0.045 270);
+          --line-control: oklch(0.6 0.04 268);
 
-          --ink: oklch(0.925 0.006 80);
-          --ink-muted: oklch(0.688 0.007 75);
-          --ink-faint: oklch(0.632 0.008 75);
+          --ink: oklch(0.945 0.006 95);
+          --ink-muted: oklch(0.79 0.022 268);
+          --ink-faint: oklch(0.75 0.022 268);
 
-          --signal: oklch(0.672 0.178 33);
-          --signal-ink: oklch(0.16 0.006 70);
-          --signal-tint: oklch(0.672 0.178 33 / 0.13);
+          --signal: oklch(0.66 0.2 27);
+          --signal-ink: oklch(0.18 0.05 270);
+          --signal-tint: oklch(0.66 0.2 27 / 0.16);
+          --focus: oklch(0.72 0.16 262);
 
           color-scheme: dark;
         }
@@ -254,24 +272,11 @@
 
       /* ── Hero ──────────────────────────────────────────────────────────── */
 
+      /* Block padding only: the hero is also a .shell, and a `padding` shorthand
+         here zeroed the shell's side gutter, so the headline sat ~57px left of the
+         logo and of every band below it. */
       .hero {
-        padding: clamp(3.5rem, 9vw, 7.5rem) 0 clamp(2rem, 4vw, 3.5rem);
-      }
-      .hero__eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.55rem;
-        margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        letter-spacing: 0.14em;
-        color: var(--ink-faint);
-      }
-      .hero__eyebrow::before {
-        content: "";
-        width: 26px;
-        height: 2px;
-        background: var(--signal);
+        padding-block: clamp(3.5rem, 9vw, 7.5rem) clamp(2rem, 4vw, 3.5rem);
       }
       .hero h1 {
         font-size: clamp(2.6rem, 8.2vw, 6.2rem);
@@ -859,9 +864,12 @@
         color: var(--signal-ink);
         border-top: 1px solid var(--signal);
       }
+      /* As strong as the band's body text: at 72% this 12px label measured 4.1:1
+         on the red, under the 4.5:1 small text needs. Its mono caps already set it
+         apart without fading it. */
       .mcp .index,
       .mcp .index b {
-        color: color-mix(in oklch, var(--signal-ink) 72%, transparent);
+        color: color-mix(in oklch, var(--signal-ink) 88%, transparent);
       }
       .mcp h2 {
         font-size: clamp(1.9rem, 4.2vw, 3.1rem);
@@ -1023,6 +1031,347 @@
           transition-duration: 0.001ms !important;
         }
       }
+
+      /* ══ Midnight Line ════════════════════════════════════════════════════
+       * The world, applied over the page's structure. Everything above sets
+       * layout and the demos; this sets the shell, the signage and the lines.
+       */
+
+      :focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+      ::selection {
+        background: color-mix(in oklch, var(--cobalt) 22%, transparent);
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-sign);
+        font-weight: 600;
+        letter-spacing: 0.005em;
+        line-height: 0.98;
+        text-transform: uppercase;
+      }
+      /* Inside a rendered document, headings are the document's, not signage. */
+      .render h3,
+      .reader__pane h3 {
+        font-family: var(--font-ui);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+        text-transform: none;
+      }
+      .facts h3,
+      .try h3,
+      .install-card h3 {
+        letter-spacing: 0.06em;
+        line-height: 1.15;
+      }
+
+      /* Each section rides its own line: its bullet is the line's ink. */
+      #panes,
+      #read {
+        --band-ink: var(--scarlet);
+      }
+      #find,
+      section.band:not([id]) {
+        --band-ink: var(--cobalt);
+      }
+      #search,
+      #mcp {
+        --band-ink: var(--amber);
+        --band-ink-on: var(--enamel);
+      }
+      #files,
+      #install,
+      #devices {
+        --band-ink: var(--green);
+        --band-ink-on: var(--enamel);
+      }
+
+      /* The section index is the line's bullet and its name board: a round
+         bullet carrying the number, the line's name beside it in signage. */
+      .index {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.25rem;
+        font-family: var(--font-sign);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        color: var(--ink-muted);
+      }
+      .index b {
+        display: inline-grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        background: var(--band-ink);
+        color: var(--band-ink-on);
+        font-size: 1rem;
+        letter-spacing: 0;
+      }
+
+      /* ── Header: the enamel bar ──────────────────────────────────────── */
+
+      .head {
+        background: var(--enamel);
+        backdrop-filter: none;
+        border-bottom: 0;
+        color: var(--on-enamel);
+      }
+      .mark {
+        gap: 0.6rem;
+        font-family: var(--font-sign);
+        font-size: 1.375rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .head nav {
+        font-family: var(--font-sign);
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .head nav a {
+        color: var(--on-enamel-muted);
+      }
+      .head nav a:hover {
+        color: var(--on-enamel);
+      }
+      .head nav a.is-cta {
+        padding: 0.4rem 0.95rem;
+        border: 0;
+        border-radius: var(--radius-control);
+        background: var(--scarlet);
+        color: oklch(0.985 0.003 95);
+      }
+      .head nav a.is-cta:hover {
+        background: oklch(0.54 0.215 27);
+        color: oklch(0.985 0.003 95);
+      }
+
+      /* ── Hero: the enamel field, the devices on it ───────────────────── */
+
+      .hero {
+        position: relative;
+        background: var(--enamel);
+        color: var(--on-enamel);
+        box-shadow: 0 0 0 100vmax var(--enamel);
+        clip-path: inset(0 -100vmax);
+        padding-block: clamp(3.5rem, 8vw, 6.5rem) clamp(3rem, 6vw, 5rem);
+      }
+      .hero h1 {
+        font-size: clamp(3rem, 9vw, 7rem);
+        max-width: 14ch;
+      }
+      .hero h1 em {
+        color: var(--amber);
+      }
+      .hero__lede {
+        color: var(--on-enamel-muted);
+      }
+      .hero__lede b {
+        color: var(--on-enamel);
+        font-weight: 600;
+      }
+      .hero .command {
+        border-color: var(--enamel-line);
+        background: var(--enamel-raised);
+        color: var(--on-enamel);
+      }
+      .hero .command button {
+        border-left-color: var(--enamel-line);
+        background: transparent;
+        color: var(--on-enamel-muted);
+        font-family: var(--font-sign);
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .hero .command button:hover {
+        background: var(--enamel);
+        color: var(--on-enamel);
+      }
+      .hero .link-quiet {
+        color: var(--on-enamel-muted);
+        text-decoration-color: var(--enamel-line);
+      }
+      .hero .link-quiet:hover {
+        color: var(--on-enamel);
+      }
+
+      /* The iPad carries the split; the iPhone, reading, stands in front of it
+         at the iPad's lower edge, where a hand would hold it. */
+      .hero__devices {
+        position: relative;
+        margin: clamp(3rem, 6vw, 4.5rem) 0 0;
+        padding-right: clamp(3.5rem, 12vw, 9rem);
+      }
+      .hero__devices .device {
+        display: block;
+        border: clamp(6px, 1vw, 12px) solid oklch(0.13 0.03 270);
+        border-radius: clamp(18px, 2.6vw, 34px);
+        background: oklch(0.13 0.03 270);
+        overflow: hidden;
+      }
+      .hero__devices .device img {
+        width: 100%;
+        border-radius: clamp(10px, 1.6vw, 22px);
+      }
+      .hero__devices .device--phone {
+        position: absolute;
+        right: 0;
+        bottom: clamp(-2.5rem, -4vw, -1rem);
+        width: clamp(7rem, 21vw, 15rem);
+        border-radius: clamp(20px, 3.4vw, 40px);
+      }
+      .hero__devices .device--phone img {
+        border-radius: clamp(14px, 2.6vw, 30px);
+      }
+      .hero__devices figcaption {
+        margin-top: clamp(2.5rem, 5vw, 3.5rem);
+        color: var(--on-enamel-muted);
+      }
+
+      /* ── Demo panels: the app's own shell ─────────────────────────────── */
+
+      .panel {
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-card);
+      }
+      .panel__bar {
+        gap: 0.9rem;
+        padding: 0.55rem 0.7rem 0.55rem 1rem;
+        background: var(--enamel);
+        border-bottom: 0;
+        color: var(--on-enamel-muted);
+        font-family: var(--font-sign);
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .panel__bar strong {
+        color: var(--on-enamel);
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.04em;
+      }
+      .seg {
+        gap: 2px;
+        padding: 3px;
+        border: 1px solid var(--enamel-line);
+        border-radius: var(--radius-control);
+      }
+      .seg button {
+        border: 0;
+        border-radius: 7px;
+        padding: 0.3rem 0.75rem;
+        color: var(--on-enamel-muted);
+        font-family: var(--font-sign);
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--on-enamel);
+        color: var(--enamel);
+      }
+      .rail__tick {
+        background: var(--scarlet);
+      }
+
+      .command,
+      .palette__input {
+        border-radius: var(--radius-control);
+      }
+      .shot {
+        border-radius: var(--radius-card);
+      }
+
+      /* ── iPad and iPhone ─────────────────────────────────────────────── */
+
+      .phones {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: clamp(0.75rem, 2.5vw, 2rem);
+        margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+        padding: clamp(1.25rem, 3vw, 2.5rem);
+        border-radius: var(--radius-card);
+        background: var(--enamel);
+      }
+      .phones figure {
+        margin: 0;
+      }
+      .phones img {
+        border: clamp(4px, 0.8vw, 8px) solid oklch(0.13 0.03 270);
+        border-radius: clamp(16px, 3vw, 30px);
+      }
+      .phones figcaption {
+        color: var(--on-enamel-muted);
+        font-family: var(--font-sign);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .phones figcaption b {
+        color: var(--on-enamel);
+        font-weight: 600;
+      }
+      @media (max-width: 600px) {
+        .phones {
+          grid-template-columns: minmax(0, 1fr);
+          max-width: 22rem;
+          margin-inline: auto;
+        }
+      }
+
+      /* ── The MCP band: the amber line, on enamel ─────────────────────── */
+
+      .mcp {
+        background: var(--enamel);
+        color: var(--on-enamel);
+        border-top: 0;
+      }
+      .mcp .index,
+      .mcp p {
+        color: var(--on-enamel-muted);
+      }
+      .mcp .index b {
+        color: var(--enamel);
+      }
+      .mcp .endpoint {
+        border-color: var(--enamel-line);
+        border-radius: var(--radius-control);
+        color: var(--on-enamel);
+      }
+
+      /* ── Footer: the line's end ──────────────────────────────────────── */
+
+      footer {
+        background: var(--enamel);
+        border-top: 0;
+      }
+      .foot__inner {
+        color: var(--on-enamel-muted);
+      }
+      .foot__inner a {
+        color: var(--on-enamel);
+        text-decoration-color: var(--enamel-line);
+      }
+      .foot__inner a:hover {
+        color: var(--amber);
+      }
     </style>
   </head>
 
@@ -1032,18 +1381,21 @@
     <header class="head">
       <div class="head__inner">
         <a class="mark" href="#top">
-          <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="7" fill="oklch(0.235 0.01 70)" />
-            <rect x="6" y="8.5" width="20" height="3.5" rx="1" fill="oklch(0.63 0.19 33)" />
-            <rect x="6" y="14.75" width="13" height="3" rx="1" fill="oklch(0.62 0.012 70)" />
-            <rect x="6" y="20.25" width="16" height="3" rx="1" fill="oklch(0.62 0.012 70)" />
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 3l9 9" stroke="oklch(0.585 0.215 27)" stroke-width="3" stroke-linecap="round" />
+            <path d="M21 3l-9 9" stroke="oklch(0.585 0.205 262)" stroke-width="3" stroke-linecap="round" />
+            <path d="M12 12h9" stroke="oklch(0.84 0.165 85)" stroke-width="3" stroke-linecap="round" />
+            <path d="M12 12v9" stroke="oklch(0.655 0.165 145)" stroke-width="3" stroke-linecap="round" />
+            <circle cx="12" cy="12" r="4" fill="oklch(0.205 0.068 271)" stroke="oklch(0.965 0.004 95)" stroke-width="2.5" />
           </svg>
-          <span>Mark<b>DN</b></span>
+          <span>MarkDN</span>
         </a>
         <nav aria-label="Sections">
+          <a class="is-hideable" href="#devices">iPad &amp; iPhone</a>
           <a class="is-hideable" href="#panes">Panes</a>
           <a class="is-hideable" href="#find">Find</a>
           <a class="is-hideable" href="#search">Search</a>
+          <a class="is-hideable" href="#files">Files</a>
           <a class="is-hideable" href="#read">Read</a>
           <a class="is-hideable" href="#mcp">Assistants</a>
           <a class="is-cta" href="#install">Install</a>
@@ -1053,11 +1405,11 @@
 
     <main id="main">
       <section class="shell hero" id="top">
-        <span class="hero__eyebrow">Markdown · MDX · macOS and Linux</span>
         <h1>Every part of the document, <em>rendered</em>.</h1>
         <p class="hero__lede">
-          Diagrams, components and highlighted code, live beside the source you are typing.
-          A native window over a folder of plain files that stay plain files.
+          A Markdown and MDX editor for macOS and Linux, and in preview on <b>iPad and
+          iPhone</b>: diagrams, components and highlighted code, live beside the source you
+          are typing. A native window over a folder of plain files that stay plain files.
         </p>
         <div class="hero__actions">
           <div class="command">
@@ -1065,6 +1417,89 @@
             <button type="button" data-copy="hero-cmd">copy</button>
           </div>
           <a class="link-quiet" href="#install">Homebrew, and what it needs →</a>
+        </div>
+
+        <figure class="hero__devices">
+          <span class="device device--tablet">
+            <img
+              src="screenshots/ipad-split.png"
+              width="1600"
+              height="1103"
+              decoding="async"
+              alt="MarkDN on an iPad in landscape: the specs folder drawn as a blue line with README.md as its ringed station, README's headings as a line beneath it with What you get lit, and the source and rendered document side by side"
+            />
+          </span>
+          <span class="device device--phone">
+            <img
+              src="screenshots/iphone-read.png"
+              width="506"
+              height="1100"
+              decoding="async"
+              alt="MarkDN on an iPhone reading README.md rendered, with the Read, Documents, Outline and Search tabs along the bottom"
+            />
+          </span>
+          <figcaption>iPad Pro and iPhone 17 Pro, in the iOS simulator. Preview.</figcaption>
+        </figure>
+      </section>
+
+      <!-- iPad and iPhone ------------------------------------------------- -->
+      <section class="band" id="devices">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>i</b> / GLASS</span>
+              <h2>Read on the couch. Fix it on the train.</h2>
+            </div>
+            <div>
+              <p>
+                On an iPad your folders are lines and every document a station on one. Open a
+                document and its headings become a line of their own: tap a station to go there,
+                and the section you are reading is the lit ring. On an iPhone it opens to the
+                rendered document, with the folder, the outline and search a thumb away.
+              </p>
+              <p>
+                A preview: it runs in the iOS simulator today, built with
+                <a href="https://github.com/filipecabaco/ex_tauri">ex_tauri</a>. It is not on the
+                App Store.
+              </p>
+            </div>
+          </div>
+
+          <div class="phones">
+            <figure>
+              <img
+                src="screenshots/iphone-documents.png"
+                width="506"
+                height="1100"
+                loading="lazy"
+                decoding="async"
+                alt="The Documents tab: the notes and specs folders as yellow and blue lines, README.md a station on the blue one, and DEVELOPMENT.md and Welcome.md on the red main line"
+              />
+              <figcaption><b>Documents</b> · folders as lines</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="screenshots/iphone-read.png"
+                width="506"
+                height="1100"
+                loading="lazy"
+                decoding="async"
+                alt="The Read tab: README.md rendered full width under the bar, with Edit and Save in it"
+              />
+              <figcaption><b>Read</b> · the document first</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="screenshots/iphone-outline.png"
+                width="506"
+                height="1100"
+                loading="lazy"
+                decoding="async"
+                alt="The Outline tab: README's headings as stations on a blue line, MarkDN ringed as the current section"
+              />
+              <figcaption><b>Outline</b> · headings as stations</figcaption>
+            </figure>
+          </div>
         </div>
       </section>
 
@@ -1195,12 +1630,53 @@
         </div>
       </section>
 
-      <!-- 04 · Read ------------------------------------------------------ -->
+      <!-- 04 · Files ----------------------------------------------------- -->
+      <section class="band" id="files">
+        <div class="band__inner">
+          <div class="lede-grid">
+            <div>
+              <span class="index"><b>04</b> / FILES</span>
+              <h2>Name&nbsp;it, rename&nbsp;it, trash&nbsp;it.</h2>
+            </div>
+            <div>
+              <p>
+                <kbd>⌘N</kbd> names a new document beside the one you are reading and makes
+                any folders the name needs. A name that is already taken is refused, never
+                overwritten. Started typing before you named it? <kbd>⌘S</kbd> asks for a
+                name and saves what you wrote.
+              </p>
+              <p>
+                Right-click a file to rename it, copy its path, or move it to the Trash, where
+                it can come back from. The tree works without a mouse too: arrows to walk it,
+                <kbd>⇧F10</kbd> for the same menu.
+              </p>
+            </div>
+          </div>
+
+          <figure style="margin: clamp(1.5rem, 3vw, 2.25rem) 0 0">
+            <div class="shot">
+              <img
+                src="screenshots/files.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                decoding="async"
+                alt="The document tree with a context menu open on work/release-checklist.md: Open, New document here, Rename, Copy path, Copy relative path, and Move to Trash"
+              />
+            </div>
+            <figcaption>
+              Right-click any file. Move to Trash is recoverable; nothing here deletes for good.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 05 · Read ------------------------------------------------------ -->
       <section class="band" id="read">
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>04</b> / TELEPROMPTER</span>
+              <span class="index"><b>05</b> / TELEPROMPTER</span>
               <h2>Long documents scroll themselves.</h2>
             </div>
             <div>
@@ -1236,7 +1712,7 @@
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>05</b> / RENDER</span>
+              <span class="index"><b>06</b> / RENDER</span>
               <h2>The parts other previewers drop.</h2>
             </div>
             <div>
@@ -1293,6 +1769,21 @@
                 size, scroll speed, hidden files.
               </p>
             </div>
+            <div>
+              <h3>Quick on long files</h3>
+              <p>
+                The editor redraws only the lines you change. On a long document the preview
+                catches up when you pause, instead of holding up every key.
+              </p>
+            </div>
+            <div>
+              <h3>Keyboard all the way</h3>
+              <p>
+                The tree, tabs, menus and dialogs all work without a mouse, and Tab never
+                traps you in the editor: <kbd>⇧Tab</kbd> or <kbd>Esc</kbd> then
+                <kbd>Tab</kbd> leaves it.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -1302,7 +1793,7 @@
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>06</b> / MCP</span>
+              <span class="index"><b>07</b> / MCP</span>
               <h2>Your assistant edits the file you have open.</h2>
             </div>
             <div>
@@ -1315,6 +1806,11 @@
               <p style="margin-top: 0.85rem">
                 It can ask which components exist, so the MDX it writes is MDX that renders.
                 And it only ever sees the folder you pointed the app at.
+              </p>
+              <p style="margin-top: 0.85rem">
+                It never writes over you, either. If the file has unsaved changes when the
+                assistant saves it, MarkDN asks whether to reload theirs or keep yours, rather
+                than swapping the text under your cursor.
               </p>
             </div>
           </div>
@@ -1342,15 +1838,15 @@
         <div class="band__inner">
           <div class="spec-grid">
             <table class="spec">
-              <caption>KEYS</caption>
+              <caption>KEYS · AS IN VS CODE</caption>
               <tbody>
                 <tr>
-                  <th><kbd>⌘K</kbd></th>
-                  <td>Find a document, or run a command</td>
+                  <th><kbd>⌘P</kbd></th>
+                  <td>Find a document</td>
                 </tr>
                 <tr>
                   <th><kbd>⌘⇧P</kbd></th>
-                  <td>Commands only</td>
+                  <td>Command palette</td>
                 </tr>
                 <tr>
                   <th><kbd>⌘⇧F</kbd></th>
@@ -1361,8 +1857,32 @@
                   <td>Source, split, render</td>
                 </tr>
                 <tr>
+                  <th><kbd>⌘B</kbd></th>
+                  <td>Show or hide the sidebar</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘⇧V</kbd></th>
+                  <td>Toggle the preview</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘K</kbd> <kbd>V</kbd></th>
+                  <td>Preview to the side</td>
+                </tr>
+                <tr>
+                  <th><kbd>⌘N</kbd></th>
+                  <td>New document</td>
+                </tr>
+                <tr>
                   <th><kbd>⌘S</kbd></th>
-                  <td>Save</td>
+                  <td>Save, or name and save an untitled one</td>
+                </tr>
+                <tr>
+                  <th><kbd>⇧F10</kbd></th>
+                  <td>Menu for the file selected in the tree</td>
+                </tr>
+                <tr>
+                  <th><kbd>F2</kbd> <kbd>⌘⌫</kbd></th>
+                  <td>Rename, or move to the Trash</td>
                 </tr>
                 <tr>
                   <th><kbd>⌘⇧C</kbd></th>
@@ -1411,6 +1931,10 @@
                   <td>MCP over local HTTP</td>
                 </tr>
                 <tr>
+                  <th>Files</th>
+                  <td>New, rename, Trash. Never overwrites by accident</td>
+                </tr>
+                <tr>
                   <th>Network</th>
                   <td>None. Everything stays on the machine</td>
                 </tr>
@@ -1429,7 +1953,7 @@
         <div class="band__inner">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>07</b> / INSTALL</span>
+              <span class="index"><b>08</b> / INSTALL</span>
               <h2>Two commands, one window.</h2>
             </div>
             <div>
