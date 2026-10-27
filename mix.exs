@@ -38,7 +38,7 @@ defmodule Markdn.MixProject do
       # The library and the Rust shell speak one heartbeat protocol, so a bump
       # past 0.5 means regenerating src-tauri/src/main.rs from its template too
       # (and src/lib.rs with `mix ex_tauri.ios init`).
-      {:ex_tauri, "~> 0.5.1"},
+      {:ex_tauri, "~> 0.5.2"},
       {:jason, "~> 1.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
