@@ -57,12 +57,12 @@ defmodule Markdn.Settings do
   end
 
   defp default_dir do
-    case :os.type() do
+    case Markdn.Host.os_type() do
       {:unix, :darwin} ->
-        Path.join(System.user_home!(), "Library/Application Support/app.markdn.desktop")
+        Path.join(Markdn.Host.home(), "Library/Application Support/app.markdn.desktop")
 
       _ ->
-        base = System.get_env("XDG_CONFIG_HOME") || Path.join(System.user_home!(), ".config")
+        base = System.get_env("XDG_CONFIG_HOME") || Path.join(Markdn.Host.home(), ".config")
         Path.join(base, "markdn")
     end
   end

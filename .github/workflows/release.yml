@@ -43,10 +43,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Exact patch, version-type strict: Burrito can only fetch an ERTS the BEAM
-  # Machine CDN has built, and it has none for OTP 28+. Keep in sync with ci.yml.
-  OTP_VERSION: "27.3.4.16"
+  # Exact patch, version-type strict: the sidecar is packed by ampoule, whose
+  # runtime runs a release only from the OTP it was built with (0.1.8 embeds
+  # ERTS 16.4.0.4, OTP 28.5.0.4). Keep in sync with ci.yml and mise.toml.
+  OTP_VERSION: "28.5.0.4"
   ELIXIR_VERSION: "1.20.4"
+  AMPOULE_VERSION: "0.1.8"
   # Tauri CLI major. Pinned here rather than derived from the app version:
   # ex_tauri 0.2.0's installer reuses `config :ex_tauri, :version` as the cargo
   # constraint (`^<major>`), which ties the app's version number to Tauri's. CI
@@ -218,13 +220,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: assets/pnpm-lock.yaml
 
-      # Burrito wraps the sidecar with Zig and needs `xz` on PATH.
-      # Node 20 holdout: setup-zig has no node24 release yet (latest is v2.2.1,
-      # `runs.using: node20`), so this step still emits the deprecation warning.
-      # Bump to the first node24 tag when upstream cuts one.
-      - uses: mlugg/setup-zig@v2
-        with:
-          version: "0.16.0"
+      # ampoule packs the sidecar (`config :ex_tauri, :packager, :ampoule`). The
+      # Linux build is static (musl), so it runs on any runner glibc.
+      - name: Install ampoule
+        run: bash .github/scripts/install-ampoule.sh "$AMPOULE_VERSION"
 
       - name: Install Linux system deps
         if: runner.os == 'Linux'
@@ -232,7 +231,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
-            libayatana-appindicator3-dev patchelf xz-utils
+            libayatana-appindicator3-dev patchelf
 
       # ── Dependencies ─────────────────────────────────────────────────────────
       - name: Elixir deps
@@ -257,14 +256,13 @@ jobs:
         run: cargo install tauri-cli --version "${TAURI_CLI_VERSION}" --locked --root _build/_tauri
 
       # ── Build ────────────────────────────────────────────────────────────────
-      # `mix ex_tauri.build` assembles the :desktop release, Burrito-wraps it as
-      # the sidecar (burrito_out/desktop-<triple>) and bundles the app.
-      # BURRITO_TARGET limits Burrito to the runner's native triple so we never
-      # attempt a cross-OS BEAM build.
+      # `mix ex_tauri.build` assembles the :desktop release, packs it with
+      # ampoule as the sidecar (burrito_out/desktop-<triple>, ex_tauri's path
+      # whichever packer) and bundles the app. `--target` is the runner's own
+      # triple: each platform is packed natively.
       - name: Build Tauri bundle
         env:
           CARGO_PROFILE_RELEASE_LTO: true
-          BURRITO_TARGET: ${{ matrix.target }}
         run: mix ex_tauri.build --ci --target ${{ matrix.target }}
 
       # ── Publish ──────────────────────────────────────────────────────────────

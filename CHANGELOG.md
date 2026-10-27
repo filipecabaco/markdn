@@ -12,6 +12,15 @@ stamps the resolved number into both before building.
 
 ## [Unreleased]
 
+### Changed
+
+- **One packager for the desktop and iOS.** The desktop backend is packed by
+  ampoule instead of Burrito: one binary running the BEAM as WebAssembly, on
+  OTP 28 like the iOS build. No Zig, nothing unpacked on first launch, and no
+  stale backend left behind by an earlier build. Settings, the documents root
+  and Move to Trash work as before; the backend log is now in
+  `~/Library/Logs/MarkDN/`.
+
 ### Added
 
 - **The window comes back where you were.** The open document, the view and any

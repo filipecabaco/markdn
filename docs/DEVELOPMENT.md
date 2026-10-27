@@ -130,116 +130,93 @@ The server binds to loopback and reads and writes files, so two guards matter:
 ## Desktop build
 
 `config/config.exs` configures ex_tauri for Francis rather than Phoenix
-(`dev_command: ~w(mix francis.server)`, `sidecar_env: []`).
+(`dev_command: ~w(mix francis.server)`, `sidecar_env: []`) and packs the backend
+with [ampoule](https://github.com/filipecabaco/ampoule) (`packager: :ampoule`):
+one binary running the BEAM as WebAssembly, the same packer the iOS build uses.
 
 ```bash
 mix ex_tauri.dev                       # app in a native window, live reload
 mix ex_tauri.build --ci --target aarch64-apple-darwin
 ```
 
-**Toolchain is pinned to OTP 27 in `mise.toml`, and that is load-bearing.** The
-desktop release is Burrito-wrapped, and Burrito can only fetch an ERTS the BEAM
-Machine CDN has built — there is none for OTP 28+. On a newer OTP the build fails
-at the wrap step, not at compile time.
+`mix ex_tauri.build` needs `ampoule` on `PATH` (or `config :ex_tauri,
+:ampoule_path`). CI installs a pinned release with
+`.github/scripts/install-ampoule.sh`; locally, download the same one from the
+[ampoule releases](https://github.com/filipecabaco/ampoule/releases).
 
-### Installing a local build over another
+**OTP is pinned to the exact patch ampoule embeds, and that is load-bearing.**
+ampoule's runtime runs a release only from the OTP it was built with:
+`ampoule version` prints its ERTS (0.1.8 embeds ERTS 16.4.0.4, OTP 28.5.0.4).
+`mise.toml`, `ci.yml` and `release.yml` pin that patch; bump them together with
+`AMPOULE_VERSION`.
 
-Burrito unpacks the backend once, into
-`~/Library/Application Support/.burrito/desktop_erts-<erts>_<version>/`, and
-reuses that directory for as long as the version matches. Local builds all carry
-the placeholder version from `mix.exs`, so a freshly built `MarkDN.app` silently
-runs the *previous* build's backend — old API, old frontend bundle. Releases are
-unaffected: the release workflow stamps a new version every time. After quitting
-the app, move that one directory aside before launching the new build:
+### What the packed backend can see
 
-```bash
-trash "$HOME/Library/Application Support/.burrito/"desktop_erts-*_0.1.0
-```
+Under ampoule the backend's own `HOME` is a private `/tmp` deleted on exit, and
+the guest reports Linux on every host. The shell passes the real ones in
+(`EX_TAURI_HOME`, `EX_TAURI_HOST_OS`) and mounts the home at its own path;
+`Markdn.Host` is what the code asks instead of `System.user_home!/0` or
+`:os.type/0`, so the default root and `settings.json` stay where they always
+were. The backend logs to `~/Library/Logs/MarkDN/markdn_desktop.log` (on Linux,
+`ExTauri.Paths.log_dir/0`); the shell's own log, sidecar output included, is in
+`~/Library/Logs/app.markdn.desktop/`.
 
-Match on the version suffix: other Burrito apps on the machine can share the
-`desktop_erts-` prefix.
+A packed app starts no host program unless `ampoule.toml` allows it. MarkDN
+starts one kind, to move a document to the Trash: `/usr/bin/trash`,
+`osascript` (older macOS) and `gio` (Linux) are listed there. A new
+`System.cmd/3` needs its program added, or it fails with `:enoent`.
 
 ### The loading screen
 
 The window opens on `src-tauri/loading/index.html`, bundled into the app as
 `frontendDist` in `tauri.conf.json`, not on the backend's URL: in a release the
-port is OS-assigned and nothing is listening yet — on a first launch Burrito is
-still unpacking the runtime. `main.rs` navigates to `http://localhost:<port>` once
-the port answers, or calls the page's `markdnStartupFailed(reason)` if the
-backend exits or never answers, so a failed start reads in the app's design with
-the real log path instead of a blank window.
+port is OS-assigned and nothing is listening yet. `main.rs` navigates to
+`http://localhost:<port>` once the port answers. If the backend never answers,
+or dies later, the shell shows its own page saying so (and restarts a backend
+that dies under an open window, up to three times).
 
 The page is self-contained (inline styles and script, DESIGN.md tokens inlined)
 because nothing it needs can come from the server it is waiting for. Dev runs are
 unaffected: `mix ex_tauri.dev` opens on `devUrl`.
 
-`mix ex_tauri.install` rewrites `tauri.conf.json`; if you re-run it, put
-`"frontendDist": "loading"` back.
+### Regenerating the shell
 
-### Re-running `mix ex_tauri.install`
+`src-tauri/src/main.rs` is ex_tauri's template output and speaks its heartbeat
+protocol, so moving to a new ex_tauri minor means regenerating it. Do it from
+the template helper, not `mix ex_tauri.install`: the installer also rewrites
+`tauri.conf.json`, and with it the identifier — `app.markdn.desktop` is where
+settings live and what the Homebrew cask's `zap` removes — and the window's
+`frontendDist`.
 
-ex_tauri 0.2.0 reuses `config :ex_tauri, :version` for two unrelated things: the
-app version stamped into `tauri.conf.json`, **and** the cargo constraint for the
-Tauri CLI (`^<major>`). With MarkDN at `0.1.0` the installer asks cargo for
-`tauri-cli ^0`, which does not exist, and dies. If you need to re-scaffold,
-temporarily set that version to `2.0.0`, run the installer, then set it back.
+```bash
+mix run --no-start -e '
+  File.write!("src-tauri/src/main.rs",
+    ExTauri.Install.Helpers.main_src("localhost", "43118", "markdn", "MarkDN", "http", ExTauri.release_name()))'
+```
 
-CI never hits this: it installs `tauri-cli` itself with an explicit `^2`
-(`TAURI_CLI_VERSION` in `release.yml`), and `mix ex_tauri.build` only reads the
-binary from `_build/_tauri`.
-
-Which is also the fix if a local build stops with **"Tauri CLI not found at
-`_build/_tauri/bin/cargo-tauri`"** — anything that clears `_build` takes the CLI
-with it. Reinstall it directly rather than re-running the installer:
+If a local build stops with **"Tauri CLI not found at
+`_build/_tauri/bin/cargo-tauri`"** — anything that clears `_build` takes the
+CLI with it — reinstall it directly:
 
 ```bash
 cargo install tauri-cli --version "^2" --locked --root _build/_tauri
 ```
 
-The installer also adds `ExTauri.ShutdownManager` unconditionally to the
-supervision tree and generates a LiveView bridge at `assets/vendor/ex_tauri.js`.
-Both are removed here: the manager is gated on `desktop_sidecar?/0` so a plain
-`mix francis.server` is not killed seconds after boot, and the bridge is
-Phoenix-only — the shutdown heartbeat comes from Rust over a Unix socket and
-needs no JavaScript.
+The `ExTauri.ShutdownManager` is gated on `desktop_sidecar?/0` (in `Markdn`), so
+a plain `mix francis.server` is not stopped seconds after boot.
 
-### Why the sidecar is spawned with `--no-halt`
-
-`src-tauri/src/main.rs` passes `--no-halt` to the `desktop` sidecar, and that is
-load-bearing for the packaged app. Burrito 1.6 launches the release as
-`erlexec -noshell -s elixir start_cli ... -extra <args>`; unlike a plain
-release's `bin/desktop start`, it never adds `--no-halt` of its own, so Elixir's
-CLI halts the VM the moment the boot script finishes. The supervision tree comes
-up, the ShutdownManager logs, and the process exits 0 in about 200ms **without
-ever binding `PORT`** — then the shell waits for a port nobody is listening on
-and the window never appears. The app looks hung, with nothing on screen to say
-why.
-
-This is new in Burrito 1.6. Through 1.5 the launcher passed `-s elixir start_cli`
-as a single argv token, so `start_cli` never actually ran and nothing halted the
-VM; 1.6 splits the flag into separate arguments and the halt starts happening.
-Codrift, which is on the same ex_tauri and Francis but is locked to Burrito
-1.5.0, is unaffected — so "it works over there" is a lockfile difference, not a
-code difference. Pinning `{:burrito, "~> 1.5.0", override: true}` is the other
-way out; `--no-halt` is preferred because it is correct on both.
-
-`mix ex_tauri.install` regenerates `main.rs` without the flag, so re-scaffolding
-re-introduces the hang.
-
-The same edit replaces the unbounded `check_server_started` loop with
-`await_server`, modelled on Codrift's: the sidecar's `Terminated` event flips a
-flag the wait checks, so a backend that dies is reported the moment it dies
-instead of at a deadline, the wait is bounded at 60s either way, and the reason
-is painted into the window by `show_startup_error` rather than leaving a blank
-frame. Sidecar stderr is now forwarded too — dropping it is part of why the
-original failure looked like a freeze instead of a crash.
-
-Reproduce it directly, without Tauri in the way:
+### iPhone and iPad
 
 ```bash
-PORT=43999 ./burrito_out/desktop_aarch64-apple-darwin              # exits 0, serves nothing
-PORT=43999 ./burrito_out/desktop_aarch64-apple-darwin --no-halt    # stays up, /api/health answers
+mix ex_tauri.ios run --device "iPad Pro 11-inch (M5)"   # the packed backend, as it ships
+mix ex_tauri.ios dev                                      # your dev server, live reload
 ```
+
+This runs in the iOS simulator only (see ex_tauri's `guides/ios.md`).
+`mix ex_tauri.ios init` regenerates `src-tauri/src/lib.rs` and
+`tauri.ios.conf.json` and keeps `src-tauri/mobile/index.html`, the iOS loading
+page. On iOS the documents are the app's own Documents folder, the one the Files
+app shows (`config/runtime.exs`).
 
 ### Why Bandit is supervised by hand
 

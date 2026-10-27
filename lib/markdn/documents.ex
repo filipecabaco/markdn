@@ -52,7 +52,7 @@ defmodule Markdn.Documents do
   """
   @spec root() :: String.t()
   def root do
-    pinned_root() || Settings.get("root") || System.user_home!()
+    pinned_root() || Settings.get("root") || Markdn.Host.home()
   end
 
   @doc """
@@ -277,7 +277,7 @@ defmodule Markdn.Documents do
       File.exists?("/usr/bin/trash") ->
         {"/usr/bin/trash", ["-s"]}
 
-      :os.type() == {:unix, :darwin} ->
+      Markdn.Host.os_type() == {:unix, :darwin} ->
         {"osascript",
          [
            "-e",

@@ -59,18 +59,20 @@ defmodule Markdn do
     if desktop_sidecar?(), do: [ExTauri.ShutdownManager], else: []
   end
 
-  # Two spellings: a plain mix release (`mix ex_tauri.dev`) exports RELEASE_NAME,
-  # while the shipped Burrito-wrapped build sets __BURRITO but never RELEASE_NAME.
+  # The :desktop release, whether a plain one (`mix ex_tauri.dev --sidecar
+  # release`) or packed by ampoule, which exports RELEASE_NAME for the release it runs.
   defp desktop_sidecar? do
-    System.get_env("RELEASE_NAME") == "desktop" or System.get_env("__BURRITO") == "1"
+    System.get_env("RELEASE_NAME") == "desktop"
   end
 
   # The sidecar's stdout is a pipe Tauri owns: nobody sees it when the app is
   # launched from Finder, and a dead GUI leaves it broken, which destabilises
   # node IO on the path ShutdownManager needs to stop the VM. Log to a file
-  # instead. Best-effort — a failure here keeps the default handler.
+  # instead, in the platform's log directory (~/Library/Logs/MarkDN on macOS):
+  # under ampoule the VM's own tmp is private and gone on exit. Best-effort — a
+  # failure here keeps the default handler.
   defp redirect_logs_to_file do
-    path = Path.join(System.tmp_dir!(), "markdn_desktop.log")
+    path = Path.join(ExTauri.Paths.log_dir(), "markdn_desktop.log")
 
     :ok =
       :logger.add_handler(:markdn_file, :logger_std_h, %{
