@@ -50,6 +50,39 @@ export function saveDocument(path: string, contents: string): Promise<{ saved: b
   });
 }
 
+/**
+ * Creates a document that must not exist yet.
+ *
+ * Unlike `saveDocument`, the server refuses (409) rather than overwrite, so a
+ * name the user believed was free cannot cost them a file. The answer carries
+ * the path as the server normalised it — open that, not what was typed.
+ */
+export function createDocument(path: string, contents = ""): Promise<{ path: string }> {
+  return request("/api/document/new", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ path, contents }),
+  });
+}
+
+/** Renames or moves a document. Refused (409) if `to` already exists. */
+export function renameDocument(from: string, to: string): Promise<{ from: string; path: string }> {
+  return request("/api/document/rename", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ from, to }),
+  });
+}
+
+/** Moves a document to the system Trash, from where it can be restored. */
+export function trashDocument(path: string): Promise<{ path: string; trashed: boolean }> {
+  return request("/api/document/trash", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ path }),
+  });
+}
+
 export function listComponents(): Promise<{ components: ComponentDoc[] }> {
   return request("/api/components");
 }
@@ -123,6 +156,8 @@ export interface Settings {
   showHiddenFiles: boolean;
   /** Auto-scroll speed in pixels per second. */
   autoScrollSpeed: number;
+  /** Layout state kept with the settings so it survives the app restarting. */
+  sidebarCollapsed: boolean;
 }
 
 export interface SettingsResponse {
@@ -142,6 +177,29 @@ export function getSettings(): Promise<SettingsResponse> {
 
 export function saveSettings(patch: Partial<Settings>): Promise<SettingsResponse> {
   return request("/api/settings", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+}
+
+/**
+ * Where the reader was: kept by the server, since the window's origin — and so
+ * its browser storage — changes with every launch.
+ */
+export interface Session {
+  document: string | null;
+  view: ViewMode | null;
+  /** Unsaved edits; `path` is null for the untitled buffer. */
+  draft: { path: string | null; contents: string } | null;
+}
+
+export function getSession(): Promise<Session> {
+  return request("/api/session");
+}
+
+export function saveSession(patch: Partial<Session>): Promise<Session> {
+  return request("/api/session", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(patch),

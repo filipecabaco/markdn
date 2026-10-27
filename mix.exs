@@ -30,12 +30,16 @@ defmodule Markdn.MixProject do
 
   defp deps do
     [
-      # 0.3.3 is the newest published release. The `config :francis, bandit_opts:`
-      # recipe in ex_tauri's README needs an unreleased 0.3.4, so Markdn does not
-      # use it — `Markdn.start/2` supervises Bandit itself and reads the port from
-      # `:markdn` config, which works on every Francis version. See config/runtime.exs.
-      {:francis, "~> 0.3.3"},
-      {:ex_tauri, "~> 0.2"},
+      # `Markdn.start/2` supervises Bandit itself and reads the port from `:markdn`
+      # config rather than `config :francis, bandit_opts:` — see Markdn's moduledoc.
+      # 0.4 also compiles `static`/`parser` with compile_env, so those stay in
+      # config/config.exs and must never move to runtime.exs.
+      {:francis, "~> 0.4.0"},
+      # Held on 0.2.x: 0.4 changes the heartbeat protocol between this library
+      # and the Rust shell, so it only works alongside a src-tauri/src/main.rs
+      # regenerated from its template — `~> 0.2` alone would resolve to 0.4 and
+      # leave the two talking past each other.
+      {:ex_tauri, "~> 0.2.0"},
       {:jason, "~> 1.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},

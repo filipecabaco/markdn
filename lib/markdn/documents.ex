@@ -5,8 +5,11 @@ defmodule Markdn.Documents do
   Every path that arrives from the webview or from an MCP client is untrusted, so
   each one is resolved and then checked to be inside `root/0` before any file
   operation runs. `Path.expand/2` collapses `..` segments *before* the check, so
-  `../../.ssh/id_rsa` is rejected rather than followed.
+  `../../.ssh/id_rsa` is rejected rather than followed — and symlinks are
+  resolved before it too, so a link inside the root cannot be a door out of it.
   """
+
+  require Logger
 
   alias Markdn.Fuzzy
   alias Markdn.Settings
@@ -70,6 +73,12 @@ defmodule Markdn.Documents do
   @doc """
   Resolves `path` against the root and rejects anything that escapes it.
 
+  The check runs on the path with every symlink resolved, because that is what
+  the OS will open: `notes/link.md -> /etc/passwd` names a path inside the root
+  and a file outside it. A link that stays inside the root is fine. The path
+  handed back is the unresolved one, so relative paths shown in the UI keep the
+  names the user sees in the tree.
+
   Returns `{:ok, absolute_path}` or `{:error, :outside_root}`.
   """
   @spec safe_path(String.t()) :: {:ok, String.t()} | {:error, :outside_root}
@@ -78,11 +87,57 @@ defmodule Markdn.Documents do
     expanded = Path.expand(path, root)
 
     # Compare on segments, not string prefixes: "/home/user-evil" has "/home/user"
-    # as a string prefix but is a different directory.
-    if inside?(expanded, root), do: {:ok, expanded}, else: {:error, :outside_root}
+    # as a string prefix but is a different directory. Both sides are resolved:
+    # the root itself may sit behind a link (macOS's /tmp is /private/tmp).
+    with true <- inside?(expanded, root),
+         {:ok, real} <- real_path(expanded),
+         {:ok, real_root} <- real_path(root),
+         true <- inside?(real, real_root) do
+      {:ok, expanded}
+    else
+      _ -> {:error, :outside_root}
+    end
   end
 
   def safe_path(_), do: {:error, :outside_root}
+
+  # Enough for any honest chain of links; a loop gives up instead of spinning.
+  @max_link_hops 40
+
+  # The path the OS would actually reach, symlinks followed. Elixir has no
+  # realpath, so it is walked one segment at a time. `..` inside a link's target
+  # is applied to the *resolved* directory, as the kernel does — collapsing it
+  # lexically with Path.expand would answer "inside" for `link/..` where the
+  # kernel goes to the parent of wherever `link` points. Segments that do not
+  # exist yet (a file about to be created) are taken as written.
+  defp real_path(path) do
+    ["/" | segments] = Path.split(path)
+    walk("/", segments, 0)
+  end
+
+  defp walk(_dir, _segments, hops) when hops > @max_link_hops, do: {:error, :eloop}
+  defp walk(dir, [], _hops), do: {:ok, dir}
+  defp walk(dir, ["." | rest], hops), do: walk(dir, rest, hops)
+  defp walk(dir, [".." | rest], hops), do: walk(Path.dirname(dir), rest, hops)
+
+  defp walk(dir, [segment | rest], hops) do
+    next = Path.join(dir, segment)
+
+    case File.read_link(next) do
+      {:ok, target} ->
+        {base, target_segments} =
+          case Path.split(target) do
+            ["/" | absolute] -> {"/", absolute}
+            relative -> {dir, relative}
+          end
+
+        walk(base, target_segments ++ rest, hops + 1)
+
+      # Not a link, or not there yet: either way it is part of the real path.
+      {:error, _} ->
+        walk(next, rest, hops)
+    end
+  end
 
   defp inside?(path, root) do
     path_parts = Path.split(path)
@@ -111,6 +166,145 @@ defmodule Markdn.Documents do
   end
 
   def write(_, _), do: {:error, :invalid_contents}
+
+  @doc """
+  Creates a new markdown document, refusing to replace one that already exists.
+
+  `write/2` overwrites by design — it is what Save does. Creating is the one
+  operation where the user has named a file they believe is not there yet, so an
+  existing file at that path is an error (`:eexist`) rather than silently lost.
+  The check and the write are one `:exclusive` open, so there is no window
+  between them for another writer to land in.
+
+  Returns `{:ok, relative_path}`, the path normalised against the root, which is
+  the form the file tree and the open-document state use.
+  """
+  @spec create(String.t(), String.t()) :: {:ok, String.t()} | {:error, atom()}
+  def create(path, contents \\ "")
+
+  def create(path, contents) when is_binary(path) and is_binary(contents) do
+    with {:ok, abs} <- safe_path(path),
+         :ok <- check_extension(abs),
+         :ok <- File.mkdir_p(Path.dirname(abs)),
+         :ok <- File.write(abs, contents, [:exclusive]) do
+      {:ok, relative(abs)}
+    end
+  end
+
+  def create(_, _), do: {:error, :invalid_contents}
+
+  @doc """
+  Renames (or moves) a markdown document within the root.
+
+  Like `create/2`, an existing file at `to` is an error (`:eexist`), never
+  replaced: `rename(2)` itself would overwrite it without a word. Both ends are
+  confined to the root and must be markdown, so this cannot turn a note into an
+  executable or pull a file in from outside.
+
+  Returns `{:ok, relative_to}`.
+  """
+  @spec rename(String.t(), String.t()) :: {:ok, String.t()} | {:error, atom()}
+  def rename(from, to) when is_binary(from) and is_binary(to) do
+    with {:ok, source} <- safe_path(from),
+         {:ok, target} <- safe_path(to),
+         :ok <- check_extension(source),
+         :ok <- check_extension(target),
+         :ok <- check_regular(source),
+         :ok <- check_free(source, target),
+         :ok <- File.mkdir_p(Path.dirname(target)),
+         :ok <- File.rename(source, target) do
+      {:ok, relative(target)}
+    end
+  end
+
+  def rename(_, _), do: {:error, :missing_path}
+
+  # Renaming to the same path, or only changing case on a case-insensitive disk,
+  # names the source itself — that is not a collision.
+  defp check_free(source, target) do
+    cond do
+      String.downcase(source) == String.downcase(target) -> :ok
+      File.exists?(target) -> {:error, :eexist}
+      true -> :ok
+    end
+  end
+
+  @doc """
+  Moves a markdown document to the user's Trash, where it can be restored.
+
+  Never a permanent delete: a right-click is too easy to get wrong for that. The
+  move is done by the platform's own trash tool (see `trash_command/0`), with
+  the path passed as an argument rather than spliced into a script.
+  """
+  @spec trash(String.t()) :: :ok | {:error, atom()}
+  def trash(path) when is_binary(path) do
+    with {:ok, abs} <- safe_path(path),
+         :ok <- check_extension(abs),
+         :ok <- check_regular(abs) do
+      run_trash(abs)
+    end
+  end
+
+  def trash(_), do: {:error, :missing_path}
+
+  defp run_trash(abs) do
+    case trash_command() do
+      nil ->
+        {:error, :trash_unavailable}
+
+      {command, args} ->
+        case System.cmd(command, args ++ [abs], stderr_to_stdout: true) do
+          {_, 0} ->
+            :ok
+
+          {output, status} ->
+            Logger.warning("trash of #{abs} failed (#{status}): #{String.trim(output)}")
+            {:error, :trash_failed}
+        end
+    end
+  end
+
+  # Overridable through config so tests do not fill the developer's real Trash.
+  # macOS 15+ ships /usr/bin/trash (`-s` makes a failed move exit non-zero);
+  # older macOS asks Finder, with the path as `argv` so it is never AppleScript
+  # source; Linux desktops have `gio trash`.
+  defp trash_command do
+    Application.get_env(:markdn, :trash_command) || default_trash_command()
+  end
+
+  defp default_trash_command do
+    cond do
+      File.exists?("/usr/bin/trash") ->
+        {"/usr/bin/trash", ["-s"]}
+
+      :os.type() == {:unix, :darwin} ->
+        {"osascript",
+         [
+           "-e",
+           "on run argv",
+           "-e",
+           ~S|tell application "Finder" to delete (POSIX file (item 1 of argv))|,
+           "-e",
+           "end run"
+         ]}
+
+      gio = System.find_executable("gio") ->
+        {gio, ["trash"]}
+
+      true ->
+        nil
+    end
+  end
+
+  # Rename and trash act on documents, not on directories or symlinks: a symlink
+  # could point anywhere, and a directory takes every document inside with it.
+  defp check_regular(abs) do
+    case File.lstat(abs) do
+      {:ok, %File.Stat{type: :regular}} -> :ok
+      {:ok, _} -> {:error, :not_a_document}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 
   @doc """
   Lists markdown documents under `path`, one level deep.
@@ -145,7 +339,20 @@ defmodule Markdn.Documents do
 
   defp relative(abs), do: Path.relative_to(abs, root())
 
-  defp markdown?(name), do: Path.extname(name) in @extensions
+  @doc """
+  `path` as the UI names it: relative to the root, with `.` and `..` resolved.
+
+  An MCP client may write `./notes/a.md` or an absolute path for the file the
+  editor has open as `notes/a.md`; save notifications are compared by string, so
+  they carry this form.
+  """
+  @spec relative_path(String.t()) :: {:ok, String.t()} | {:error, :outside_root}
+  def relative_path(path) do
+    with {:ok, abs} <- safe_path(path), do: {:ok, relative(abs)}
+  end
+
+  # Case-insensitive: macOS filesystems are, and `README.MD` is a common name.
+  defp markdown?(name), do: String.downcase(Path.extname(name)) in @extensions
 
   # Dotfiles are noise in a document tree by default, but a notes directory that
   # lives in a dotfolder is a real thing, so it is a setting rather than a rule.

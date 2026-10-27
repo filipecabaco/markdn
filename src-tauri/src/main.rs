@@ -350,7 +350,7 @@ fn await_server(port: u16, died: &Arc<AtomicBool>) -> Result<(), String> {
 
     while std::time::Instant::now() < deadline {
         if died.load(Ordering::SeqCst) {
-            return Err(exit_message(port));
+            return Err(exit_message(port, true));
         }
 
         if std::net::TcpStream::connect(addr.clone()).is_ok() {
@@ -360,19 +360,29 @@ fn await_server(port: u16, died: &Arc<AtomicBool>) -> Result<(), String> {
         std::thread::sleep(sleep_interval);
     }
 
-    Err(exit_message(port))
+    Err(exit_message(port, false))
 }
 
-fn exit_message(port: u16) -> String {
-    format!(
-        "The MarkDN backend never started listening on port {port}.\n\n\
-         Check the log at $TMPDIR/markdn_desktop.log for the reason, or run the \
-         sidecar by hand:\n\n\
-         PORT={port} burrito_out/desktop-<triplet>"
-    )
+// Shown to whoever launched the app, so it names what happened and the actual
+// file to open — `$TMPDIR` means nothing to someone who double-clicked an icon.
+// The path matches where the backend writes it (Markdn.redirect_logs_to_file/0:
+// System.tmp_dir!(), which is TMPDIR, as std::env::temp_dir is).
+fn exit_message(port: u16, died: bool) -> String {
+    let log = std::env::temp_dir().join("markdn_desktop.log");
+    let what = if died {
+        "The MarkDN backend stopped while it was starting.".to_string()
+    } else {
+        format!("The MarkDN backend did not answer on port {port} within a minute.")
+    };
+
+    format!("{what}\n\nIts log says why:\n{}", log.display())
 }
 
-/// Paints the reason into the window instead of leaving a blank frame.
+/// Paints the reason into the window instead of leaving it on "Starting…".
+///
+/// The window is still on the bundled loading page (src-tauri/loading), which
+/// knows how to show a failure in the app's own design; the inline fallback only
+/// runs if that page is somehow not the one loaded.
 fn show_startup_error(app: &tauri::AppHandle, reason: &str) {
     eprintln!("MarkDN failed to start: {}", reason);
 
@@ -380,17 +390,20 @@ fn show_startup_error(app: &tauri::AppHandle, reason: &str) {
         return;
     };
 
+    let reason_json = serde_json::to_string(reason).unwrap_or_else(|_| "\"\"".to_string());
     let script = format!(
         r#"
-        document.title = "MarkDN — can't start";
-        document.body.innerHTML = "";
-        document.body.style.cssText =
-          "margin:0;padding:48px;background:#16181d;color:#e6e6e6;" +
-          "font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap";
-        document.body.textContent = {};
-        "#,
-        serde_json::to_string(&format!("MarkDN can't start\n\n{reason}"))
-            .unwrap_or_else(|_| "\"MarkDN can't start\"".to_string())
+        if (typeof window.markdnStartupFailed === "function") {{
+          window.markdnStartupFailed({reason_json});
+        }} else {{
+          document.title = "MarkDN — can't start";
+          document.body.innerHTML = "";
+          document.body.style.cssText =
+            "margin:0;padding:48px;white-space:pre-wrap;" +
+            "font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace";
+          document.body.textContent = "MarkDN can't start\n\n" + {reason_json};
+        }}
+        "#
     );
 
     // Re-applied: the window is loading its own URL concurrently and whatever
@@ -403,9 +416,11 @@ fn show_startup_error(app: &tauri::AppHandle, reason: &str) {
     });
 }
 
-// Points the window at the port actually in use. When the OS assigned a free
-// port (production), the compile-time URL in tauri.conf.json is wrong — and
-// even in dev this reload recovers the webview if it raced the server boot.
+// Leaves the bundled loading page for the backend on the port actually in use.
+// The window opens on that page (tauri.conf.json `frontendDist: "loading"`)
+// rather than on a URL nothing is serving yet — in production the port is
+// OS-assigned and unknown at build time anyway. In dev the window starts on
+// `devUrl`, and this reload recovers it if it raced the server boot.
 fn navigate_main_window(app: &tauri::AppHandle, port: u16) {
     if let Some(window) = app.get_webview_window("main") {
         let url = format!("http://localhost:{}", port);

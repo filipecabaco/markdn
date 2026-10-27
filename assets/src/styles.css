@@ -1,56 +1,95 @@
 /*
- * MarkDN — precision instrument.
+ * MarkDN — Midnight Line.
  *
- * Warm graphite neutrals with a single signal-red accent, in the tradition of
- * measuring instruments rather than developer tools: hairlines instead of
- * shadows, near-zero radii, tight density, and colour reserved for state.
+ * A document is a line. The shell is a transit diagram fired in midnight-blue
+ * enamel: every top-level folder is a line in one of four inks, documents are its
+ * stations, and the open document's headings are a line of their own, with the
+ * section in view as the lit interchange. The document itself sits on a
+ * porcelain card inset in the enamel — deep enamel in the dark appearance.
  *
- * Both themes are designed surfaces, not one theme with inverted tokens. Only the
- * palette block is redefined for dark; everything below reads tokens.
+ * Two palettes, kept apart on purpose. The enamel tokens paint the shell and
+ * are the same in both appearances; the document tokens (canvas, panel,
+ * surface, ink…) paint the card and everything that floats over it, and are
+ * redefined for dark. Line inks are only ever lines, station rings and state.
  */
 
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fonts/BarlowCondensed-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fonts/BarlowCondensed-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-display: swap;
+}
+
 :root {
-  /* Warm-tinted neutrals. Nothing is pure white or pure black. */
-  --canvas: oklch(0.955 0.004 75);
-  --panel: oklch(0.925 0.005 75);
-  --surface: oklch(0.985 0.003 80);
-  --line: oklch(0.865 0.006 75);
-  --line-strong: oklch(0.775 0.008 75);
-  /* The border that *identifies an interactive control*. WCAG 1.4.11 wants 3:1
-     against the adjacent surface for that, which the decorative hairlines above
-     deliberately do not meet — they separate regions, they do not name a
-     control. */
-  --line-control: oklch(0.592 0.010 70);
+  /* The shell: midnight enamel, porcelain type. The same in both appearances. */
+  --enamel: oklch(0.205 0.068 271);
+  --enamel-raised: oklch(0.26 0.066 270);
+  --enamel-line: oklch(0.39 0.052 270);
+  --on-enamel: oklch(0.965 0.004 95);
+  --on-enamel-muted: oklch(0.80 0.025 268);
 
-  --ink: oklch(0.245 0.010 70);
-  --ink-muted: oklch(0.495 0.008 70);
-  --ink-faint: oklch(0.505 0.008 70);
+  /* Line inks. Lines, station rings and state; never decoration. */
+  --scarlet: oklch(0.585 0.215 27);
+  --cobalt: oklch(0.585 0.205 262);
+  --amber: oklch(0.84 0.165 85);
+  --green: oklch(0.655 0.165 145);
+  --line-ink: var(--scarlet);
+  --line-ink-on: oklch(0.985 0.003 95);
 
-  /* Source syntax. Two low-chroma hues past the neutrals, at a chroma an order
-     of magnitude under the signal so a highlighted document still reads as a
-     document rather than as a paint chart. Marker is the punctuation the author
-     typed and the reader mostly does not need: the quietest thing on screen. */
-  --syn-marker: oklch(0.620 0.008 70);
-  --syn-heading: oklch(0.245 0.010 70);
-  --syn-code: oklch(0.450 0.070 160);
-  --syn-link: oklch(0.450 0.090 250);
-  --syn-url: oklch(0.510 0.050 250);
-  --syn-html: oklch(0.470 0.070 300);
+  /* The document card: porcelain. */
+  --canvas: oklch(0.935 0.006 265);
+  --panel: oklch(0.925 0.008 265);
+  --surface: oklch(0.968 0.004 95);
+  --line: oklch(0.875 0.01 265);
+  --line-strong: oklch(0.775 0.014 265);
+  /* The border that identifies an interactive control: 3:1 against the card
+     (WCAG 1.4.11), which the decorative hairlines above deliberately are not. */
+  --line-control: oklch(0.565 0.025 265);
 
-  /* Signal red. Selection, focus, active state, primary action. Nothing else. */
-  --signal: oklch(0.508 0.185 30);
-  --signal-ink: oklch(0.985 0.004 80);
-  --signal-tint: oklch(0.508 0.185 30 / 0.10);
-  --signal-tint-soft: oklch(0.508 0.185 30 / 0.055);
+  --ink: oklch(0.235 0.04 268);
+  --ink-muted: oklch(0.455 0.03 268);
+  --ink-faint: oklch(0.48 0.025 268);
+
+  /* Source syntax: low chroma, so a highlighted document reads as a document. */
+  --syn-marker: oklch(0.6 0.02 268);
+  --syn-heading: oklch(0.235 0.04 268);
+  --syn-code: oklch(0.45 0.08 150);
+  --syn-link: oklch(0.45 0.11 262);
+  --syn-url: oklch(0.52 0.06 262);
+  --syn-html: oklch(0.47 0.08 310);
+
+  /* Scarlet is state: the primary action, unsaved edits, a search hit. */
+  --signal: oklch(0.54 0.205 27);
+  --signal-ink: oklch(0.985 0.003 95);
+  --signal-tint: oklch(0.54 0.205 27 / 0.12);
+  --signal-tint-soft: oklch(0.54 0.205 27 / 0.06);
+  /* Cobalt is focus, as the diagram's active input is. */
+  --focus: oklch(0.53 0.21 262);
+
+  /* Amber: a warning, and an agent's change. Text-weight on porcelain. */
+  --caution: oklch(0.5 0.11 70);
+  --caution-tint: oklch(0.84 0.165 85 / 0.22);
 
   --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sign: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
-  /* Fixed rem scale, ratio ~1.2. Product UI is viewed at consistent DPI. */
-  --t-micro: 0.6875rem;
-  --t-small: 0.75rem;
-  --t-base: 0.8125rem;
-  --t-body: 0.9375rem;
+  /* Sized for glass first: 17 is iOS body, 15 the UI, 13 the smallest label. */
+  --t-micro: 0.75rem;
+  --t-small: 0.8125rem;
+  --t-base: 0.9375rem;
+  --t-body: 1.0625rem;
+
+  --radius-card: 14px;
+  --radius-control: 10px;
+  /* One target for every control on glass; a pointer gets a tighter one. */
+  --target: 44px;
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out-quart */
   --fast: 120ms;
@@ -59,30 +98,40 @@
   color-scheme: light;
 }
 
+@media (pointer: fine) {
+  :root {
+    --target: 34px;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --canvas: oklch(0.195 0.005 70);
-    --panel: oklch(0.228 0.006 70);
-    --surface: oklch(0.168 0.005 70);
-    --line: oklch(0.300 0.007 70);
-    --line-strong: oklch(0.385 0.008 70);
-    --line-control: oklch(0.520 0.009 70);
+    --canvas: oklch(0.185 0.055 270);
+    --panel: oklch(0.265 0.055 270);
+    --surface: oklch(0.235 0.052 270);
+    --line: oklch(0.33 0.048 270);
+    --line-strong: oklch(0.42 0.045 270);
+    --line-control: oklch(0.6 0.04 268);
 
-    --ink: oklch(0.920 0.006 80);
-    --ink-muted: oklch(0.665 0.007 75);
-    --ink-faint: oklch(0.635 0.008 75);
+    --ink: oklch(0.945 0.006 95);
+    --ink-muted: oklch(0.79 0.022 268);
+    --ink-faint: oklch(0.75 0.022 268);
 
-    --syn-marker: oklch(0.560 0.008 70);
-    --syn-heading: oklch(0.940 0.006 80);
-    --syn-code: oklch(0.780 0.080 160);
-    --syn-link: oklch(0.760 0.090 250);
-    --syn-url: oklch(0.700 0.050 250);
-    --syn-html: oklch(0.780 0.080 300);
+    --syn-marker: oklch(0.6 0.025 268);
+    --syn-heading: oklch(0.96 0.005 95);
+    --syn-code: oklch(0.8 0.1 150);
+    --syn-link: oklch(0.78 0.11 262);
+    --syn-url: oklch(0.72 0.06 262);
+    --syn-html: oklch(0.8 0.09 310);
 
-    --signal: oklch(0.660 0.180 33);
-    --signal-ink: oklch(0.165 0.006 70);
-    --signal-tint: oklch(0.660 0.180 33 / 0.14);
-    --signal-tint-soft: oklch(0.660 0.180 33 / 0.07);
+    --signal: oklch(0.66 0.2 27);
+    --signal-ink: oklch(0.18 0.05 270);
+    --signal-tint: oklch(0.66 0.2 27 / 0.18);
+    --signal-tint-soft: oklch(0.66 0.2 27 / 0.09);
+    --focus: oklch(0.72 0.16 262);
+
+    --caution: oklch(0.85 0.15 85);
+    --caution-tint: oklch(0.84 0.165 85 / 0.16);
 
     color-scheme: dark;
   }
@@ -93,34 +142,81 @@
    CSS has no way to share one declaration list between a media query and an
    attribute selector — so the two move together or the themes drift apart. */
 :root[data-theme="dark"] {
-  --canvas: oklch(0.195 0.005 70);
-  --panel: oklch(0.228 0.006 70);
-  --surface: oklch(0.168 0.005 70);
-  --line: oklch(0.300 0.007 70);
-  --line-strong: oklch(0.385 0.008 70);
-  --line-control: oklch(0.520 0.009 70);
+  --canvas: oklch(0.185 0.055 270);
+  --panel: oklch(0.265 0.055 270);
+  --surface: oklch(0.235 0.052 270);
+  --line: oklch(0.33 0.048 270);
+  --line-strong: oklch(0.42 0.045 270);
+  --line-control: oklch(0.6 0.04 268);
 
-  --ink: oklch(0.920 0.006 80);
-  --ink-muted: oklch(0.665 0.007 75);
-  --ink-faint: oklch(0.635 0.008 75);
+  --ink: oklch(0.945 0.006 95);
+  --ink-muted: oklch(0.79 0.022 268);
+  --ink-faint: oklch(0.75 0.022 268);
 
-  --syn-marker: oklch(0.560 0.008 70);
-  --syn-heading: oklch(0.940 0.006 80);
-  --syn-code: oklch(0.780 0.080 160);
-  --syn-link: oklch(0.760 0.090 250);
-  --syn-url: oklch(0.700 0.050 250);
-  --syn-html: oklch(0.780 0.080 300);
+  --syn-marker: oklch(0.6 0.025 268);
+  --syn-heading: oklch(0.96 0.005 95);
+  --syn-code: oklch(0.8 0.1 150);
+  --syn-link: oklch(0.78 0.11 262);
+  --syn-url: oklch(0.72 0.06 262);
+  --syn-html: oklch(0.8 0.09 310);
 
-  --signal: oklch(0.660 0.180 33);
-  --signal-ink: oklch(0.165 0.006 70);
-  --signal-tint: oklch(0.660 0.180 33 / 0.14);
-  --signal-tint-soft: oklch(0.660 0.180 33 / 0.07);
+  --signal: oklch(0.66 0.2 27);
+  --signal-ink: oklch(0.18 0.05 270);
+  --signal-tint: oklch(0.66 0.2 27 / 0.18);
+  --signal-tint-soft: oklch(0.66 0.2 27 / 0.09);
+  --focus: oklch(0.72 0.16 262);
+
+  --caution: oklch(0.85 0.15 85);
+  --caution-tint: oklch(0.84 0.165 85 / 0.16);
 
   color-scheme: dark;
 }
 
-* {
+/* A line's ink, wherever something rides it: a tree item, the open document's
+   line, the panes' sync rail. Amber is light, so it carries enamel type. */
+[data-ink="scarlet"] {
+  --line-ink: var(--scarlet);
+  --line-ink-on: oklch(0.985 0.003 95);
+}
+[data-ink="cobalt"] {
+  --line-ink: var(--cobalt);
+  --line-ink-on: oklch(0.985 0.003 95);
+}
+[data-ink="amber"] {
+  --line-ink: var(--amber);
+  --line-ink-on: var(--enamel);
+}
+[data-ink="green"] {
+  --line-ink: var(--green);
+  --line-ink-on: var(--enamel);
+}
+
+/* Browser surfaces carry the palette too. Selection is state, so it is signal;
+   checkboxes in task lists and settings follow it. */
+:root {
+  accent-color: var(--signal);
+}
+::selection {
+  background: var(--signal-tint);
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+/* Read by assistive technology, not drawn. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 html,
@@ -130,16 +226,16 @@ body {
 
 body {
   margin: 0;
-  background: var(--canvas);
+  background: var(--enamel);
   color: var(--ink);
   font: var(--t-base) / 1.5 var(--font-ui);
   -webkit-font-smoothing: antialiased;
 }
 
 :focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 1px;
-  border-radius: 1px;
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -154,20 +250,26 @@ body {
 
 /* ── Shell ─────────────────────────────────────────────────────────────── */
 
+/* The enamel frame. Safe areas are the shell's to clear: on an iPhone the
+   notch and the home indicator sit over enamel, never over the document. */
 .app {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  background: var(--enamel);
+  color: var(--on-enamel);
 }
 
 .app__header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  height: 38px;
-  padding: 0 10px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
+  gap: 12px;
+  min-height: 56px;
+  padding: 6px 12px 6px 16px;
+  background: var(--enamel);
+  color: var(--on-enamel);
   flex-shrink: 0;
 }
 
@@ -182,121 +284,170 @@ body {
 .wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 9px;
   user-select: none;
+  flex-shrink: 0;
 }
-.wordmark__frame {
-  stroke: var(--line-strong);
-  stroke-width: 1.5;
-  fill: var(--surface);
+.wordmark__line {
+  stroke-width: 3;
+  stroke-linecap: round;
 }
-.wordmark__rule {
-  fill: var(--ink-faint);
+.wordmark__line--scarlet {
+  stroke: var(--scarlet);
 }
-.wordmark__rule-active {
-  fill: var(--signal);
+.wordmark__line--cobalt {
+  stroke: var(--cobalt);
+}
+.wordmark__line--amber {
+  stroke: var(--amber);
+}
+.wordmark__line--green {
+  stroke: var(--green);
+}
+.wordmark__ring {
+  fill: var(--enamel);
+  stroke: var(--on-enamel);
+  stroke-width: 2.5;
 }
 .wordmark__text {
-  font-size: var(--t-base);
+  font-family: var(--font-sign);
+  font-size: 1.375rem;
   font-weight: 600;
-  letter-spacing: -0.005em;
-}
-.wordmark__text-dn {
-  color: var(--ink-muted);
-  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
+/* The document as a sign: the line it rides, then its station. */
 .app__doc {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   flex: 1;
   min-width: 0;
+  margin-left: 8px;
+}
+.app__line {
+  flex-shrink: 0;
+  padding: 3px 10px 2px;
+  border-radius: 999px;
+  background: var(--line-ink);
+  color: var(--line-ink-on);
+  font-family: var(--font-sign);
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  line-height: 1.3;
+  text-transform: uppercase;
 }
 .app__path {
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-  color: var(--ink-muted);
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-sign);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 .app__state {
-  font-size: var(--t-micro);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
   flex-shrink: 0;
+  font-family: var(--font-sign);
+  font-size: var(--t-small);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-enamel-muted);
 }
 .app__state.is-dirty {
-  color: var(--signal);
+  color: var(--on-enamel);
+}
+.app__state.is-dirty::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--scarlet);
+  vertical-align: 1px;
 }
 
-/* Segmented control. One hairline box, dividers between items, no radii-heavy
-   pills — the control reads as a switch on a panel. */
+/* Segmented control: the platform's, in enamel. The selected segment is a
+   porcelain plate, so the view in use reads at a glance from across the room. */
 .segmented {
   display: flex;
-  border: 1px solid var(--line-control);
-  border-radius: 3px;
-  overflow: hidden;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--enamel-line);
+  border-radius: var(--radius-control);
   flex-shrink: 0;
 }
 .segmented__item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 7px;
+  min-height: calc(var(--target) - 8px);
+  min-width: 72px;
+  padding: 0 14px;
   border: 0;
-  border-left: 1px solid var(--line-control);
-  padding: 3px 9px;
+  border-radius: 7px;
   background: transparent;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: var(--t-small);
+  color: var(--on-enamel-muted);
+  font-family: var(--font-sign);
+  font-size: var(--t-base);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
 }
-.segmented__item:first-child {
-  border-left: 0;
-}
 .segmented__item:hover:not(:disabled) {
-  background: var(--signal-tint-soft);
-  color: var(--ink);
+  background: var(--enamel-raised);
+  color: var(--on-enamel);
 }
 .segmented__item:disabled {
-  color: var(--ink-faint);
+  opacity: 0.5;
   cursor: default;
 }
 .segmented__item.is-active {
-  background: var(--signal);
-  color: var(--signal-ink);
+  background: var(--on-enamel);
+  color: var(--enamel);
 }
 .segmented__key,
 .button__key {
   font-family: var(--font-mono);
   font-size: var(--t-micro);
-  opacity: 0.55;
-}
-.segmented__item.is-active .segmented__key {
-  opacity: 0.75;
+  font-weight: 400;
+  letter-spacing: 0;
+  opacity: 0.8;
 }
 
+/* Buttons on the document: hairline outline, one radius, one target. */
 .button {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--target);
+  padding: 0 16px;
   border: 1px solid var(--line-control);
-  border-radius: 3px;
-  padding: 3px 9px;
-  background: var(--surface);
+  border-radius: var(--radius-control);
+  background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: var(--t-small);
+  font-size: var(--t-base);
+  font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease);
+  transition:
+    border-color var(--fast) var(--ease),
+    background var(--fast) var(--ease),
+    color var(--fast) var(--ease);
 }
 .button:hover:not(:disabled) {
-  border-color: var(--signal);
+  border-color: var(--ink);
 }
 .button:active:not(:disabled) {
   background: var(--signal-tint);
@@ -306,8 +457,6 @@ body {
   cursor: default;
   opacity: 0.6;
 }
-/* Secondary action in the header: the same control, without the border that
-   claims primacy next to Save. */
 .button--quiet {
   border-color: transparent;
   color: var(--ink-muted);
@@ -317,149 +466,481 @@ body {
   color: var(--ink);
 }
 
+/* In the enamel header the same controls speak signage: uppercase condensed,
+   porcelain outline, and Save as the one scarlet plate when there is something
+   to save. */
+.app__header .button {
+  border-color: var(--enamel-line);
+  color: var(--on-enamel);
+  font-family: var(--font-sign);
+  font-size: var(--t-base);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.app__header .button:hover:not(:disabled) {
+  border-color: var(--on-enamel);
+  background: var(--enamel-raised);
+}
+.app__header .button--quiet {
+  border-color: transparent;
+  color: var(--on-enamel-muted);
+}
+.app__header .button--quiet:hover:not(:disabled) {
+  color: var(--on-enamel);
+}
+.app__header .button--quiet[aria-pressed="true"] {
+  border-color: var(--on-enamel);
+  color: var(--on-enamel);
+}
+.app__header .button:not(.button--quiet):not(:disabled) {
+  background: var(--scarlet);
+  border-color: var(--scarlet);
+  color: oklch(0.985 0.003 95);
+}
+.app__header .button:not(.button--quiet):not(:disabled):hover {
+  background: oklch(0.54 0.215 27);
+}
+.app__header .button:disabled {
+  color: var(--on-enamel-muted);
+  opacity: 0.55;
+}
+
+/* A notice on the line: an enamel strip under the bar, its dot the ink of what
+   it reports. */
 .banner {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 6px 12px;
-  background: var(--signal-tint);
-  border-bottom: 1px solid var(--line);
-  font-size: var(--t-small);
+  gap: 10px;
+  min-height: var(--target);
+  margin: 0 12px 8px;
+  padding: 6px 8px 6px 14px;
+  border: 1px solid var(--enamel-line);
+  border-radius: var(--radius-control);
+  background: var(--enamel-raised);
+  color: var(--on-enamel);
+  font-size: var(--t-base);
 }
 .banner__dot {
-  width: 5px;
-  height: 5px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: var(--signal);
+  background: var(--amber);
   flex-shrink: 0;
+}
+/* A question rather than a report: the actions carry the weight. */
+.banner--decision {
+  flex-wrap: wrap;
+}
+.banner--decision .button {
+  border-color: var(--enamel-line);
+  color: var(--on-enamel);
+}
+.banner--decision .button:first-child {
+  background: var(--on-enamel);
+  border-color: var(--on-enamel);
+  color: var(--enamel);
+}
+.banner__message {
+  min-width: 0;
+}
+.banner__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
 }
 .banner__dismiss {
   margin-left: auto;
+  min-height: var(--target);
+  padding: 0 10px;
   border: 0;
   background: none;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: var(--t-small);
+  color: var(--on-enamel-muted);
+  font-family: var(--font-sign);
+  font-size: var(--t-base);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+}
+.banner__dismiss:hover {
+  color: var(--on-enamel);
 }
 
+/* The card is inset in the enamel on every edge but the rail's. */
 .app__body {
   display: flex;
   flex: 1;
   min-height: 0;
+  padding: 0 12px 12px 0;
 }
 
-/* ── Sidebar ───────────────────────────────────────────────────────────── */
+/* ── Rail ──────────────────────────────────────────────────────────────── */
 
 .sidebar {
-  width: 232px;
+  width: 300px;
   flex-shrink: 0;
   overflow-y: auto;
-  padding: 10px 8px;
-  background: var(--panel);
-  border-right: 1px solid var(--line);
+  overscroll-behavior: contain;
+  padding: 4px 16px 24px;
+  background: var(--enamel);
+  color: var(--on-enamel);
 }
-@media (max-width: 1000px) {
-  .sidebar {
-    width: 190px;
-  }
+/* Collapsed outright, not animated: easing the width would re-lay out both
+   panes on every frame. */
+.sidebar[hidden] {
+  display: none;
 }
 
-.sidebar__label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 6px 10px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid var(--line);
+.sidebar-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--target);
+  height: var(--target);
+  margin-right: -4px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--on-enamel-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--fast) var(--ease),
+    color var(--fast) var(--ease);
 }
-.sidebar__label > span:first-child {
-  font-size: var(--t-micro);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+.sidebar-toggle:hover {
+  border-color: var(--enamel-line);
+  color: var(--on-enamel);
 }
+.sidebar-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+.sidebar-toggle__frame {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+.sidebar-toggle__pane {
+  fill: currentColor;
+  opacity: 0;
+  transition: opacity var(--fast) var(--ease);
+}
+.sidebar-toggle[aria-expanded="true"] .sidebar-toggle__pane {
+  opacity: 0.45;
+}
+/* iPad portrait and split screen: the rail slides over the card, above a scrim
+   that closes it, so the document keeps its full width. */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .app__body {
+    position: relative;
+    padding-left: 12px;
+  }
+  .sidebar {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(340px, 86vw);
+    border-right: 1px solid var(--enamel-line);
+    border-radius: 0 var(--radius-card) var(--radius-card) 0;
+    animation: rail-in var(--base) var(--ease);
+  }
+}
+@keyframes rail-in {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+}
+.rail-scrim {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: oklch(0.205 0.068 271 / 0.55);
+  cursor: pointer;
+}
+
+/* Where the documents live, said once and quietly above the network. */
 .sidebar__root {
-  font-family: var(--font-mono);
+  margin: 18px 2px 6px;
   font-size: var(--t-small);
-  color: var(--ink-muted);
+  color: var(--on-enamel-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* One row: the palette field, then search and New as square controls. */
+.sidebar__controls {
+  display: flex;
+  gap: 8px;
+}
+.sidebar__controls .sidebar__search {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.sidebar__icon,
+.app__icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--target);
+  height: var(--target);
+  padding: 0;
+  border: 1px solid var(--enamel-line);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--on-enamel-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color var(--fast) var(--ease),
+    color var(--fast) var(--ease),
+    background var(--fast) var(--ease);
+}
+.app__icon {
+  border-color: transparent;
+}
+.sidebar__icon:hover,
+.sidebar__icon.is-active,
+.app__icon:hover {
+  border-color: var(--on-enamel);
+  color: var(--on-enamel);
+  background: var(--enamel-raised);
+}
+.sidebar__icon svg,
+.app__icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+/* The documents as lines. Every row rides its folder's line: a 5px rule down
+   its left edge and a porcelain station on it; the open document is the
+   interchange ring. Folders are the line's name board. */
 .tree {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+.tree .tree {
+  padding-left: 0 !important;
+}
 .tree__dir,
 .tree__file {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  text-align: left;
+  min-height: var(--target);
+  padding: 4px 10px 4px 40px;
   border: 0;
+  border-radius: var(--radius-control);
   background: transparent;
-  color: var(--ink);
+  color: var(--on-enamel-muted);
   font: inherit;
   font-size: var(--t-base);
-  padding: 2px 6px;
-  border-radius: 2px;
+  text-align: left;
   cursor: pointer;
-  transition: background var(--fast) var(--ease);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
 }
-.tree__file {
-  font-family: var(--font-mono);
+.tree__file::before,
+.tree__dir::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: var(--line-ink);
+}
+.tree__file::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
+  border-radius: 50%;
+  background: var(--on-enamel);
+  border: 3px solid var(--line-ink);
+  transition: transform var(--base) var(--ease);
+}
+/* The line's name board: the folder sits on its own line as a square terminus. */
+.tree__dir {
+  color: var(--on-enamel);
+  font-family: var(--font-sign);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tree__dir::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 17px;
+  height: 17px;
+  margin-top: -8.5px;
+  border-radius: 4px;
+  background: var(--line-ink);
+}
+/* Every folder is a line of its own, and the documents at the root share the
+   main line: a run of the same line is drawn unbroken, and each line starts and
+   ends at its first and last station, with a gap before the next one. */
+.tree[role="tree"] > .tree__item + .tree__item:is([data-type="directory"], [data-type="file"]:not([data-type="file"] + *)) {
+  margin-top: 12px;
+}
+.tree[role="tree"] > .tree__item[data-type="file"] + .tree__item[data-type="file"] {
+  margin-top: 0;
+}
+.tree[role="tree"] > .tree__item[data-type="directory"] > .tree__dir::before,
+.tree[role="tree"] > .tree__item[data-type="file"]:not([data-type="file"] + *) > .tree__file::before {
+  top: 50%;
+}
+.tree[role="tree"] > .tree__item[data-type="file"]:not(:has(+ [data-type="file"])) > .tree__file::before,
+.tree__item[data-terminus] > .tree__row::before {
+  bottom: 50%;
+}
+/* A folder inside a line is a stop on it, not a second terminus: the track
+   runs straight through, and the stop is a small square station. */
+.tree .tree .tree__dir {
+  color: var(--on-enamel-muted);
   font-size: var(--t-small);
-  color: var(--ink-muted);
+}
+.tree .tree .tree__dir::after {
+  left: 10px;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
+  border-radius: 3px;
+  background: var(--on-enamel);
+  border: 3px solid var(--line-ink);
+}
+.tree[role="tree"] > .tree__board {
+  margin-top: 12px;
+}
+.tree[role="tree"] > .tree__board:first-child {
+  margin-top: 0;
+}
+.tree__board > .tree__dir {
+  cursor: default;
+}
+.tree__board > .tree__dir:hover {
+  background: transparent;
+}
+.tree__board > .tree__dir::before {
+  top: 50%;
+}
+.tree[role="tree"] > .tree__board + .tree__item[data-type="file"] {
+  margin-top: 0;
+}
+.tree[role="tree"] > .tree__board + .tree__item[data-type="file"] > .tree__file::before {
+  top: 0;
+}
+/* A closed folder is a terminus with no track: its line is folded away. */
+.tree[role="tree"] > .tree__item[data-type="directory"]:not([aria-expanded="true"]) > .tree__dir::before {
+  display: none;
 }
 .tree__dir:hover,
 .tree__file:hover {
-  background: var(--signal-tint-soft);
-  color: var(--ink);
+  background: var(--enamel-raised);
+  color: var(--on-enamel);
 }
 .tree__file.is-selected {
-  background: var(--signal);
-  color: var(--signal-ink);
+  color: var(--on-enamel);
+  font-weight: 600;
+}
+.tree__file.is-selected::after {
+  transform: scale(1.45);
+  background: var(--enamel);
+  border: 3.5px solid var(--on-enamel);
+}
+.tree__item:focus-visible {
+  outline: none;
+}
+.tree__item:focus-visible > .tree__row {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
 }
 .tree__chevron {
   display: inline-block;
   width: 0;
   height: 0;
-  margin: 0 4px 0 2px;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  border-left: 5px solid var(--ink-muted);
+  margin-left: auto;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid var(--on-enamel-muted);
+  order: 2;
   transition: transform var(--fast) var(--ease);
 }
-.tree__dir[aria-expanded="true"] .tree__chevron {
+.tree__item[aria-expanded="true"] > .tree__row .tree__chevron {
   transform: rotate(90deg);
 }
 .tree__loading,
 .tree__empty,
 .tree__error {
-  color: var(--ink-faint);
-  font-size: var(--t-small);
-  padding: 3px 6px;
+  color: var(--on-enamel-muted);
+  font-size: var(--t-base);
+  padding: 8px 2px;
 }
 .tree__error {
-  color: var(--signal);
+  color: var(--amber);
+}
+
+/* The open document's own line, first in the rail, headed by its line and
+   name as the top bar signs it. */
+.sidebar__now {
+  margin: 4px 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--enamel-line);
+}
+.sidebar__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 2px 10px;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.sidebar__heading-name {
+  font-family: var(--font-sign);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--on-enamel);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Panes ─────────────────────────────────────────────────────────────── */
 
+/* The document card, inset in the enamel. */
 .panes {
   flex: 1;
   display: grid;
   min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-card);
   background: var(--surface);
+  color: var(--ink);
 }
 .panes--split {
-  grid-template-columns: minmax(0, 1fr) 15px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 21px minmax(0, 1fr);
 }
 .panes--editor,
 .panes--preview {
@@ -561,6 +1042,11 @@ body {
 .source--nowrap .source__input {
   overflow-y: hidden;
 }
+/* An empty line still occupies a line in the textarea above; without a glyph a
+   block collapses to nothing and every line below rides up by one. */
+.source__line:empty::before {
+  content: "\200b";
+}
 /* Past the size where highlighting pays for itself the layer is dropped and the
    textarea paints its own text again. Nothing else changes. */
 .source--plain .source__layer {
@@ -619,6 +1105,21 @@ body {
 }
 
 /* Line readout. An instrument shows its index. */
+/* Tab-moves-focus mode, in the readout's own style at the opposite corner. */
+.editor__mode {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  pointer-events: none;
+}
 .editor__meter {
   position: absolute;
   right: 10px;
@@ -634,19 +1135,35 @@ body {
   font-size: var(--t-micro);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
+  /* Above the textarea, so a long line scrolling past the corner runs under the
+     readout instead of printing its glyphs across the numbers. */
+  z-index: 2;
 }
 .editor__meter-sep {
-  opacity: 0.5;
+  color: var(--line-control);
 }
 
 /* ── Sync rail ─────────────────────────────────────────────────────────── */
 
+/* Between the panes, the same line the document rides: a rule in its ink, each
+   block a tick across it, the caret's block a station. */
 .rail {
   position: relative;
   overflow: hidden;
-  background: var(--panel);
+  background: var(--surface);
   border-left: 1px solid var(--line);
   border-right: 1px solid var(--line);
+}
+.rail::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--line-ink);
+  opacity: 0.35;
 }
 .rail__strip {
   position: absolute;
@@ -655,18 +1172,21 @@ body {
 }
 .rail__tick {
   position: absolute;
-  left: 1px;
-  height: 1.5px;
-  background: var(--ink-faint);
-  opacity: 0.85;
-  transition: background var(--fast) var(--ease), opacity var(--fast) var(--ease);
+  left: 50%;
+  height: 2px;
+  transform: translateX(-50%);
+  background: var(--line-ink);
+  opacity: 0.8;
+  transition: opacity var(--fast) var(--ease);
 }
 .rail__tick.is-active {
-  background: var(--signal);
+  width: 13px !important;
+  height: 13px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--line-ink);
   opacity: 1;
-  height: 2px;
-  left: 0;
-  width: 15px !important;
 }
 
 /* ── Preview ───────────────────────────────────────────────────────────── */
@@ -709,84 +1229,89 @@ body {
 
 /* Active block: the caret's block, tinted. The rail carries the precise index;
    this is only enough to find your place at a glance. */
+/* The caret's block: a wash of the document's own line ink. */
 .preview [data-line].is-active-block {
-  background: var(--signal-tint-soft);
-  box-shadow: 0 0 0 6px var(--signal-tint-soft);
-  border-radius: 1px;
+  background: color-mix(in oklch, var(--line-ink) 9%, transparent);
+  box-shadow: 0 0 0 8px color-mix(in oklch, var(--line-ink) 9%, transparent);
+  border-radius: 4px;
 }
 
-.preview h1,
-.preview h2,
-.preview h3,
-.preview h4 {
+/* Document typography. Wrapped in :where() so it carries no class weight: a
+   component's own class (`.mdx-card__title`, a code block's `pre > code`) always
+   wins over "a heading in the preview", rather than the prose rules leaking a
+   28px heading margin or an inline-code box into the component. */
+:where(.preview) h1,
+:where(.preview) h2,
+:where(.preview) h3,
+:where(.preview) h4 {
   line-height: 1.25;
   letter-spacing: -0.012em;
   margin: 1.7em 0 0.5em;
 }
-.preview h1 {
+:where(.preview) h1 {
   font-size: 1.6rem;
   font-weight: 650;
 }
-.preview h2 {
+:where(.preview) h2 {
   font-size: 1.25rem;
   font-weight: 620;
   padding-bottom: 0.25em;
   border-bottom: 1px solid var(--line);
 }
-.preview h3 {
+:where(.preview) h3 {
   font-size: 1.05rem;
   font-weight: 600;
 }
-.preview h4 {
+:where(.preview) h4 {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--ink-muted);
 }
-.preview p,
-.preview ul,
-.preview ol {
+:where(.preview) p,
+:where(.preview) ul,
+:where(.preview) ol {
   margin: 0 0 0.9em;
 }
-.preview a {
+:where(.preview) a {
   color: var(--ink);
   text-decoration-color: var(--signal);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 2px;
 }
-.preview a:hover {
+:where(.preview) a:hover {
   color: var(--signal);
 }
-.preview hr {
+:where(.preview) hr {
   border: 0;
   border-top: 1px solid var(--line);
   margin: 1.8em 0;
 }
-.preview blockquote {
+:where(.preview) blockquote {
   margin: 0 0 1em;
   padding: 0.1em 0 0.1em 1em;
   border-left: 1px solid var(--line-strong);
   color: var(--ink-muted);
 }
-.preview table {
+:where(.preview) table {
   border-collapse: collapse;
   display: block;
   overflow-x: auto;
   margin-bottom: 1em;
   font-size: var(--t-base);
 }
-.preview th,
-.preview td {
+:where(.preview) th,
+:where(.preview) td {
   border: 1px solid var(--line);
   padding: 5px 10px;
   text-align: left;
 }
-.preview th {
+:where(.preview) th {
   background: var(--panel);
   font-weight: 600;
   font-size: var(--t-small);
   letter-spacing: 0.02em;
 }
-.preview kbd {
+:where(.preview) kbd {
   display: inline-block;
   padding: 0.05em 0.4em;
   border: 1px solid var(--line-control);
@@ -796,13 +1321,42 @@ body {
   font-size: 0.82em;
   line-height: 1.5;
 }
-.preview :not(.code-block) > code {
+:where(.preview) :not(pre) > code {
   padding: 0.1em 0.3em;
   border: 1px solid var(--line);
   border-radius: 2px;
   background: var(--panel);
   font-family: var(--font-mono);
   font-size: 0.86em;
+}
+
+/* GFM task lists: the checkbox is the marker, so the bullet goes. */
+:where(.preview) .contains-task-list {
+  padding-left: 0.4em;
+}
+:where(.preview) .task-list-item {
+  list-style: none;
+}
+:where(.preview) .task-list-item > input[type="checkbox"] {
+  margin: 0 0.5em 0 0;
+  vertical-align: -0.1em;
+}
+
+/* An image that did not load says which one, in the same hairline language as
+   a pending diagram, instead of the browser's broken-image glyph. */
+.preview__missing {
+  display: block;
+  margin: 0 0 1em;
+  padding: 10px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 3px;
+  color: var(--ink-muted);
+  font-size: var(--t-small);
+}
+.preview__missing code {
+  font-family: var(--font-mono);
+  color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .preview__image {
@@ -826,6 +1380,7 @@ body {
   margin: 0;
   padding: 10px 13px;
   overflow-x: auto;
+  font-family: var(--font-mono);
   font-size: var(--t-base);
   line-height: 1.6;
 }
@@ -851,31 +1406,24 @@ body {
   margin-bottom: 1em;
 }
 
-/* Shiki emits both themes; show the one matching the surface. Explicit
-   [data-theme] wins over the system preference, as for the palette above. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .code-block .shiki,
-  :root:not([data-theme="light"]) .code-block .shiki span {
-    color: var(--shiki-dark) !important;
-    background-color: transparent !important;
-  }
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .code-block .shiki,
-  :root:not([data-theme="dark"]) .code-block .shiki span {
-    color: var(--shiki-light) !important;
-    background-color: transparent !important;
-  }
-}
-:root[data-theme="dark"] .code-block .shiki,
-:root[data-theme="dark"] .code-block .shiki span {
-  color: var(--shiki-dark) !important;
-  background-color: transparent !important;
-}
-:root[data-theme="light"] .code-block .shiki,
-:root[data-theme="light"] .code-block .shiki span {
-  color: var(--shiki-light) !important;
-  background-color: transparent !important;
+/* Rendered code speaks the source pane's syntax palette, so a fenced block reads
+   the same on both sides of the split and follows the theme with the rest of the
+   tokens. Shiki's css-variables theme writes `var(--code-token-*)`; this is the
+   whole mapping. Comments take ink-muted, not syn-marker: marker is tuned to be
+   the quietest thing in the source pane and fails 4.5:1 on this panel. Signal
+   red is never a syntax colour. */
+.code-block {
+  --code-foreground: var(--ink);
+  --code-background: transparent;
+  --code-token-keyword: var(--syn-html);
+  --code-token-function: var(--syn-link);
+  --code-token-link: var(--syn-link);
+  --code-token-string: var(--syn-code);
+  --code-token-string-expression: var(--syn-code);
+  --code-token-constant: var(--syn-url);
+  --code-token-parameter: var(--ink);
+  --code-token-comment: var(--ink-muted);
+  --code-token-punctuation: var(--ink-muted);
 }
 
 /* ── MDX components ────────────────────────────────────────────────────── */
@@ -910,10 +1458,21 @@ body {
 .mdx-alert__body > :last-child {
   margin-bottom: 0;
 }
-.mdx-alert--warning .mdx-alert__header,
+/* Info and success stay neutral: neither asks for anything. Warning and error
+   are the two that do, and they must not be mistaken for each other — amber
+   caution and signal red, each with its own glyph. */
+.mdx-alert--warning .mdx-alert__header {
+  background: var(--caution-tint);
+  color: var(--caution);
+}
 .mdx-alert--error .mdx-alert__header {
   background: var(--signal-tint);
   color: var(--signal);
+}
+.mdx-alert__icon {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
 }
 
 .mdx-callout {
@@ -1102,7 +1661,7 @@ body {
   outline: none;
 }
 .picker__option:focus {
-  box-shadow: inset 2px 0 0 var(--signal);
+  box-shadow: inset 0 0 0 2px var(--focus);
 }
 .picker__name {
   font-family: var(--font-mono);
@@ -1115,9 +1674,9 @@ body {
   font-size: var(--t-small);
 }
 
-/* ── Sidebar search ────────────────────────────────────────────────────── */
+/* ── Rail controls ─────────────────────────────────────────────────────── */
 
-/* A button that reads as a field. The palette is the one search surface; a real
+/* Buttons that read as fields: the palette is the one search surface; a real
    input here would be a second one that behaved differently on every keystroke. */
 .sidebar__search {
   display: flex;
@@ -1125,27 +1684,75 @@ body {
   justify-content: space-between;
   gap: 8px;
   width: 100%;
+  min-height: var(--target);
   margin-bottom: 8px;
-  padding: 5px 8px;
-  background: var(--surface);
-  border: 1px solid var(--line-control);
-  border-radius: 3px;
-  color: var(--ink-faint);
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid var(--enamel-line);
+  border-radius: var(--radius-control);
+  color: var(--on-enamel-muted);
   font: inherit;
+  font-size: var(--t-base);
   text-align: left;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
     border-color var(--fast) var(--ease),
-    color var(--fast) var(--ease);
+    color var(--fast) var(--ease),
+    background var(--fast) var(--ease);
 }
-.sidebar__search:hover {
-  border-color: var(--signal);
-  color: var(--ink);
+.sidebar__search:hover,
+.sidebar__search.is-active {
+  border-color: var(--on-enamel);
+  color: var(--on-enamel);
+  background: var(--enamel-raised);
 }
 .sidebar__search kbd {
+  flex-shrink: 0;
   font-family: var(--font-mono);
   font-size: var(--t-micro);
+  color: var(--on-enamel-muted);
+}
+/* One line at every rail width; the full text stays in the accessible name. */
+.sidebar__search > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── New document ──────────────────────────────────────────────────────── */
+
+/* Takes the place of its button, at the same size, so the tree below does not
+   jump when it opens. */
+.newdoc {
+  margin-bottom: 8px;
+}
+.newdoc__input {
+  width: 100%;
+  padding: 5px 8px;
+  background: var(--surface);
+  border: 1px solid var(--signal);
+  border-radius: 3px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-small);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--signal-tint);
+}
+.newdoc__input:disabled {
+  opacity: 0.6;
+}
+.newdoc__hint {
+  padding: 4px 2px 0;
+  font-size: var(--t-micro);
   color: var(--ink-faint);
+}
+.newdoc__hint kbd {
+  font-family: var(--font-mono);
+}
+.newdoc__error {
+  color: var(--signal);
 }
 
 /* ── Command palette ───────────────────────────────────────────────────── */
@@ -1202,8 +1809,7 @@ body {
   cursor: pointer;
 }
 .palette__row.is-active {
-  background: var(--signal-tint-soft);
-  box-shadow: inset 2px 0 0 var(--signal);
+  background: var(--signal-tint);
 }
 .palette__label {
   flex-shrink: 0;
@@ -1631,4 +2237,347 @@ body {
 .source--excerpt {
   --source-pad: 6px 10px;
   --source-size: var(--t-small);
+}
+
+/* ── Context menu ──────────────────────────────────────────────────────── */
+
+/* Same surface and edge as the palette and picker, so it reads as part of the
+   app rather than an OS menu that drifted in. Focus is the palette's inset
+   signal bar, which is also what the arrow keys move. */
+.menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 196px;
+  padding: 4px 0;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  animation: menu-in var(--fast) var(--ease);
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+.menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 4px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--t-base);
+  text-align: left;
+  cursor: pointer;
+}
+.menu__item:hover,
+.menu__item:focus {
+  background: var(--signal-tint-soft);
+  outline: none;
+}
+.menu__item:focus {
+  box-shadow: inset 0 0 0 2px var(--focus);
+}
+.menu__item:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+.menu__item.is-danger {
+  color: var(--signal);
+}
+.menu__hint {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+}
+.menu__separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--line);
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    animation: none;
+  }
+}
+
+/* ── The document's line ───────────────────────────────────────────────── */
+
+/* Headings as stations, evenly spaced: order, not distance, is what a reader
+   navigates by. The line is a 6px rule in the document's ink; level-1 and 2
+   headings are stations, level 3 a tick across the line; the section in view is
+   the lit interchange, and an agent's change an amber service alert. */
+.doc-line__stops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.doc-line__stop {
+  position: relative;
+}
+.doc-line__stop::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--line-ink);
+}
+.doc-line__stop:first-child::before {
+  top: 50%;
+}
+.doc-line__stop:last-child::before {
+  bottom: 50%;
+}
+.doc-line__station {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--target);
+  padding: 6px 10px 6px 44px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--on-enamel-muted);
+  font: inherit;
+  font-size: var(--t-base);
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+.doc-line__station:hover {
+  background: var(--enamel-raised);
+  color: var(--on-enamel);
+}
+.doc-line__station:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.doc-line__marker {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--on-enamel);
+  border: 4px solid var(--line-ink);
+  transition:
+    transform var(--base) var(--ease),
+    background var(--base) var(--ease),
+    border-color var(--base) var(--ease);
+}
+.doc-line__stop--h1 .doc-line__station {
+  color: var(--on-enamel);
+  font-weight: 600;
+}
+/* A minor station: a tick across the line rather than a stop on it. */
+.doc-line__stop--h3 .doc-line__marker {
+  left: 11px;
+  width: 14px;
+  height: 4px;
+  margin-top: -2px;
+  border: 0;
+  border-radius: 2px;
+}
+.doc-line__stop--h3 .doc-line__station {
+  font-size: var(--t-small);
+}
+.doc-line__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.doc-line__station.is-here {
+  color: var(--on-enamel);
+  font-weight: 600;
+}
+.doc-line__station.is-here .doc-line__marker {
+  transform: scale(1.4);
+  background: var(--enamel);
+  border: 3.5px solid var(--on-enamel);
+}
+.doc-line__stop--h3 .doc-line__station.is-here .doc-line__marker {
+  transform: none;
+  left: 9px;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 50%;
+}
+.doc-line__station.has-alert .doc-line__marker {
+  border-color: var(--amber);
+}
+.doc-line__alert {
+  flex-shrink: 0;
+  display: inline-grid;
+  margin-left: auto;
+}
+.doc-line__alert svg {
+  width: 18px;
+  height: 18px;
+}
+.doc-line__alert path:first-child {
+  fill: var(--amber);
+  stroke: var(--amber);
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+.doc-line__alert-mark {
+  fill: none;
+  stroke: var(--enamel);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.doc-line__empty {
+  margin: 0;
+  padding: 8px 2px;
+  color: var(--on-enamel-muted);
+  font-size: var(--t-base);
+}
+
+/* ── iPhone ────────────────────────────────────────────────────────────── */
+
+/* The app's places, at the bottom, within thumb reach. The active one is lit
+   porcelain with a scarlet rule under its label, the diagram's selected tab. */
+.tabbar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  flex-shrink: 0;
+  padding: 4px 4px env(safe-area-inset-bottom);
+  background: var(--enamel);
+  border-top: 1px solid var(--enamel-line);
+}
+.tabbar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 52px;
+  padding: 4px 0 6px;
+  border: 0;
+  background: transparent;
+  color: var(--on-enamel-muted);
+  font-family: var(--font-sign);
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tabbar__item svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tabbar__item span {
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
+}
+.tabbar__item.is-active {
+  color: var(--on-enamel);
+}
+.tabbar__item.is-active span {
+  border-bottom-color: var(--scarlet);
+}
+.tabbar__item:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -4px;
+  border-radius: var(--radius-control);
+}
+
+/* Off the Read tab the bar names the place, as a navigation bar does. */
+.app__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-sign);
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Documents and Outline take the whole space above the tab bar. */
+.phone-panel {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 16px 24px;
+  background: var(--enamel);
+}
+.phone-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 2px 16px;
+  font-family: var(--font-sign);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 599px) {
+  .app__header {
+    gap: 8px;
+    padding: 4px 16px;
+  }
+  .wordmark__text,
+  .app__state,
+  .sidebar-toggle,
+  .app__settings {
+    display: none;
+  }
+  .app__doc {
+    margin-left: 2px;
+    gap: 8px;
+  }
+  .app__path {
+    font-size: 1.125rem;
+  }
+  /* Reading on a phone is the whole width, edge to edge under the bar. */
+  .app__body {
+    padding: 0;
+  }
+  .panes {
+    border-radius: 0;
+  }
+  .sidebar {
+    width: 100%;
+    padding-top: 8px;
+  }
+  .banner {
+    margin: 0 8px 8px;
+  }
+}
+
+/* Key hints mean nothing without a keyboard; on glass they are noise. */
+@media (hover: none) and (pointer: coarse) {
+  .segmented__key,
+  .button__key,
+  .sidebar__search kbd {
+    display: none;
+  }
 }

@@ -20,7 +20,7 @@
   },
   "build": {
     "devUrl": "http://localhost:43118",
-    "frontendDist": "http://localhost:43118"
+    "frontendDist": "loading"
   },
   "bundle": {
     "active": true,

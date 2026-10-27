@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useModal } from "../hooks/useModal";
 import { REGISTRY } from "./mdx/registry";
 
 /**
@@ -25,6 +26,7 @@ interface Props {
 
 export function ComponentPicker({ onInsert, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  useModal(ref);
 
   useEffect(() => {
     // Focus the first option so the menu is usable from the keyboard alone.
@@ -44,6 +46,7 @@ export function ComponentPicker({ onInsert, onClose }: Props) {
         ref={ref}
         className="picker"
         role="dialog"
+        aria-modal="true"
         aria-label="Insert component"
         onMouseDown={(event) => event.stopPropagation()}
       >

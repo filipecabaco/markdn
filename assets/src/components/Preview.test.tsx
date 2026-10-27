@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Preview } from "./Preview";
 
@@ -100,6 +100,30 @@ describe("Preview", () => {
     expect(screen.getByText("bold").tagName).toBe("STRONG");
   });
 
+  it("draws distinct alert glyphs rather than emoji", () => {
+    const { container } = render(
+      <Preview content={'<Alert type="warning">w</Alert>\n\n<Alert type="error">e</Alert>'} />,
+    );
+
+    const icons = [...container.querySelectorAll(".mdx-alert__icon")];
+    expect(icons).toHaveLength(2);
+    expect(icons[0].innerHTML).not.toBe(icons[1].innerHTML);
+    expect(container.textContent).not.toMatch(/[⚠❌✅ℹ]/u);
+  });
+
+  it("names an image that did not load instead of showing a broken glyph", async () => {
+    const { container } = render(<Preview content={"![diagram](./missing.png)"} documentPath="a.md" />);
+    const image = container.querySelector("img");
+    expect(image).not.toBeNull();
+
+    fireEvent.error(image as HTMLImageElement);
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByRole("img", { name: "diagram" })).toHaveTextContent(
+      "Image not found: ./missing.png",
+    );
+  });
+
   describe("Tabs", () => {
     const doc = [
       '<Tabs defaultValue="second">',
@@ -124,6 +148,25 @@ describe("Preview", () => {
 
       expect(screen.getByText("Panel one")).toBeInTheDocument();
       expect(screen.queryByText("Panel two")).not.toBeInTheDocument();
+    });
+
+    it("moves between tabs with the arrow keys, as one tab stop linked to its panel", async () => {
+      const user = userEvent.setup();
+      render(<Preview content={doc} />);
+
+      const second = screen.getByRole("tab", { name: "Second" });
+      expect(second).toHaveAttribute("tabindex", "0");
+      expect(screen.getByRole("tab", { name: "First" })).toHaveAttribute("tabindex", "-1");
+      expect(screen.getByRole("tabpanel", { name: "Second" })).toHaveAttribute(
+        "id",
+        second.getAttribute("aria-controls"),
+      );
+
+      second.focus();
+      await user.keyboard("{ArrowRight}");
+
+      expect(screen.getByRole("tab", { name: "First" })).toHaveFocus();
+      expect(screen.getByText("Panel one")).toBeInTheDocument();
     });
 
     it("falls back to the first tab when defaultValue names nothing", () => {

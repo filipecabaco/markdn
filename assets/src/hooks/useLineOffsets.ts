@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { patchLines } from "../patchLines";
 
 /**
  * Measures the pixel offset of every source line in a textarea.
@@ -38,13 +39,18 @@ const COPIED_STYLES = [
 export function useLineOffsets(
   ref: RefObject<HTMLTextAreaElement | null>,
   value: string,
+  /** Only split view reads the offsets; elsewhere measuring is pure cost. */
+  enabled = true,
 ): number[] {
   const mirror = useRef<HTMLDivElement | null>(null);
+  // The text each mirror line holds, so a keystroke rewrites one line element
+  // instead of rebuilding thousands and laying all of them out again.
+  const mirrored = useRef<string[]>([]);
   const [offsets, setOffsets] = useState<number[]>([]);
 
   const measure = useCallback(() => {
     const textarea = ref.current;
-    if (!textarea) return;
+    if (!textarea || !enabled) return;
 
     if (!mirror.current) {
       const node = document.createElement("div");
@@ -70,23 +76,20 @@ export function useLineOffsets(
     node.style.wordBreak = style.wordBreak;
 
     const lines = value.split("\n");
-    const fragment = document.createDocumentFragment();
-    const elements: HTMLElement[] = [];
-
-    for (const line of lines) {
-      const el = document.createElement("div");
+    patchLines(node, mirrored.current, lines, (element, line) => {
       // A zero-width space keeps an empty line from collapsing to zero height.
-      el.textContent = line.length === 0 ? "​" : line;
-      fragment.appendChild(el);
-      elements.push(el);
-    }
-
-    node.textContent = "";
-    node.appendChild(fragment);
+      element.textContent = line.length === 0 ? "​" : line;
+    });
+    mirrored.current = lines;
 
     const paddingTop = parseFloat(style.paddingTop) || 0;
-    setOffsets(elements.map((el) => el.offsetTop - paddingTop));
-  }, [ref, value]);
+    const elements = node.children;
+    const next = new Array<number>(elements.length);
+    for (let index = 0; index < elements.length; index += 1) {
+      next[index] = (elements[index] as HTMLElement).offsetTop - paddingTop;
+    }
+    setOffsets(next);
+  }, [enabled, ref, value]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(measure);
@@ -106,6 +109,7 @@ export function useLineOffsets(
     return () => {
       mirror.current?.remove();
       mirror.current = null;
+      mirrored.current = [];
     };
   }, []);
 

@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode, type Ref } from "react";
+import { useLayoutEffect, useMemo, useState, type ReactNode, type Ref, type RefObject } from "react";
 import { resolveAssetUrl } from "../resolveAssetUrl";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -33,7 +33,7 @@ import { rehypeSourcePositions } from "./mdx/rehypeSourcePositions";
 // GitHub's schema, plus the layout attributes that decorate a README. `align`
 // and `width` on an image cannot execute anything; they are the difference
 // between a centred badge row and a ragged column of icons.
-const SCHEMA = {
+export const SCHEMA = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
@@ -104,6 +104,34 @@ interface ImageProps {
   title?: string;
 }
 
+/**
+ * A document image, or — when it does not load — a line naming the reference
+ * that failed, so a typo in a path is findable from the render. Keyed on the
+ * resolved URL by the caller, so fixing the path retries.
+ */
+function PreviewImage({ src, alt, title, url }: ImageProps & { url: string | undefined }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <span className="preview__missing" role="img" aria-label={alt || "Image not found"}>
+        Image not found: <code>{src}</code>
+      </span>
+    );
+  }
+
+  return (
+    <img
+      className="preview__image"
+      src={url}
+      alt={alt ?? ""}
+      title={title}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 interface PreviewProps {
   content: string;
   scrollerRef?: Ref<HTMLDivElement>;
@@ -111,6 +139,11 @@ interface PreviewProps {
   activeLine?: number | null;
   /** The open document's path. Relative image references resolve against it. */
   documentPath?: string | null;
+  /**
+   * Written with how long rendering new content took, parse and commit
+   * together, so the caller can pace updates to what this document costs.
+   */
+  renderCost?: RefObject<number>;
 }
 
 export function Preview({
@@ -119,19 +152,25 @@ export function Preview({
   onScroll,
   activeLine,
   documentPath = null,
+  renderCost,
 }: PreviewProps) {
+  // Children's layout effects run before this component's, so the span from
+  // here to the effect below covers the markdown subtree rendering and
+  // committing — the whole price of a content change.
+  const started = performance.now();
+  useLayoutEffect(() => {
+    if (renderCost) renderCost.current = performance.now() - started;
+    // Measured only when the content changed; other renders are not the cost.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content]);
+
   const components = useMemo(
     () => ({
       ...COMPONENTS,
-      img: ({ src, alt, title }: ImageProps) => (
-        <img
-          className="preview__image"
-          src={resolveAssetUrl(src, documentPath)}
-          alt={alt ?? ""}
-          title={title}
-          loading="lazy"
-        />
-      ),
+      img: ({ src, alt, title }: ImageProps) => {
+        const url = resolveAssetUrl(src, documentPath);
+        return <PreviewImage key={url} src={src} alt={alt} title={title} url={url} />;
+      },
     }),
     [documentPath],
   ) as never;
@@ -144,6 +183,23 @@ export function Preview({
       <Markdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, [rehypeSanitize, SCHEMA], rehypeSourcePositions]}
+        components={components}
+      >
+        {content}
+      </Markdown>
+    ),
+    [components, content],
+  );
+
+  // Memoised like `plain`, and for a bigger reason: this is the render that
+  // shows. Rebuilt on every Preview render, it re-parsed the whole document
+  // whenever anything above re-rendered — the caret moving, the line offsets
+  // landing — 60ms a time on a long file, for output that had not changed.
+  const mdx = useMemo(
+    () => (
+      <Markdown
+        remarkPlugins={[remarkGfm, remarkMdx, remarkComponentRegistry]}
+        rehypePlugins={[rehypeSourcePositions]}
         components={components}
       >
         {content}
@@ -173,13 +229,7 @@ export function Preview({
           </>
         )}
       >
-        <Markdown
-          remarkPlugins={[remarkGfm, remarkMdx, remarkComponentRegistry]}
-          rehypePlugins={[rehypeSourcePositions]}
-          components={components}
-        >
-          {content}
-        </Markdown>
+        {mdx}
       </ErrorBoundary>
     </div>
   );

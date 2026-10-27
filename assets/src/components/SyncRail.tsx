@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { Block } from "../hooks/useLinkedPanes";
 
 /**
@@ -34,7 +34,9 @@ interface Props {
   scrollerRef: React.RefObject<HTMLElement | null>;
 }
 
-export function SyncRail({ blocks, activeLine, scrollerRef }: Props) {
+// Memoised: a long document has a tick per block, and the app re-renders on
+// every keystroke and caret move while the blocks change only with the preview.
+export const SyncRail = memo(function SyncRail({ blocks, activeLine, scrollerRef }: Props) {
   const strip = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,4 +76,4 @@ export function SyncRail({ blocks, activeLine, scrollerRef }: Props) {
       </div>
     </div>
   );
-}
+});

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { searchDocuments, type SearchHit } from "../api";
 import { fuzzyMatch } from "../fuzzy";
+import { useModal } from "../hooks/useModal";
 
 /**
  * One palette for both commands and documents.
@@ -73,6 +74,9 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const dialog = useRef<HTMLDivElement>(null);
+  const listId = useId();
+  useModal(dialog);
 
   const commandMode = query.startsWith(">");
   const term = commandMode ? query.slice(1).trim() : query.trim();
@@ -183,8 +187,10 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
   return (
     <div className="picker__backdrop" onMouseDown={onClose}>
       <div
+        ref={dialog}
         className="palette"
         role="dialog"
+        aria-modal="true"
         aria-label="Command palette"
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -195,11 +201,16 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
           spellCheck={false}
           placeholder="Search documents, or type > for commands…"
           aria-label="Search documents or commands"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={items.length > 0 ? `${listId}-${active}` : undefined}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onKeyDown}
         />
 
-        <div className="palette__list" ref={listRef} role="listbox">
+        <div className="palette__list" ref={listRef} role="listbox" id={listId}>
           {error && <div className="palette__empty">{error}</div>}
           {!error && items.length === 0 && (
             <div className="palette__empty">No documents or commands match.</div>
@@ -213,13 +224,19 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
             return (
               <div key={item.key}>
                 {header && <div className="palette__section">{header}</div>}
+                {/* Not a tab stop: focus stays in the input, as in every
+                    palette, and the arrows move the highlight. A click must not
+                    take focus either, or the input stops hearing Escape. */}
                 <button
                   type="button"
                   role="option"
+                  id={`${listId}-${index}`}
+                  tabIndex={-1}
                   aria-selected={index === active}
                   data-active={index === active}
                   className={`palette__row${index === active ? " is-active" : ""}`}
                   onMouseMove={() => setActive(index)}
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => run(item)}
                 >
                   {item.kind === "command" ? (

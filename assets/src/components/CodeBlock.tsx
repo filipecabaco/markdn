@@ -11,10 +11,22 @@ import { Mermaid } from "./Mermaid";
  */
 
 let shiki: Promise<typeof import("shiki")> | null = null;
+let theme: import("shiki").ThemeRegistration | null = null;
 
 function loadShiki() {
   if (!shiki) shiki = import("shiki");
   return shiki;
+}
+
+/**
+ * One theme whose colours are CSS variables, mapped onto the source pane's
+ * syntax tokens in styles.css. A stock theme brings its own palette — GitHub's
+ * keyword red is the signal colour, and fails contrast on the panel — and two
+ * of them meant swapping themes with `!important` overrides per scheme.
+ */
+function codeTheme(module: typeof import("shiki")) {
+  theme ??= module.createCssVariablesTheme({ name: "markdn", variablePrefix: "--code-" });
+  return theme;
 }
 
 export interface CodeBlockProps {
@@ -26,15 +38,18 @@ export function CodeBlock({ language, code }: CodeBlockProps) {
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
+    // A diagram is drawn, not highlighted: loading Shiki for it fetched and
+    // compiled a 600 kB regex engine on documents with no code in them at all.
+    if (language === "mermaid") return;
+
     let cancelled = false;
 
     loadShiki()
-      .then(({ codeToHtml }) =>
-        codeToHtml(code, {
+      .then((module) =>
+        module.codeToHtml(code, {
           // Shiki lazy-loads grammars; an unknown language falls back to plain text.
           lang: language ?? "text",
-          themes: { light: "github-light", dark: "github-dark" },
-          defaultColor: false,
+          theme: codeTheme(module),
         }),
       )
       .then((result) => {

@@ -119,7 +119,8 @@ defmodule Markdn.MCP.Handler do
       :ok ->
         # Any window with this document open re-reads it, so an agent's write does
         # not sit invisibly under the user's editor.
-        Markdn.notify_saved(path)
+        {:ok, relative} = Documents.relative_path(path)
+        Markdn.notify_saved(relative)
         {:ok, text_content("wrote #{path}")}
 
       {:error, reason} ->

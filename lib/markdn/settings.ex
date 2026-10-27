@@ -33,7 +33,11 @@ defmodule Markdn.Settings do
     "editorFontSize" => 13,
     "showHiddenFiles" => false,
     # Pixels per second for the auto-scroll teleprompter.
-    "autoScrollSpeed" => 40
+    "autoScrollSpeed" => 40,
+    # Layout, not a preference the panel offers — but it has to live here: the
+    # desktop window's origin changes port on every launch, so browser storage
+    # would forget it each time the app starts.
+    "sidebarCollapsed" => false
   }
 
   @themes ~w(system light dark)
@@ -170,6 +174,7 @@ defmodule Markdn.Settings do
   defp cast("theme", value) when value in @themes, do: {:ok, value}
   defp cast("defaultView", value) when value in @views, do: {:ok, value}
   defp cast("showHiddenFiles", value) when is_boolean(value), do: {:ok, value}
+  defp cast("sidebarCollapsed", value) when is_boolean(value), do: {:ok, value}
 
   defp cast("editorFontSize", value) when is_integer(value) do
     if value in @font_sizes, do: {:ok, value}, else: :error
