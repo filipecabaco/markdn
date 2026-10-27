@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T00:48:40Z",
+  "title": "Design System: MarkDN",
+  "extensions": {
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "max-width: 599px",
+        "purpose": "Bottom tab bar (Read, Documents, Outline, Search); full-bleed square card."
+      },
+      {
+        "name": "compact",
+        "value": "600px to 1023px",
+        "purpose": "Rail slides over the card above an enamel scrim."
+      },
+      {
+        "name": "wide",
+        "value": "min-width: 1024px",
+        "purpose": "Rail beside the card, collapsible outright."
+      },
+      {
+        "name": "split",
+        "value": "min-width: 760px",
+        "purpose": "Split view available; below this the Split segment is disabled."
+      },
+      {
+        "name": "settings-stack",
+        "value": "max-width: 620px",
+        "purpose": "Settings rows stack label over control."
+      },
+      {
+        "name": "pointer-fine",
+        "value": "pointer: fine",
+        "purpose": "Target tightens from 44px to 34px."
+      },
+      {
+        "name": "glass",
+        "value": "hover: none and pointer: coarse",
+        "purpose": "Key hints hidden."
+      }
+    ],
+    "colorMeta": {
+      "amber": {
+        "role": "secondary",
+        "displayName": "Amber Line",
+        "canonical": "oklch(0.84 0.165 85)",
+        "tonalRamp": ["oklch(0.15 0.165 85)", "oklch(0.264 0.165 85)", "oklch(0.379 0.165 85)", "oklch(0.493 0.165 85)", "oklch(0.607 0.165 85)", "oklch(0.721 0.165 85)", "oklch(0.836 0.165 85)", "oklch(0.95 0.165 85)"]
+      },
+      "caution": {
+        "role": "tertiary",
+        "displayName": "Caution",
+        "canonical": "oklch(0.5 0.11 70)",
+        "tonalRamp": ["oklch(0.15 0.11 70)", "oklch(0.264 0.11 70)", "oklch(0.379 0.11 70)", "oklch(0.493 0.11 70)", "oklch(0.607 0.11 70)", "oklch(0.721 0.11 70)", "oklch(0.836 0.11 70)", "oklch(0.95 0.11 70)"]
+      },
+      "caution-dark": {
+        "role": "tertiary",
+        "displayName": "Caution (dark)",
+        "canonical": "oklch(0.85 0.15 85)",
+        "tonalRamp": ["oklch(0.15 0.15 85)", "oklch(0.264 0.15 85)", "oklch(0.379 0.15 85)", "oklch(0.493 0.15 85)", "oklch(0.607 0.15 85)", "oklch(0.721 0.15 85)", "oklch(0.836 0.15 85)", "oklch(0.95 0.15 85)"]
+      },
+      "caution-tint": {
+        "role": "tertiary",
+        "displayName": "Caution Tint",
+        "canonical": "oklch(0.84 0.165 85 / 0.22)",
+        "tonalRamp": ["oklch(0.15 0.165 85)", "oklch(0.264 0.165 85)", "oklch(0.379 0.165 85)", "oklch(0.493 0.165 85)", "oklch(0.607 0.165 85)", "oklch(0.721 0.165 85)", "oklch(0.836 0.165 85)", "oklch(0.95 0.165 85)"]
+      },
+      "caution-tint-dark": {
+        "role": "tertiary",
+        "displayName": "Caution Tint (dark)",
+        "canonical": "oklch(0.84 0.165 85 / 0.16)",
+        "tonalRamp": ["oklch(0.15 0.165 85)", "oklch(0.264 0.165 85)", "oklch(0.379 0.165 85)", "oklch(0.493 0.165 85)", "oklch(0.607 0.165 85)", "oklch(0.721 0.165 85)", "oklch(0.836 0.165 85)", "oklch(0.95 0.165 85)"]
+      },
+      "cobalt": {
+        "role": "secondary",
+        "displayName": "Cobalt Line",
+        "canonical": "oklch(0.585 0.205 262)",
+        "tonalRamp": ["oklch(0.15 0.205 262)", "oklch(0.264 0.205 262)", "oklch(0.379 0.205 262)", "oklch(0.493 0.205 262)", "oklch(0.607 0.205 262)", "oklch(0.721 0.205 262)", "oklch(0.836 0.205 262)", "oklch(0.95 0.205 262)"]
+      },
+      "enamel": {
+        "role": "primary",
+        "displayName": "Midnight Enamel",
+        "canonical": "oklch(0.205 0.068 271)",
+        "tonalRamp": ["oklch(0.15 0.068 271)", "oklch(0.264 0.068 271)", "oklch(0.379 0.068 271)", "oklch(0.493 0.068 271)", "oklch(0.607 0.068 271)", "oklch(0.721 0.068 271)", "oklch(0.836 0.068 271)", "oklch(0.95 0.068 271)"]
+      },
+      "enamel-line": {
+        "role": "primary",
+        "displayName": "Enamel Hairline",
+        "canonical": "oklch(0.39 0.052 270)",
+        "tonalRamp": ["oklch(0.15 0.052 270)", "oklch(0.264 0.052 270)", "oklch(0.379 0.052 270)", "oklch(0.493 0.052 270)", "oklch(0.607 0.052 270)", "oklch(0.721 0.052 270)", "oklch(0.836 0.052 270)", "oklch(0.95 0.052 270)"]
+      },
+      "enamel-raised": {
+        "role": "primary",
+        "displayName": "Raised Enamel",
+        "canonical": "oklch(0.26 0.066 270)",
+        "tonalRamp": ["oklch(0.15 0.066 270)", "oklch(0.264 0.066 270)", "oklch(0.379 0.066 270)", "oklch(0.493 0.066 270)", "oklch(0.607 0.066 270)", "oklch(0.721 0.066 270)", "oklch(0.836 0.066 270)", "oklch(0.95 0.066 270)"]
+      },
+      "focus": {
+        "role": "tertiary",
+        "displayName": "Cobalt Focus",
+        "canonical": "oklch(0.53 0.21 262)",
+        "tonalRamp": ["oklch(0.15 0.21 262)", "oklch(0.264 0.21 262)", "oklch(0.379 0.21 262)", "oklch(0.493 0.21 262)", "oklch(0.607 0.21 262)", "oklch(0.721 0.21 262)", "oklch(0.836 0.21 262)", "oklch(0.95 0.21 262)"]
+      },
+      "focus-dark": {
+        "role": "tertiary",
+        "displayName": "Cobalt Focus (dark)",
+        "canonical": "oklch(0.72 0.16 262)",
+        "tonalRamp": ["oklch(0.15 0.16 262)", "oklch(0.264 0.16 262)", "oklch(0.379 0.16 262)", "oklch(0.493 0.16 262)", "oklch(0.607 0.16 262)", "oklch(0.721 0.16 262)", "oklch(0.836 0.16 262)", "oklch(0.95 0.16 262)"]
+      },
+      "green": {
+        "role": "secondary",
+        "displayName": "Green Line",
+        "canonical": "oklch(0.655 0.165 145)",
+        "tonalRamp": ["oklch(0.15 0.165 145)", "oklch(0.264 0.165 145)", "oklch(0.379 0.165 145)", "oklch(0.493 0.165 145)", "oklch(0.607 0.165 145)", "oklch(0.721 0.165 145)", "oklch(0.836 0.165 145)", "oklch(0.95 0.165 145)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.235 0.04 268)",
+        "tonalRamp": ["oklch(0.15 0.04 268)", "oklch(0.264 0.04 268)", "oklch(0.379 0.04 268)", "oklch(0.493 0.04 268)", "oklch(0.607 0.04 268)", "oklch(0.721 0.04 268)", "oklch(0.836 0.04 268)", "oklch(0.95 0.04 268)"]
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Ink (dark)",
+        "canonical": "oklch(0.945 0.006 95)",
+        "tonalRamp": ["oklch(0.15 0.006 95)", "oklch(0.264 0.006 95)", "oklch(0.379 0.006 95)", "oklch(0.493 0.006 95)", "oklch(0.607 0.006 95)", "oklch(0.721 0.006 95)", "oklch(0.836 0.006 95)", "oklch(0.95 0.006 95)"]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Faint Ink",
+        "canonical": "oklch(0.48 0.025 268)",
+        "tonalRamp": ["oklch(0.15 0.025 268)", "oklch(0.264 0.025 268)", "oklch(0.379 0.025 268)", "oklch(0.493 0.025 268)", "oklch(0.607 0.025 268)", "oklch(0.721 0.025 268)", "oklch(0.836 0.025 268)", "oklch(0.95 0.025 268)"]
+      },
+      "ink-faint-dark": {
+        "role": "neutral",
+        "displayName": "Faint Ink (dark)",
+        "canonical": "oklch(0.75 0.022 268)",
+        "tonalRamp": ["oklch(0.15 0.022 268)", "oklch(0.264 0.022 268)", "oklch(0.379 0.022 268)", "oklch(0.493 0.022 268)", "oklch(0.607 0.022 268)", "oklch(0.721 0.022 268)", "oklch(0.836 0.022 268)", "oklch(0.95 0.022 268)"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "oklch(0.455 0.03 268)",
+        "tonalRamp": ["oklch(0.15 0.03 268)", "oklch(0.264 0.03 268)", "oklch(0.379 0.03 268)", "oklch(0.493 0.03 268)", "oklch(0.607 0.03 268)", "oklch(0.721 0.03 268)", "oklch(0.836 0.03 268)", "oklch(0.95 0.03 268)"]
+      },
+      "ink-muted-dark": {
+        "role": "neutral",
+        "displayName": "Muted Ink (dark)",
+        "canonical": "oklch(0.79 0.022 268)",
+        "tonalRamp": ["oklch(0.15 0.022 268)", "oklch(0.264 0.022 268)", "oklch(0.379 0.022 268)", "oklch(0.493 0.022 268)", "oklch(0.607 0.022 268)", "oklch(0.721 0.022 268)", "oklch(0.836 0.022 268)", "oklch(0.95 0.022 268)"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(0.875 0.01 265)",
+        "tonalRamp": ["oklch(0.15 0.01 265)", "oklch(0.264 0.01 265)", "oklch(0.379 0.01 265)", "oklch(0.493 0.01 265)", "oklch(0.607 0.01 265)", "oklch(0.721 0.01 265)", "oklch(0.836 0.01 265)", "oklch(0.95 0.01 265)"]
+      },
+      "line-control": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "canonical": "oklch(0.565 0.025 265)",
+        "tonalRamp": ["oklch(0.15 0.025 265)", "oklch(0.264 0.025 265)", "oklch(0.379 0.025 265)", "oklch(0.493 0.025 265)", "oklch(0.607 0.025 265)", "oklch(0.721 0.025 265)", "oklch(0.836 0.025 265)", "oklch(0.95 0.025 265)"]
+      },
+      "line-control-dark": {
+        "role": "neutral",
+        "displayName": "Control Edge (dark)",
+        "canonical": "oklch(0.6 0.04 268)",
+        "tonalRamp": ["oklch(0.15 0.04 268)", "oklch(0.264 0.04 268)", "oklch(0.379 0.04 268)", "oklch(0.493 0.04 268)", "oklch(0.607 0.04 268)", "oklch(0.721 0.04 268)", "oklch(0.836 0.04 268)", "oklch(0.95 0.04 268)"]
+      },
+      "line-dark": {
+        "role": "neutral",
+        "displayName": "Hairline (dark)",
+        "canonical": "oklch(0.33 0.048 270)",
+        "tonalRamp": ["oklch(0.15 0.048 270)", "oklch(0.264 0.048 270)", "oklch(0.379 0.048 270)", "oklch(0.493 0.048 270)", "oklch(0.607 0.048 270)", "oklch(0.721 0.048 270)", "oklch(0.836 0.048 270)", "oklch(0.95 0.048 270)"]
+      },
+      "line-ink-on": {
+        "role": "secondary",
+        "displayName": "Type on Ink",
+        "canonical": "oklch(0.985 0.003 95)",
+        "tonalRamp": ["oklch(0.15 0.003 95)", "oklch(0.264 0.003 95)", "oklch(0.379 0.003 95)", "oklch(0.493 0.003 95)", "oklch(0.607 0.003 95)", "oklch(0.721 0.003 95)", "oklch(0.836 0.003 95)", "oklch(0.95 0.003 95)"]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "oklch(0.775 0.014 265)",
+        "tonalRamp": ["oklch(0.15 0.014 265)", "oklch(0.264 0.014 265)", "oklch(0.379 0.014 265)", "oklch(0.493 0.014 265)", "oklch(0.607 0.014 265)", "oklch(0.721 0.014 265)", "oklch(0.836 0.014 265)", "oklch(0.95 0.014 265)"]
+      },
+      "line-strong-dark": {
+        "role": "neutral",
+        "displayName": "Strong Hairline (dark)",
+        "canonical": "oklch(0.42 0.045 270)",
+        "tonalRamp": ["oklch(0.15 0.045 270)", "oklch(0.264 0.045 270)", "oklch(0.379 0.045 270)", "oklch(0.493 0.045 270)", "oklch(0.607 0.045 270)", "oklch(0.721 0.045 270)", "oklch(0.836 0.045 270)", "oklch(0.95 0.045 270)"]
+      },
+      "on-enamel": {
+        "role": "primary",
+        "displayName": "Porcelain Type",
+        "canonical": "oklch(0.965 0.004 95)",
+        "tonalRamp": ["oklch(0.15 0.004 95)", "oklch(0.264 0.004 95)", "oklch(0.379 0.004 95)", "oklch(0.493 0.004 95)", "oklch(0.607 0.004 95)", "oklch(0.721 0.004 95)", "oklch(0.836 0.004 95)", "oklch(0.95 0.004 95)"]
+      },
+      "on-enamel-muted": {
+        "role": "primary",
+        "displayName": "Muted Porcelain",
+        "canonical": "oklch(0.80 0.025 268)",
+        "tonalRamp": ["oklch(0.15 0.025 268)", "oklch(0.264 0.025 268)", "oklch(0.379 0.025 268)", "oklch(0.493 0.025 268)", "oklch(0.607 0.025 268)", "oklch(0.721 0.025 268)", "oklch(0.836 0.025 268)", "oklch(0.95 0.025 268)"]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Card Panel",
+        "canonical": "oklch(0.925 0.008 265)",
+        "tonalRamp": ["oklch(0.15 0.008 265)", "oklch(0.264 0.008 265)", "oklch(0.379 0.008 265)", "oklch(0.493 0.008 265)", "oklch(0.607 0.008 265)", "oklch(0.721 0.008 265)", "oklch(0.836 0.008 265)", "oklch(0.95 0.008 265)"]
+      },
+      "panel-dark": {
+        "role": "neutral",
+        "displayName": "Card Panel (dark)",
+        "canonical": "oklch(0.265 0.055 270)",
+        "tonalRamp": ["oklch(0.15 0.055 270)", "oklch(0.264 0.055 270)", "oklch(0.379 0.055 270)", "oklch(0.493 0.055 270)", "oklch(0.607 0.055 270)", "oklch(0.721 0.055 270)", "oklch(0.836 0.055 270)", "oklch(0.95 0.055 270)"]
+      },
+      "scarlet": {
+        "role": "secondary",
+        "displayName": "Main Line Scarlet",
+        "canonical": "oklch(0.585 0.215 27)",
+        "tonalRamp": ["oklch(0.15 0.215 27)", "oklch(0.264 0.215 27)", "oklch(0.379 0.215 27)", "oklch(0.493 0.215 27)", "oklch(0.607 0.215 27)", "oklch(0.721 0.215 27)", "oklch(0.836 0.215 27)", "oklch(0.95 0.215 27)"]
+      },
+      "signal": {
+        "role": "tertiary",
+        "displayName": "Signal",
+        "canonical": "oklch(0.54 0.205 27)",
+        "tonalRamp": ["oklch(0.15 0.205 27)", "oklch(0.264 0.205 27)", "oklch(0.379 0.205 27)", "oklch(0.493 0.205 27)", "oklch(0.607 0.205 27)", "oklch(0.721 0.205 27)", "oklch(0.836 0.205 27)", "oklch(0.95 0.205 27)"]
+      },
+      "signal-dark": {
+        "role": "tertiary",
+        "displayName": "Signal (dark)",
+        "canonical": "oklch(0.66 0.2 27)",
+        "tonalRamp": ["oklch(0.15 0.2 27)", "oklch(0.264 0.2 27)", "oklch(0.379 0.2 27)", "oklch(0.493 0.2 27)", "oklch(0.607 0.2 27)", "oklch(0.721 0.2 27)", "oklch(0.836 0.2 27)", "oklch(0.95 0.2 27)"]
+      },
+      "signal-ink": {
+        "role": "tertiary",
+        "displayName": "Type on Signal",
+        "canonical": "oklch(0.985 0.003 95)",
+        "tonalRamp": ["oklch(0.15 0.003 95)", "oklch(0.264 0.003 95)", "oklch(0.379 0.003 95)", "oklch(0.493 0.003 95)", "oklch(0.607 0.003 95)", "oklch(0.721 0.003 95)", "oklch(0.836 0.003 95)", "oklch(0.95 0.003 95)"]
+      },
+      "signal-ink-dark": {
+        "role": "tertiary",
+        "displayName": "Type on Signal (dark)",
+        "canonical": "oklch(0.18 0.05 270)",
+        "tonalRamp": ["oklch(0.15 0.05 270)", "oklch(0.264 0.05 270)", "oklch(0.379 0.05 270)", "oklch(0.493 0.05 270)", "oklch(0.607 0.05 270)", "oklch(0.721 0.05 270)", "oklch(0.836 0.05 270)", "oklch(0.95 0.05 270)"]
+      },
+      "signal-tint": {
+        "role": "tertiary",
+        "displayName": "Signal Tint",
+        "canonical": "oklch(0.54 0.205 27 / 0.12)",
+        "tonalRamp": ["oklch(0.15 0.205 27)", "oklch(0.264 0.205 27)", "oklch(0.379 0.205 27)", "oklch(0.493 0.205 27)", "oklch(0.607 0.205 27)", "oklch(0.721 0.205 27)", "oklch(0.836 0.205 27)", "oklch(0.95 0.205 27)"]
+      },
+      "signal-tint-dark": {
+        "role": "tertiary",
+        "displayName": "Signal Tint (dark)",
+        "canonical": "oklch(0.66 0.2 27 / 0.18)",
+        "tonalRamp": ["oklch(0.15 0.2 27)", "oklch(0.264 0.2 27)", "oklch(0.379 0.2 27)", "oklch(0.493 0.2 27)", "oklch(0.607 0.2 27)", "oklch(0.721 0.2 27)", "oklch(0.836 0.2 27)", "oklch(0.95 0.2 27)"]
+      },
+      "signal-tint-soft": {
+        "role": "tertiary",
+        "displayName": "Soft Signal Tint",
+        "canonical": "oklch(0.54 0.205 27 / 0.06)",
+        "tonalRamp": ["oklch(0.15 0.205 27)", "oklch(0.264 0.205 27)", "oklch(0.379 0.205 27)", "oklch(0.493 0.205 27)", "oklch(0.607 0.205 27)", "oklch(0.721 0.205 27)", "oklch(0.836 0.205 27)", "oklch(0.95 0.205 27)"]
+      },
+      "signal-tint-soft-dark": {
+        "role": "tertiary",
+        "displayName": "Soft Signal Tint (dark)",
+        "canonical": "oklch(0.66 0.2 27 / 0.09)",
+        "tonalRamp": ["oklch(0.15 0.2 27)", "oklch(0.264 0.2 27)", "oklch(0.379 0.2 27)", "oklch(0.493 0.2 27)", "oklch(0.607 0.2 27)", "oklch(0.721 0.2 27)", "oklch(0.836 0.2 27)", "oklch(0.95 0.2 27)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Porcelain Surface",
+        "canonical": "oklch(0.968 0.004 95)",
+        "tonalRamp": ["oklch(0.15 0.004 95)", "oklch(0.264 0.004 95)", "oklch(0.379 0.004 95)", "oklch(0.493 0.004 95)", "oklch(0.607 0.004 95)", "oklch(0.721 0.004 95)", "oklch(0.836 0.004 95)", "oklch(0.95 0.004 95)"]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Porcelain Surface (dark)",
+        "canonical": "oklch(0.235 0.052 270)",
+        "tonalRamp": ["oklch(0.15 0.052 270)", "oklch(0.264 0.052 270)", "oklch(0.379 0.052 270)", "oklch(0.493 0.052 270)", "oklch(0.607 0.052 270)", "oklch(0.721 0.052 270)", "oklch(0.836 0.052 270)", "oklch(0.95 0.052 270)"]
+      },
+      "syn-code": {
+        "role": "neutral",
+        "displayName": "Syntax Code",
+        "canonical": "oklch(0.45 0.08 150)",
+        "tonalRamp": ["oklch(0.15 0.08 150)", "oklch(0.264 0.08 150)", "oklch(0.379 0.08 150)", "oklch(0.493 0.08 150)", "oklch(0.607 0.08 150)", "oklch(0.721 0.08 150)", "oklch(0.836 0.08 150)", "oklch(0.95 0.08 150)"]
+      },
+      "syn-code-dark": {
+        "role": "neutral",
+        "displayName": "Syntax Code (dark)",
+        "canonical": "oklch(0.8 0.1 150)",
+        "tonalRamp": ["oklch(0.15 0.1 150)", "oklch(0.264 0.1 150)", "oklch(0.379 0.1 150)", "oklch(0.493 0.1 150)", "oklch(0.607 0.1 150)", "oklch(0.721 0.1 150)", "oklch(0.836 0.1 150)", "oklch(0.95 0.1 150)"]
+      },
+      "syn-heading": {
+        "role": "neutral",
+        "displayName": "Syntax Heading",
+        "canonical": "oklch(0.235 0.04 268)",
+        "tonalRamp": ["oklch(0.15 0.04 268)", "oklch(0.264 0.04 268)", "oklch(0.379 0.04 268)", "oklch(0.493 0.04 268)", "oklch(0.607 0.04 268)", "oklch(0.721 0.04 268)", "oklch(0.836 0.04 268)", "oklch(0.95 0.04 268)"]
+      },
+      "syn-heading-dark": {
+        "role": "neutral",
+        "displayName": "Syntax Heading (dark)",
+        "canonical": "oklch(0.96 0.005 95)",
+        "tonalRamp": ["oklch(0.15 0.005 95)", "oklch(0.264 0.005 95)", "oklch(0.379 0.005 95)", "oklch(0.493 0.005 95)", "oklch(0.607 0.005 95)", "oklch(0.721 0.005 95)", "oklch(0.836 0.005 95)", "oklch(0.95 0.005 95)"]
+      },
+      "syn-html": {
+        "role": "neutral",
+        "displayName": "Syntax HTML",
+        "canonical": "oklch(0.47 0.08 310)",
+        "tonalRamp": ["oklch(0.15 0.08 310)", "oklch(0.264 0.08 310)", "oklch(0.379 0.08 310)", "oklch(0.493 0.08 310)", "oklch(0.607 0.08 310)", "oklch(0.721 0.08 310)", "oklch(0.836 0.08 310)", "oklch(0.95 0.08 310)"]
+      },
+      "syn-html-dark": {
+        "role": "neutral",
+        "displayName": "Syntax HTML (dark)",
+        "canonical": "oklch(0.8 0.09 310)",
+        "tonalRamp": ["oklch(0.15 0.09 310)", "oklch(0.264 0.09 310)", "oklch(0.379 0.09 310)", "oklch(0.493 0.09 310)", "oklch(0.607 0.09 310)", "oklch(0.721 0.09 310)", "oklch(0.836 0.09 310)", "oklch(0.95 0.09 310)"]
+      },
+      "syn-link": {
+        "role": "neutral",
+        "displayName": "Syntax Link",
+        "canonical": "oklch(0.45 0.11 262)",
+        "tonalRamp": ["oklch(0.15 0.11 262)", "oklch(0.264 0.11 262)", "oklch(0.379 0.11 262)", "oklch(0.493 0.11 262)", "oklch(0.607 0.11 262)", "oklch(0.721 0.11 262)", "oklch(0.836 0.11 262)", "oklch(0.95 0.11 262)"]
+      },
+      "syn-link-dark": {
+        "role": "neutral",
+        "displayName": "Syntax Link (dark)",
+        "canonical": "oklch(0.78 0.11 262)",
+        "tonalRamp": ["oklch(0.15 0.11 262)", "oklch(0.264 0.11 262)", "oklch(0.379 0.11 262)", "oklch(0.493 0.11 262)", "oklch(0.607 0.11 262)", "oklch(0.721 0.11 262)", "oklch(0.836 0.11 262)", "oklch(0.95 0.11 262)"]
+      },
+      "syn-marker": {
+        "role": "neutral",
+        "displayName": "Syntax Marker",
+        "canonical": "oklch(0.6 0.02 268)",
+        "tonalRamp": ["oklch(0.15 0.02 268)", "oklch(0.264 0.02 268)", "oklch(0.379 0.02 268)", "oklch(0.493 0.02 268)", "oklch(0.607 0.02 268)", "oklch(0.721 0.02 268)", "oklch(0.836 0.02 268)", "oklch(0.95 0.02 268)"]
+      },
+      "syn-marker-dark": {
+        "role": "neutral",
+        "displayName": "Syntax Marker (dark)",
+        "canonical": "oklch(0.6 0.025 268)",
+        "tonalRamp": ["oklch(0.15 0.025 268)", "oklch(0.264 0.025 268)", "oklch(0.379 0.025 268)", "oklch(0.493 0.025 268)", "oklch(0.607 0.025 268)", "oklch(0.721 0.025 268)", "oklch(0.836 0.025 268)", "oklch(0.95 0.025 268)"]
+      },
+      "syn-url": {
+        "role": "neutral",
+        "displayName": "Syntax URL",
+        "canonical": "oklch(0.52 0.06 262)",
+        "tonalRamp": ["oklch(0.15 0.06 262)", "oklch(0.264 0.06 262)", "oklch(0.379 0.06 262)", "oklch(0.493 0.06 262)", "oklch(0.607 0.06 262)", "oklch(0.721 0.06 262)", "oklch(0.836 0.06 262)", "oklch(0.95 0.06 262)"]
+      },
+      "syn-url-dark": {
+        "role": "neutral",
+        "displayName": "Syntax URL (dark)",
+        "canonical": "oklch(0.72 0.06 262)",
+        "tonalRamp": ["oklch(0.15 0.06 262)", "oklch(0.264 0.06 262)", "oklch(0.379 0.06 262)", "oklch(0.493 0.06 262)", "oklch(0.607 0.06 262)", "oklch(0.721 0.06 262)", "oklch(0.836 0.06 262)", "oklch(0.95 0.06 262)"]
+      }
+    },
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "ease-out-quart; every transition."
+      },
+      {
+        "name": "fast",
+        "value": "120ms",
+        "purpose": "State feedback: hover, colour, borders, menu entry."
+      },
+      {
+        "name": "base",
+        "value": "180ms",
+        "purpose": "Larger changes: station ring scaling, rail slide-over, overlay entry."
+      },
+      {
+        "name": "rail-in",
+        "value": "translateX(-24px) + fade, 180ms",
+        "purpose": "Compact rail sliding over the card."
+      },
+      {
+        "name": "picker-in",
+        "value": "translateY(-4px) + fade, 180ms",
+        "purpose": "Palette, picker, settings, auto-scroll readout entry."
+      },
+      {
+        "name": "menu-in",
+        "value": "translateY(-2px) + fade, 120ms",
+        "purpose": "Context menu entry."
+      },
+      {
+        "name": "autoscroll-pulse",
+        "value": "opacity 1 to 0.25, 1.6s, infinite",
+        "purpose": "The auto-scroll running dot; still when paused, off under reduced motion."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "All animation and transition durations under prefers-reduced-motion."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "none",
+        "value": "none",
+        "purpose": "Nothing casts a shadow. Overlays and menus are separated by a strong hairline and their material."
+      },
+      {
+        "name": "ring-search-hit",
+        "value": "0 0 0 1px var(--signal-tint)",
+        "purpose": "Zero-blur ring around a search hit in the source pane. Not elevation."
+      },
+      {
+        "name": "ring-active-block",
+        "value": "0 0 0 8px color-mix(in oklch, var(--line-ink) 9%, transparent)",
+        "purpose": "Extends the caret block's ink wash in the rendered pane. Not elevation."
+      },
+      {
+        "name": "ring-field-editing",
+        "value": "0 0 0 3px var(--signal-tint)",
+        "purpose": "Tint ring on the new-document path field. Not elevation."
+      },
+      {
+        "name": "inset-focus-bar",
+        "value": "inset 0 0 0 2px var(--focus)",
+        "purpose": "Keyboard focus on menu and picker rows."
+      },
+      {
+        "name": "inset-tab-rule",
+        "value": "inset 0 -1px 0 var(--signal)",
+        "purpose": "Rule under the active MDX tab."
+      }
+    ],
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body",
+        "purpose": "Rendered prose, capped at 68ch."
+      },
+      "body-ui": {
+        "displayName": "UI Body",
+        "purpose": "Tree rows, stations, menus, buttons on the card."
+      },
+      "doc-h1": {
+        "displayName": "Document H1",
+        "purpose": "Rendered level-1 heading."
+      },
+      "doc-h2": {
+        "displayName": "Document H2",
+        "purpose": "Rendered level-2 heading, hairline beneath."
+      },
+      "doc-h3": {
+        "displayName": "Document H3",
+        "purpose": "Rendered level-3 heading."
+      },
+      "label-micro": {
+        "displayName": "Micro Label",
+        "purpose": "Header strips inside the card: MDX alerts and callouts, picker title, palette sections. Uppercase."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "The source pane; code blocks at 1.6 line height."
+      },
+      "sign-chip": {
+        "displayName": "Sign Chip",
+        "purpose": "Line chips naming the line a document rides. Uppercase."
+      },
+      "sign-display": {
+        "displayName": "Sign Display",
+        "purpose": "Place title on an iPhone panel. Uppercase."
+      },
+      "sign-headline": {
+        "displayName": "Sign Headline",
+        "purpose": "Station name in the top bar and at the head of the rail's document line. Uppercase."
+      },
+      "sign-label": {
+        "displayName": "Sign Label",
+        "purpose": "Segmented control, header buttons, folder name boards. Uppercase."
+      },
+      "sign-tab": {
+        "displayName": "Sign Tab",
+        "purpose": "iPhone tab bar labels. Uppercase."
+      },
+      "sign-title": {
+        "displayName": "Sign Title",
+        "purpose": "The wordmark and the iPhone bar's place name. Uppercase."
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Line Chips",
+      "kind": "chip",
+      "refersTo": "line-chip-main",
+      "description": "The line a document rides, as a pill in its ink. Scarlet is the root Main line only; folders hash into cobalt, amber, green.",
+      "html": "<div class=\"ds-chips\"><span class=\"ds-line ds-line--scarlet\">Main line</span><span class=\"ds-line ds-line--cobalt\">specs</span><span class=\"ds-line ds-line--amber\">notes</span><span class=\"ds-line ds-line--green\">journal</span></div>",
+      "css": ".ds-chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px; background: var(--enamel); } .ds-line { padding: 3px 10px 2px; border-radius: 999px; font-family: var(--font-sign); font-size: var(--t-small); font-weight: 600; letter-spacing: 0.09em; line-height: 1.3; text-transform: uppercase; } .ds-line--scarlet { background: var(--scarlet); color: oklch(0.985 0.003 95); } .ds-line--cobalt { background: var(--cobalt); color: oklch(0.985 0.003 95); } .ds-line--amber { background: var(--amber); color: var(--enamel); } .ds-line--green { background: var(--green); color: var(--enamel); }"
+    },
+    {
+      "name": "Save Plate",
+      "kind": "button",
+      "refersTo": "button-save",
+      "description": "The one scarlet plate in the top bar, shown only when there are edits to save.",
+      "html": "<div class=\"ds-bar\"><button class=\"ds-save\">Save</button><button class=\"ds-save\" disabled>Save</button></div>",
+      "css": ".ds-bar { display: flex; gap: 12px; padding: 6px 12px; background: var(--enamel); } .ds-save { min-height: 44px; padding: 0 16px; border: 1px solid var(--scarlet); border-radius: var(--radius-control); background: var(--scarlet); color: oklch(0.985 0.003 95); font-family: var(--font-sign); font-size: var(--t-base); font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; transition: background var(--fast) var(--ease); } .ds-save:hover:not(:disabled) { background: oklch(0.54 0.215 27); } .ds-save:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; } .ds-save:disabled { background: transparent; border-color: var(--enamel-line); color: var(--on-enamel-muted); opacity: 0.55; cursor: default; }"
+    },
+    {
+      "name": "Header Quiet Button",
+      "kind": "button",
+      "refersTo": "button-header-quiet",
+      "description": "Settings, Edit and Done in the enamel bar: signage type, no outline until hover or pressed.",
+      "html": "<div class=\"ds-bar\"><button class=\"ds-quiet\">Settings</button><button class=\"ds-quiet\" aria-pressed=\"true\">Done</button></div>",
+      "css": ".ds-bar { display: flex; gap: 12px; padding: 6px 12px; background: var(--enamel); } .ds-quiet { min-height: 44px; padding: 0 16px; border: 1px solid transparent; border-radius: var(--radius-control); background: transparent; color: var(--on-enamel-muted); font-family: var(--font-sign); font-size: var(--t-base); font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease), color var(--fast) var(--ease); } .ds-quiet:hover { border-color: var(--on-enamel); background: var(--enamel-raised); color: var(--on-enamel); } .ds-quiet[aria-pressed=\"true\"] { border-color: var(--on-enamel); color: var(--on-enamel); } .ds-quiet:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Card Button",
+      "kind": "button",
+      "refersTo": "button-card",
+      "description": "A button on the document card: hairline control edge, ink text, signal tint when pressed.",
+      "html": "<div class=\"ds-card\"><button class=\"ds-btn\">Insert</button><button class=\"ds-btn ds-btn--quiet\">Cancel</button></div>",
+      "css": ".ds-card { display: flex; gap: 8px; padding: 16px; background: var(--surface); border-radius: var(--radius-card); } .ds-btn { min-height: 44px; padding: 0 16px; border: 1px solid var(--line-control); border-radius: var(--radius-control); background: transparent; color: var(--ink); font-family: var(--font-ui); font-size: var(--t-base); font-weight: 600; cursor: pointer; transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease); } .ds-btn:hover { border-color: var(--ink); } .ds-btn:active { background: var(--signal-tint); } .ds-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; } .ds-btn--quiet { border-color: transparent; color: var(--ink-muted); } .ds-btn--quiet:hover { border-color: var(--line-control); color: var(--ink); }"
+    },
+    {
+      "name": "View Segmented Control",
+      "kind": "nav",
+      "refersTo": "segmented-item",
+      "description": "Source / Split / Render in enamel; the view in use is a porcelain plate.",
+      "html": "<div class=\"ds-wrap\"><div class=\"ds-seg\" role=\"group\" aria-label=\"View\"><button class=\"ds-seg__item\">Source</button><button class=\"ds-seg__item is-active\" aria-pressed=\"true\">Split</button><button class=\"ds-seg__item\">Render</button></div></div>",
+      "css": ".ds-wrap { padding: 12px; background: var(--enamel); } .ds-seg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--enamel-line); border-radius: var(--radius-control); } .ds-seg__item { min-height: 36px; min-width: 72px; padding: 0 14px; border: 0; border-radius: 7px; background: transparent; color: var(--on-enamel-muted); font-family: var(--font-sign); font-size: var(--t-base); font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; transition: background var(--fast) var(--ease), color var(--fast) var(--ease); } .ds-seg__item:hover:not(.is-active) { background: var(--enamel-raised); color: var(--on-enamel); } .ds-seg__item.is-active { background: var(--on-enamel); color: var(--enamel); } .ds-seg__item:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Rail Search Field",
+      "kind": "input",
+      "refersTo": "rail-search-field",
+      "description": "A button dressed as a field that opens the command palette, the one search surface.",
+      "html": "<div class=\"ds-wrap\"><button class=\"ds-search\"><span>Find a document…</span><kbd>⌘P</kbd></button></div>",
+      "css": ".ds-wrap { padding: 12px 16px; background: var(--enamel); width: 300px; } .ds-search { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; border: 1px solid var(--enamel-line); border-radius: var(--radius-control); background: transparent; color: var(--on-enamel-muted); font-family: var(--font-ui); font-size: var(--t-base); text-align: left; cursor: pointer; transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease), color var(--fast) var(--ease); } .ds-search:hover { border-color: var(--on-enamel); background: var(--enamel-raised); color: var(--on-enamel); } .ds-search:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; } .ds-search kbd { font-family: var(--font-mono); font-size: var(--t-micro); }"
+    },
+    {
+      "name": "Line Network",
+      "kind": "custom",
+      "refersTo": "tree-row",
+      "description": "The document tree as lines: a folder's name board, a nested folder as a square stop, documents as stations, the open one as the interchange ring, the track ending at the true last station.",
+      "html": "<ul class=\"ds-net\"><li class=\"ds-row ds-row--board ds-first\">Specs</li><li class=\"ds-row ds-row--stop\">api</li><li class=\"ds-row ds-row--doc\">auth.md</li><li class=\"ds-row ds-row--doc is-selected\">README.md</li><li class=\"ds-row ds-row--doc ds-last\">roadmap.md</li></ul>",
+      "css": ".ds-net { list-style: none; margin: 0; padding: 8px 16px; width: 300px; background: var(--enamel); --ink-line: var(--cobalt); } .ds-row { position: relative; display: flex; align-items: center; min-height: 44px; padding: 4px 10px 4px 40px; border-radius: var(--radius-control); color: var(--on-enamel-muted); font-family: var(--font-ui); font-size: var(--t-base); cursor: pointer; transition: background var(--fast) var(--ease), color var(--fast) var(--ease); } .ds-row:hover { background: var(--enamel-raised); color: var(--on-enamel); } .ds-row::before { content: \"\"; position: absolute; left: 15px; top: 0; bottom: 0; width: 5px; background: var(--ink-line); } .ds-first::before { top: 50%; } .ds-last::before { bottom: 50%; } .ds-row::after { content: \"\"; position: absolute; top: 50%; } .ds-row--board { color: var(--on-enamel); font-family: var(--font-sign); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; } .ds-row--board::after { left: 9px; width: 17px; height: 17px; margin-top: -8.5px; border-radius: 4px; background: var(--ink-line); } .ds-row--stop { font-family: var(--font-sign); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: var(--t-small); } .ds-row--stop::after { left: 10px; width: 15px; height: 15px; margin-top: -7.5px; border-radius: 3px; background: var(--on-enamel); border: 3px solid var(--ink-line); box-sizing: border-box; } .ds-row--doc::after { left: 10px; width: 15px; height: 15px; margin-top: -7.5px; border-radius: 50%; background: var(--on-enamel); border: 3px solid var(--ink-line); box-sizing: border-box; transition: transform var(--base) var(--ease); } .ds-row.is-selected { color: var(--on-enamel); font-weight: 600; } .ds-row.is-selected::after { transform: scale(1.45); background: var(--enamel); border: 3.5px solid var(--on-enamel); }"
+    },
+    {
+      "name": "Document Line",
+      "kind": "custom",
+      "refersTo": "doc-line-station",
+      "description": "The open document's headings as stations: the section in view is the lit interchange, an h3 is a tick, an agent's change an amber service alert.",
+      "html": "<ol class=\"ds-dl\"><li class=\"ds-stop ds-h1\"><button class=\"ds-st\"><span class=\"ds-mk\"></span>MarkDN</button></li><li class=\"ds-stop\"><button class=\"ds-st is-here\" aria-current=\"location\"><span class=\"ds-mk\"></span>What you get</button></li><li class=\"ds-stop ds-h3\"><button class=\"ds-st\"><span class=\"ds-mk\"></span>Split view</button></li><li class=\"ds-stop\"><button class=\"ds-st has-alert\"><span class=\"ds-mk\"></span>Working with an assistant<svg class=\"ds-alert\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M8 2.2 14.6 13.6H1.4Z\"/><path class=\"ds-alert-mark\" d=\"M8 6.4v3.4M8 11.6v.01\"/></svg></button></li></ol>",
+      "css": ".ds-dl { list-style: none; margin: 0; padding: 8px 16px; width: 300px; background: var(--enamel); --ink-line: var(--cobalt); } .ds-stop { position: relative; } .ds-stop::before { content: \"\"; position: absolute; left: 15px; top: 0; bottom: 0; width: 6px; background: var(--ink-line); } .ds-stop:first-child::before { top: 50%; } .ds-stop:last-child::before { bottom: 50%; } .ds-st { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 10px 6px 44px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--on-enamel-muted); font-family: var(--font-ui); font-size: var(--t-base); line-height: 1.3; text-align: left; cursor: pointer; transition: background var(--fast) var(--ease), color var(--fast) var(--ease); } .ds-st:hover { background: var(--enamel-raised); color: var(--on-enamel); } .ds-st:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; } .ds-mk { position: absolute; left: 9px; top: 50%; width: 18px; height: 18px; margin-top: -9px; box-sizing: border-box; border-radius: 50%; background: var(--on-enamel); border: 4px solid var(--ink-line); transition: transform var(--base) var(--ease); } .ds-h1 .ds-st { color: var(--on-enamel); font-weight: 600; } .ds-h3 .ds-mk { left: 11px; width: 14px; height: 4px; margin-top: -2px; border: 0; border-radius: 2px; } .ds-h3 .ds-st { font-size: var(--t-small); } .ds-st.is-here { color: var(--on-enamel); font-weight: 600; } .ds-st.is-here .ds-mk { transform: scale(1.4); background: var(--enamel); border: 3.5px solid var(--on-enamel); } .ds-st.has-alert .ds-mk { border-color: var(--amber); } .ds-alert { width: 18px; height: 18px; margin-left: auto; flex-shrink: 0; } .ds-alert path:first-child { fill: var(--amber); stroke: var(--amber); stroke-linejoin: round; stroke-width: 1.5; } .ds-alert-mark { fill: none; stroke: var(--enamel); stroke-width: 1.8; stroke-linecap: round; }"
+    },
+    {
+      "name": "iPhone Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar-item",
+      "description": "Four places at the bottom: Read, Documents, Outline, Search. The active one is porcelain with a scarlet rule under its label.",
+      "html": "<nav class=\"ds-tabs\" aria-label=\"Sections\"><button class=\"ds-tab is-active\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M8.5 8h7M8.5 12h7M8.5 16h4\"/></svg><span>Read</span></button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 3v18\"/><circle cx=\"6\" cy=\"6\" r=\"2\"/><circle cx=\"6\" cy=\"12\" r=\"2\"/><circle cx=\"6\" cy=\"18\" r=\"2\"/><path d=\"M11 6h8M11 12h8M11 18h6\"/></svg><span>Documents</span></button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3v18\"/><circle cx=\"12\" cy=\"7\" r=\"2.5\"/><circle cx=\"12\" cy=\"17\" r=\"2.5\"/><path d=\"M12 12h6\"/></svg><span>Outline</span></button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"6\"/><path d=\"m15.5 15.5 4.5 4.5\"/></svg><span>Search</span></button></nav>",
+      "css": ".ds-tabs { display: grid; grid-template-columns: repeat(4, 1fr); width: 390px; padding: 4px; background: var(--enamel); border-top: 1px solid var(--enamel-line); } .ds-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; padding: 4px 0 6px; border: 0; background: transparent; color: var(--on-enamel-muted); font-family: var(--font-sign); font-size: var(--t-small); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; } .ds-tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; } .ds-tab span { padding-bottom: 3px; border-bottom: 2px solid transparent; } .ds-tab:hover { color: var(--on-enamel); } .ds-tab.is-active { color: var(--on-enamel); } .ds-tab.is-active span { border-bottom-color: var(--scarlet); } .ds-tab:focus-visible { outline: 2px solid var(--focus); outline-offset: -4px; border-radius: var(--radius-control); }"
+    },
+    {
+      "name": "Service Notice",
+      "kind": "card",
+      "refersTo": "banner",
+      "description": "A notice or decision on the line, under the top bar, with an amber dot; the first action is a porcelain plate and Escape takes the last.",
+      "html": "<div class=\"ds-wrap\"><div class=\"ds-banner\" role=\"alertdialog\"><span class=\"ds-dot\"></span><span>README.md changed on disk.</span><span class=\"ds-actions\"><button class=\"ds-act ds-act--primary\">Reload</button><button class=\"ds-act\">Keep mine</button></span></div></div>",
+      "css": ".ds-wrap { padding: 12px; background: var(--enamel); } .ds-banner { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 44px; padding: 6px 8px 6px 14px; border: 1px solid var(--enamel-line); border-radius: var(--radius-control); background: var(--enamel-raised); color: var(--on-enamel); font-family: var(--font-ui); font-size: var(--t-base); } .ds-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex-shrink: 0; } .ds-actions { display: flex; gap: 8px; margin-left: auto; } .ds-act { min-height: 44px; padding: 0 16px; border: 1px solid transparent; border-radius: var(--radius-control); background: transparent; color: var(--on-enamel); font-family: var(--font-ui); font-size: var(--t-base); font-weight: 600; cursor: pointer; } .ds-act:hover { border-color: var(--enamel-line); } .ds-act--primary { background: var(--on-enamel); border-color: var(--on-enamel); color: var(--enamel); } .ds-act:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Midnight Line",
+    "overview": "MarkDN is drawn as a transit diagram fired in midnight-blue enamel. A document is a line. Every top-level folder is a line in its own ink, its documents are the stations on it, and the open document's headings are a line of their own, with the section in view lit as an interchange ring. The person reading always knows where they are: which line, which station, and how far along it.\n\nThe world has two materials and keeps them apart. The **enamel shell** (rail, top bar, tab bar, every edge) is the same in light and dark: midnight ground, porcelain type, signage in uppercase condensed letters. The **document card** sits inset in the enamel with a generous 14px corner: porcelain in light, deep enamel in dark. The card is where reading and writing happen, and it stays quiet: system type, hairline boxes, and colour only where the document's own syntax or state asks for it. The four line inks (scarlet, cobalt, amber, green) belong to lines, station rings and state. They are never decoration.\n\nIt is sized for glass first. Every control in the shell is a 44px target, tightened to 34px only under a fine pointer, and the layout moves through three arrangements (iPhone tab bar, iPad slide-over rail, wide split view) without changing what anything means. It refuses the category default of a grey list sidebar beside a grey page, and it refuses glass, glow and gradient: depth here is enamel against porcelain and nothing else.",
+    "keyCharacteristics": [
+      "A document is a line; folders are lines; headings are stations; the open document is an interchange ring.",
+      "Midnight enamel shell, identical in both appearances; porcelain document card (deep enamel in dark), inset 12px with a 14px corner.",
+      "Four line inks used only as track, station rings and state. Scarlet is the root \"Main line\" alone among lines.",
+      "Signage in uppercase Barlow Condensed; prose and UI body in the system face; source and code in ui-monospace.",
+      "44px touch targets everywhere in the shell, 34px under a fine pointer.",
+      "Flat: no drop shadows, no gradients, hairline edges and tonal contrast only.",
+      "Motion is state only (120ms and 180ms on ease-out-quart) and disappears under reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The Ink Is Track Rule",
+        "body": "The line inks are lines, station rings and state, never decoration. No ink fills a panel, colours body text, or appears on a control that is not carrying state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Main Line Rule",
+        "body": "Among lines, scarlet belongs to the root \"Main line\" alone; top-level folders hash into cobalt, amber or green, so no folder can be mistaken for the main line.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Palettes Rule",
+        "body": "The enamel tokens paint the shell and never change with the theme. The document tokens paint the card and everything that floats over it, and each has a designed dark value. Mermaid diagrams take their colours from the document tokens (surface, panel, ink, muted ink, control edge, and the UI face), resolved at render time so they follow the theme; never from the line inks.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cobalt Is Focus Rule",
+        "body": "Keyboard focus is always cobalt. Scarlet means \"act\" or \"unsaved\", never \"focused\".",
+        "section": "colors"
+      },
+      {
+        "name": "The Signage Rule",
+        "body": "Every label in the enamel shell (line, station, view, tab, folder) is uppercase Barlow Condensed, tracked. Nothing a person reads as prose is ever set in it, and the document card never uses it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Glass First Rule",
+        "body": "Sizes are fixed rem steps chosen for touch screens: 17px body, 15px UI, 13px the smallest label, 12px only for micro labels and key hints. Never fluid.",
+        "section": "typography"
+      },
+      {
+        "name": "The Line First Rule",
+        "body": "Where the reader is in the open document is the thing looked for most, so its line comes first in the rail; the network of documents comes second.",
+        "section": "layout"
+      },
+      {
+        "name": "The One Target Rule",
+        "body": "Every control in the shell is at least 44px tall (34px under a fine pointer). Key hints are hidden on glass, where they mean nothing.",
+        "section": "layout"
+      },
+      {
+        "name": "The No-Shadow Rule",
+        "body": "Nothing in MarkDN casts a shadow. Menus, palettes and sheets are separated by their edge and their material, not by blur.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Station Geometry Rule",
+        "body": "Shape says what a stop is, ink says which line it is on. Never swap the two: a folder is never a circle and the current place is never anything but the ring.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** put every shell surface (rail, top bar, tab bar, phone panels) on Midnight Enamel and every document surface on the card tokens, so the two palettes never mix.",
+      "**Do** draw a folder as a line and a document as a station on it, with the open document as the interchange ring; assign branch inks with `lineFor`, by folder name.",
+      "**Do** run a line's track unbroken to its true last station, through any nested folders, and stop it there.",
+      "**Do** keep the document's own line first in the rail on iPad and desktop, and on its own Outline tab on iPhone.",
+      "**Do** set shell labels in uppercase Barlow Condensed, tracked 0.02em to 0.1em, and keep prose in the system face.",
+      "**Do** give every shell control a 44px target (34px under a fine pointer) and show focus as a 2px cobalt ring.",
+      "**Do** mark an agent's change with amber on the stations it touched, and say it in text for assistive technology.",
+      "**Do** theme anything drawn on the card, mermaid included, from the document tokens so it follows light and dark.",
+      "**Do** honour `prefers-reduced-motion`: every transition and animation collapses, and state still reads statically."
+    ],
+    "donts": [
+      "**Don't** use a line ink as decoration: no ink-filled panels, no ink text on the card, no ink on a control that is not carrying state.",
+      "**Don't** give a folder scarlet; scarlet is the root Main line's among lines, and otherwise only Save, unsaved and the selected tab.",
+      "**Don't** put a coloured or thick stripe on one side of a card, alert, callout, row or menu item to mark its kind or state. The only vertical ink rules are the lines themselves, drawn through their stations; a blockquote keeps its 1px neutral hairline.",
+      "**Don't** put a drop shadow on menus, palettes, sheets or anything else; separate overlays by edge and material.",
+      "**Don't** use gradients, glass, blur or glow on any surface.",
+      "**Don't** set prose, document headings or card labels in the condensed signage face.",
+      "**Don't** animate the rail's width or add load sequences; motion is state feedback only.",
+      "**Don't** let a diagram, code block or MDX component bring its own palette; it speaks the document tokens."
+    ]
+  }
+}

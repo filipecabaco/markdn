@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "assets/src/styles.css"
+        ],
+        "createdAt": "2026-10-26T17:56:42.580Z",
+        "reason": "Claude triage: L436 is .tree__chevron, a zero-size CSS border triangle (5px border-left + transparent top/bottom), not a side-tab accent; predates session (326f495)"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/index.html"
+        ],
+        "createdAt": "2026-10-26T20:37:14.851Z",
+        "reason": "Claude triage, user-requested polish pass: the only pulsing element in this file is the HUD demo's .hud__pulse, which depicts the app's own auto-scroll indicator (assets/src/styles.css .autoscroll__pulse: same 6px signal dot, 1.6s, drains when paused, off under prefers-reduced-motion); literal state per DESIGN.md Motion"
+      }
+    ]
+  }
+}

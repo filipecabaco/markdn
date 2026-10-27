@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Pocket Paperbacks — MarkDN iPad</title>
+<style>
+  :root { --orange:#E8701A; --paper:#FBFAF6; --ink:#1E1E1C; --green:#2E7D4F; --blue:#2B66A6; }
+  * { box-sizing:border-box; margin:0; }
+  body { width:1194px; height:834px; overflow:hidden; font:16px/1.5 "Gill Sans", "Gill Sans MT", -apple-system, system-ui, sans-serif; color:var(--ink); background:var(--paper); display:grid; grid-template-columns:280px 1fr; }
+  .shelf { border-right:1px solid #E3DFD4; padding:48px 20px 0; display:flex; flex-direction:column; gap:10px; }
+  .shelf h1 { font-size:22px; font-weight:600; letter-spacing:.02em; margin-bottom:10px; }
+  .spine { display:grid; grid-template-rows:10px auto 10px; border:1px solid #D8D3C7; }
+  .spine .b { background:var(--orange); } .spine.g .b { background:var(--green); } .spine.bl .b { background:var(--blue); }
+  .spine .t { padding:10px 14px; font-weight:600; } .spine .t small { display:block; font-weight:400; color:#6E6A60; font-size:13px; }
+  .spine.on { outline:2px solid var(--ink); }
+  main { display:grid; grid-template-rows:auto auto 1fr; }
+  .bar { height:56px; display:flex; align-items:center; gap:16px; padding:0 28px; }
+  .seg { margin-left:auto; display:flex; border-radius:8px; background:#EEEBE3; padding:3px; } .seg span { padding:6px 14px; border-radius:6px; } .seg .on { background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.1); }
+  .cover { margin:0 28px; display:grid; grid-template-rows:28px auto 28px; }
+  .cover .band { background:var(--orange); } .cover .white { padding:18px 24px; text-align:center; border-left:1px solid #E3DFD4; border-right:1px solid #E3DFD4; }
+  .cover h2 { font-size:34px; font-weight:600; } .cover p { color:#6E6A60; }
+  .panes { display:grid; grid-template-columns:1fr 1fr; gap:28px; padding:24px 28px; }
+  .src { font:15px/1.7 ui-monospace, Menlo, monospace; color:#3C3A35; } .src .m { color:var(--orange); }
+  .ren p { font-size:18px; margin-bottom:14px; } .alert { border-top:3px solid var(--orange); background:#F4EFE4; padding:12px 14px; }
+</style></head><body>
+<aside class="shelf"><h1>MarkDN</h1>
+  <div class="spine on"><div class="b"></div><div class="t">Welcome<small>docs</small></div><div class="b"></div></div>
+  <div class="spine"><div class="b"></div><div class="t">Development<small>docs</small></div><div class="b"></div></div>
+  <div class="spine g"><div class="b"></div><div class="t">MDX components<small>notes</small></div><div class="b"></div></div>
+  <div class="spine bl"><div class="b"></div><div class="t">Release plan<small>specs</small></div><div class="b"></div></div>
+</aside>
+<main>
+  <div class="bar"><span>docs</span><div class="seg"><span>Source</span><span class="on">Split</span><span>Render</span></div><span>Save</span></div>
+  <div class="cover"><div class="band"></div><div class="white"><h2>MarkDN</h2><p>Welcome.md · docs</p></div><div class="band"></div></div>
+  <div class="panes"><div class="src"><span class="m">#</span> MarkDN<br><br>Markdown and MDX, served by<br><span class="m">**</span>Francis<span class="m">**</span>.</div>
+  <div class="ren"><p>Markdown and MDX, served by <b>Francis</b> into a native window.</p><div class="alert"><b>Components render live.</b> Nothing is evaluated.</div></div></div>
+</main>
+</body></html>
