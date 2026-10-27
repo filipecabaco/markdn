@@ -6,11 +6,14 @@ product
 
 ## Users
 
-Developers and technical writers who live in markdown for hours at a stretch, on a
-large display, in a native desktop window. They arrive with a job already in mind:
-read a document, edit a passage, check that a diagram or component renders. They
-are fluent in Linear, Raycast, Figma and their editor of choice, so an affordance
-that behaves subtly differently from those costs them more than it teaches them.
+Developers and technical writers who live in markdown, first on an **iPad** held or
+propped up — touch first, a keyboard attached for longer writing — and on an
+**iPhone**, where they mostly read and make light edits: a typo, a line, a checkbox.
+The desktop window is the third place, and follows the same design. They arrive
+with a job already in mind: read a document, find their place in it, fix a
+passage, check that a diagram or component renders. They are fluent in iPadOS and
+iOS apps, so a control that behaves differently from the platform's costs them
+more than it teaches them.
 
 A second class of user is not human. An MCP client reads and writes the same files
 through the same server while a person has them open. The interface has to make
@@ -29,10 +32,10 @@ which renders here renders the same way everywhere else it is published.
 
 ## Brand Personality
 
-Precision instrument. Engineered, exact, quietly confident. Tight micro-detail and
-deliberate density rather than generous whitespace; the surface is a machined
-panel, not a page. Voice is terse and factual: labels, not sentences; no
-exclamation, no encouragement, no personality in the chrome.
+Wayfinding. Clear, confident, built to be read at a glance and touched without
+aiming: a document is a line you can see your place on. Voice is terse and
+factual, as signage is: labels, not sentences; no exclamation, no encouragement,
+no personality in the chrome.
 
 ## Anti-references
 

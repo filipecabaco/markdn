@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Settings, SettingsResponse, Theme, ViewMode } from "../api";
 import { MAX_SPEED, MIN_SPEED } from "../hooks/useAutoScroll";
+import { useModal } from "../hooks/useModal";
 
 /**
  * Settings, backed by the JSON file the panel names at the bottom.
@@ -35,6 +36,8 @@ export function SettingsPanel({ state, onChange, onClose }: Props) {
   const [root, setRoot] = useState(settings.root ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const dialog = useRef<HTMLDivElement>(null);
+  useModal(dialog);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -60,8 +63,10 @@ export function SettingsPanel({ state, onChange, onClose }: Props) {
   return (
     <div className="picker__backdrop" onMouseDown={onClose}>
       <div
+        ref={dialog}
         className="settings"
         role="dialog"
+        aria-modal="true"
         aria-label="Settings"
         onMouseDown={(event) => event.stopPropagation()}
       >

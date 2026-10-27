@@ -29,15 +29,6 @@
     "core:window:allow-set-resizable",
     "core:window:allow-start-dragging",
     "core:window:allow-close",
-    "core:webview:allow-create-webview-window",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "desktop",
-          "sidecar": true
-        }
-      ]
-    }
+    "core:webview:allow-create-webview-window"
   ]
 }

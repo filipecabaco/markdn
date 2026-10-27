@@ -1,0 +1,4 @@
+# Scratch from design passes: review captures, third-party reference images, the hook cache.
+review/
+refs/
+hook.cache.json

@@ -344,6 +344,65 @@ export function highlightMarkdown(text: string, hits: readonly TextRange[] = [])
   return text.endsWith("\n") ? `${html}\n` : html;
 }
 
+/**
+ * The same highlighting as `highlightMarkdown`, one HTML string per source line.
+ *
+ * Tokens never cross a newline, so a line's markup is complete on its own. That
+ * is what lets the editor's layer keep one element per line and, on a keystroke,
+ * rewrite only the lines whose markup changed — usually one — instead of
+ * replacing the markup of a whole document and laying all of it out again.
+ */
+export function highlightLines(text: string, hits: readonly TextRange[] = []): string[] {
+  const tokens = tokenizeMarkdown(text);
+  const lines: string[] = [];
+  let token = 0;
+  let hit = 0;
+  let lineStart = 0;
+
+  for (const line of text.split("\n")) {
+    const lineEnd = lineStart + line.length;
+    const bounds = new Set<number>([lineStart, lineEnd]);
+
+    while (token < tokens.length && tokens[token].end <= lineStart) token += 1;
+    while (hit < hits.length && hits[hit].end <= lineStart) hit += 1;
+
+    for (let t = token; t < tokens.length && tokens[t].start < lineEnd; t += 1) {
+      bounds.add(Math.max(tokens[t].start, lineStart));
+      bounds.add(Math.min(tokens[t].end, lineEnd));
+    }
+    for (let h = hit; h < hits.length && hits[h].start < lineEnd; h += 1) {
+      bounds.add(Math.max(hits[h].start, lineStart));
+      bounds.add(Math.min(hits[h].end, lineEnd));
+    }
+
+    const points = [...bounds].sort((a, b) => a - b);
+    let html = "";
+    let t = token;
+    let h = hit;
+
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const start = points[index];
+      const end = points[index + 1];
+
+      while (t < tokens.length && tokens[t].end <= start) t += 1;
+      while (h < hits.length && hits[h].end <= start) h += 1;
+
+      const covering = tokens[t];
+      const kind = covering !== undefined && covering.start <= start ? covering.kind : null;
+      const marked = hits[h] !== undefined && hits[h].start <= start;
+      const classes = [kind && `md-${kind}`, marked && "source__hit"].filter(Boolean).join(" ");
+      const chunk = escape(text.slice(start, end));
+
+      html += classes ? `<span class="${classes}">${chunk}</span>` : chunk;
+    }
+
+    lines.push(html);
+    lineStart = lineEnd + 1;
+  }
+
+  return lines;
+}
+
 function escape(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

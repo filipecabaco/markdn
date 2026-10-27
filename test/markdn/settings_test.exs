@@ -61,6 +61,15 @@ defmodule Markdn.SettingsTest do
       assert {:ok, _} = Settings.put(%{"root" => root})
     end
 
+    test "keeps whether the sidebar is collapsed, as a boolean only" do
+      assert Settings.all()["sidebarCollapsed"] == false
+      assert {:ok, %{"sidebarCollapsed" => true}} = Settings.put(%{"sidebarCollapsed" => true})
+      assert Settings.refresh()["sidebarCollapsed"] == true
+
+      assert {:error, {:invalid, "sidebarCollapsed"}} =
+               Settings.put(%{"sidebarCollapsed" => "yes"})
+    end
+
     test "ignores keys it does not know" do
       assert {:ok, settings} = Settings.put(%{"nonsense" => true})
       refute Map.has_key?(settings, "nonsense")

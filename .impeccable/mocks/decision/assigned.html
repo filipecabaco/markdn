@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Card Catalogue — MarkDN iPad</title>
+<style>
+  :root { --oak:#5E4128; --oak-2:#4D3520; --card:#F3F1EA; --ink:#1F1D1A; --rule:#C23B2E; --blue:#8FA9CC; --stamp:#5A4C9C; --tab:#E6DCC2; }
+  * { box-sizing:border-box; margin:0; }
+  body { width:1194px; height:834px; overflow:hidden; font:15px/1.5 -apple-system, "SF Pro Text", system-ui, sans-serif; color:var(--ink); background:var(--oak); display:grid; grid-template-columns:300px 1fr; }
+  .drawer { background:var(--oak); color:#F3E9D6; padding:56px 0 0; display:flex; flex-direction:column; }
+  .drawer h1 { font:600 15px/1 -apple-system, system-ui; letter-spacing:.08em; text-transform:uppercase; padding:0 24px 16px; color:#EADBC0; }
+  .label { margin:0 24px 16px; background:#C9B48A; color:var(--oak-2); font:600 15px/1 ui-monospace, Menlo, monospace; padding:10px 12px; border:1px solid #A8925F; text-align:center; letter-spacing:.06em; }
+  .guide { margin:8px 16px 0; position:relative; }
+  .guide .tab { display:inline-block; background:var(--tab); color:var(--oak-2); font:600 15px/1 -apple-system, system-ui; text-transform:uppercase; letter-spacing:.06em; padding:9px 14px 7px; }
+  .guide .tab.mid { margin-left:72px; } .guide .tab.right { margin-left:144px; }
+  .cards { background:var(--tab); padding:6px 8px 10px; }
+  .c { background:var(--card); border-top:2px solid var(--rule); padding:10px 12px; margin-top:6px; display:grid; grid-template-columns:1fr 22px; min-height:48px; align-items:center; }
+  .c b { font-weight:600; } .c small { grid-column:1; font:13px ui-monospace, Menlo, monospace; color:#6B655C; }
+  .c .cell { grid-row:1 / span 2; grid-column:2; width:16px; height:16px; border:1.5px solid var(--ink); }
+  .c.open { outline:2px solid var(--ink); } .c.open .cell { background:var(--ink); }
+  .c.agent .cell { border-color:var(--stamp); background:repeating-linear-gradient(45deg,var(--stamp) 0 2px,transparent 2px 5px); }
+  main { background:var(--card); display:grid; grid-template-rows:auto auto 1fr; }
+  .bar { height:56px; display:flex; align-items:center; gap:16px; padding:0 24px; border-bottom:1px solid #D9D3C4; }
+  .call { font:600 15px ui-monospace, Menlo, monospace; letter-spacing:.04em; }
+  .seg { margin-left:auto; display:flex; border:1px solid var(--ink); }
+  .seg span { padding:8px 16px; font-weight:600; font-size:15px; } .seg .on { background:var(--ink); color:var(--card); }
+  .btn { border:1px solid var(--ink); padding:8px 16px; font-weight:600; }
+  .title { padding:24px 32px 12px; border-bottom:2px solid var(--rule); display:flex; align-items:baseline; gap:16px; }
+  .title h2 { font:700 32px/1.1 -apple-system, system-ui; letter-spacing:-.01em; }
+  .stamp { margin-left:auto; border:2px solid var(--stamp); color:var(--stamp); font:700 13px ui-monospace, Menlo, monospace; padding:4px 8px; transform:rotate(-4deg); letter-spacing:.06em; }
+  .panes { display:grid; grid-template-columns:1fr 1fr; min-height:0; }
+  .src { padding:20px 32px; font:15px/32px ui-monospace, Menlo, monospace; background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--blue) 31px 32px); border-right:1px solid #D9D3C4; color:#3A3631; }
+  .src .m { color:#9A8F80; } .src .t { color:#5A4C9C; }
+  .ren { padding:20px 32px; } .ren p { margin-bottom:16px; font-size:17px; line-height:1.55; }
+  .alert { border:1px solid var(--ink); margin:8px 0 16px; } .alert .h { background:#E6E2D6; padding:8px 12px; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.06em; } .alert .b { padding:10px 12px; }
+  .flow { display:flex; gap:12px; align-items:center; } .flow span { border:1.5px solid var(--ink); padding:8px 14px; font-weight:600; } .flow i { flex:0 0 24px; border-top:1.5px solid var(--ink); }
+</style></head><body>
+<aside class="drawer">
+  <h1>MarkDN</h1>
+  <div class="label">DOCS · A–Z</div>
+  <div class="guide"><span class="tab">docs</span></div>
+  <div class="cards">
+    <div class="c open"><b>Welcome.md</b><small>docs/ · 2.1 kB</small><span class="cell"></span></div>
+    <div class="c agent"><b>DEVELOPMENT.md</b><small>docs/ · agent 23:14</small><span class="cell"></span></div>
+  </div>
+  <div class="guide"><span class="tab mid">notes</span></div>
+  <div class="cards">
+    <div class="c"><b>MDX_COMPONENT_SUMMARY.md</b><small>notes/ · 6.8 kB</small><span class="cell"></span></div>
+  </div>
+  <div class="guide"><span class="tab right">specs</span></div>
+</aside>
+<main>
+  <div class="bar"><span class="call">docs/Welcome.md</span><div class="seg"><span>Source</span><span class="on">Split</span><span>Render</span></div><span class="btn">Save</span></div>
+  <div class="title"><h2>MarkDN</h2><span class="stamp">AGENT · 26 OCT 23:14</span></div>
+  <div class="panes">
+    <div class="src"><span class="m">#</span> MarkDN<br><br>Markdown and MDX, served by<br><span class="m">**</span>Francis<span class="m">**</span> into a native window.<br><br><span class="t">&lt;Alert type="info"&gt;</span><br>Components render live.<br><span class="t">&lt;/Alert&gt;</span></div>
+    <div class="ren"><p>Markdown and MDX, served by <b>Francis</b> into a native window.</p><div class="alert"><div class="h">Components render live</div><div class="b">Resolved through the registry. Nothing is evaluated.</div></div><div class="flow"><span>Source</span><i></i><span>Francis</span><i></i><span>Render</span></div></div>
+  </div>
+</main>
+</body></html>

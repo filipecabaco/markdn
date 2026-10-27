@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Category standard — MarkDN iPad</title>
+<style>
+  * { box-sizing:border-box; margin:0; }
+  body { width:1194px; height:834px; overflow:hidden; font:17px/1.45 -apple-system, "SF Pro Text", system-ui, sans-serif; color:#1C1C1E; background:#fff; display:grid; grid-template-columns:320px 1fr; }
+  aside { background:#F2F2F7; padding:56px 16px 0; border-right:1px solid #D1D1D6; }
+  aside h1 { font-size:34px; font-weight:700; padding:0 8px 12px; } .search { background:#E3E3E8; border-radius:10px; padding:8px 12px; color:#8E8E93; margin-bottom:16px; }
+  .group { background:#fff; border-radius:10px; overflow:hidden; } .row { padding:11px 14px; border-bottom:1px solid #E5E5EA; } .row.on { background:#007AFF; color:#fff; } .row small { display:block; color:#8E8E93; font-size:13px; } .row.on small { color:#DCE9FF; }
+  main { display:grid; grid-template-rows:auto 1fr; } .bar { height:56px; display:flex; align-items:center; gap:18px; padding:0 24px; color:#007AFF; }
+  .seg { margin:0 auto; display:flex; background:#EEEEF0; border-radius:9px; padding:2px; color:#1C1C1E; } .seg span { padding:5px 16px; border-radius:7px; font-size:14px; } .seg .on { background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .doc { padding:8px 48px; } .doc h2 { font-size:34px; font-weight:700; margin-bottom:12px; } .doc p { margin-bottom:14px; }
+  .alert { background:#F2F7FF; border-radius:12px; padding:12px 14px; }
+</style></head><body>
+<aside><h1>Documents</h1><div class="search">Search</div>
+  <div class="group"><div class="row on">Welcome<small>docs · Today 23:14</small></div><div class="row">Development<small>docs · Yesterday</small></div><div class="row">MDX components<small>notes · Mon</small></div></div>
+</aside>
+<main><div class="bar"><span>Back</span><div class="seg"><span>Source</span><span class="on">Split</span><span>Render</span></div><span>Share</span></div>
+  <div class="doc"><h2>MarkDN</h2><p>Markdown and MDX, served by <b>Francis</b> into a native window.</p><div class="alert"><b>Components render live.</b> Nothing is evaluated.</div></div>
+</main>
+</body></html>

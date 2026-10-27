@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { highlightMarkdown, tokenizeMarkdown } from "./markdown-syntax";
+import { highlightLines, highlightMarkdown, tokenizeMarkdown } from "./markdown-syntax";
 
 /** Tokens as `[kind, the text it covers]`, which is what a highlight layer is. */
 function tokens(text: string) {
@@ -135,5 +135,36 @@ describe("highlightMarkdown", () => {
   it("keeps a trailing newline so the layer and the textarea stay in step", () => {
     expect(highlightMarkdown("a\n").endsWith("\n")).toBe(true);
     expect(highlightMarkdown("a").endsWith("\n")).toBe(false);
+  });
+});
+
+describe("highlightLines", () => {
+  const documents = [
+    "# Title\n\nSome **bold** and `code` text.\n",
+    "```js\nconst a = 1;\n\nconsole.log(a);\n```\nafter",
+    "---\ntitle: x\n---\n- [ ] task\n> quote with [link](http://x.y)\n",
+    "",
+    "no newline at the end",
+  ];
+
+  it("is the whole-document highlighting, split at the newlines", () => {
+    for (const text of documents) {
+      const trailing = text.endsWith("\n") ? "\n" : "";
+      expect(highlightLines(text).join("\n") + trailing).toBe(highlightMarkdown(text));
+    }
+  });
+
+  it("splits a search hit that spans lines rather than dropping it", () => {
+    const text = "one two\nthree four";
+    const hits = [{ start: 4, end: 13 }];
+    // One span per line: markup cannot be left open across a line element.
+    expect(highlightLines(text, hits)).toEqual([
+      'one <span class="source__hit">two</span>',
+      '<span class="source__hit">three</span> four',
+    ]);
+  });
+
+  it("gives every source line its own entry, blank ones included", () => {
+    expect(highlightLines("a\n\nb\n")).toHaveLength(4);
   });
 });

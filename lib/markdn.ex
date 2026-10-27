@@ -12,14 +12,13 @@ defmodule Markdn do
 
   ## Why Bandit is supervised here
 
-  `use Francis` supplies the router; it does not start the server in this app.
-  `start/2` starts Bandit itself with `plug: __MODULE__` and merges
+  `use Francis` supplies the router; `start/2` is overridden because the app
+  needs more under its supervisor than Francis's own start would give it: the
+  socket registry, the desktop-only `ExTauri.ShutdownManager`, and the log file
+  redirect. Bandit is started with `plug: __MODULE__` and
   `Application.get_env(:markdn, :bandit_opts)`, which is what lets
-  `config/runtime.exs` bind the ephemeral `PORT` that the Tauri shell injects.
-  Francis 0.3.3 resolves its own `:bandit_opts` from the `use Francis` macro
-  options only and silently ignores application env, so the documented
-  `config :francis, bandit_opts: ...` recipe would bind port 4000 while the
-  webview pointed somewhere else — a blank window with no error.
+  `config/runtime.exs` bind the ephemeral `PORT` the Tauri shell injects — an
+  app bound anywhere else gets a blank window and no error.
   """
 
   use Francis
@@ -30,6 +29,7 @@ defmodule Markdn do
   alias Markdn.MCP.Components
   alias Markdn.MCP.Handler
   alias Markdn.Search
+  alias Markdn.Session
   alias Markdn.Settings
 
   # Runs before every route. Must be declared before the route macros.
@@ -152,6 +152,19 @@ defmodule Markdn do
     end
   end)
 
+  # --- Session -------------------------------------------------------------
+
+  # Where the reader was, so a window that reloads — iOS reclaiming a suspended
+  # app, a restart — comes back on the same document with its unsaved edits.
+  get("/api/session", fn _conn -> Session.get() end)
+
+  post("/api/session", fn conn ->
+    case Session.put(conn.body_params) do
+      {:ok, session} -> session
+      {:error, reason} -> api_error(conn, reason)
+    end
+  end)
+
   get("/api/document", fn conn ->
     with path when is_binary(path) <- conn.params["path"],
          {:ok, contents} <- Documents.read(path) do
@@ -166,6 +179,40 @@ defmodule Markdn do
     with %{"path" => path, "contents" => contents} <- conn.body_params,
          :ok <- Documents.write(path, contents) do
       %{path: path, saved: true}
+    else
+      {:error, reason} -> api_error(conn, reason)
+      _ -> api_error(conn, :missing_path)
+    end
+  end)
+
+  # Creates a document that must not exist yet. Separate from POST /api/document,
+  # which overwrites: Save means "replace", New means "this file is not there".
+  # 201 with the normalised path, so the client opens what was actually written.
+  post("/api/document/new", fn conn ->
+    with %{"path" => path} = params when is_binary(path) <- conn.body_params,
+         {:ok, created} <- Documents.create(path, Map.get(params, "contents", "")) do
+      json(conn, 201, %{path: created, created: true})
+    else
+      {:error, reason} -> api_error(conn, reason)
+      _ -> api_error(conn, :missing_path)
+    end
+  end)
+
+  post("/api/document/rename", fn conn ->
+    with %{"from" => from, "to" => to} <- conn.body_params,
+         {:ok, renamed} <- Documents.rename(from, to) do
+      %{from: from, path: renamed}
+    else
+      {:error, reason} -> api_error(conn, reason)
+      _ -> api_error(conn, :missing_path)
+    end
+  end)
+
+  # POST, not DELETE: the file is moved to the Trash and can be put back.
+  post("/api/document/trash", fn conn ->
+    with %{"path" => path} <- conn.body_params,
+         :ok <- Documents.trash(path) do
+      %{path: path, trashed: true}
     else
       {:error, reason} -> api_error(conn, reason)
       _ -> api_error(conn, :missing_path)
@@ -211,9 +258,7 @@ defmodule Markdn do
       {:reply, %{type: "connected", id: socket.id}}
 
     {:received, message}, socket ->
-      # Qualified call: `ws/2` compiles this body into a generated module
-      # (Francis.Ws), not into Markdn, so Markdn's own functions are not in scope.
-      Markdn.broadcast(message, socket.transport)
+      broadcast(message, socket.transport)
       :noreply
 
     {:close, _reason}, _socket ->
@@ -243,14 +288,11 @@ defmodule Markdn do
     end
   end
 
-  @doc """
-  Fans a message out to every connected websocket except `from`.
-
-  Public because the `ws/2` handler body lives in a generated module and can only
-  reach this through a qualified call.
-  """
+  # Fans a message out to every connected websocket except `from`. Each one is
+  # delivered to that socket's process and, with no `{:info, _}` clause in the
+  # handler, forwarded straight to its client.
   @spec broadcast(term(), pid() | nil) :: :ok
-  def broadcast(message, from) do
+  defp broadcast(message, from) do
     Markdn.Sockets
     |> Registry.lookup(:all)
     |> Enum.each(fn {_pid, transport} ->
@@ -313,12 +355,21 @@ defmodule Markdn do
   defp describe(:unsupported_extension), do: {415, "not a markdown document"}
   defp describe(:missing_path), do: {400, "missing \"path\""}
   defp describe(:invalid_settings), do: {400, "settings must be a JSON object"}
+  defp describe(:invalid_session), do: {400, "the session must be a JSON object"}
   defp describe({:invalid, key}), do: {422, "invalid value for \"#{key}\""}
 
   defp describe(:root_locked),
     do: {409, "root is pinned by MARKDN_ROOT and cannot be changed from settings"}
 
+  defp describe(:eexist), do: {409, "a file already exists at that path"}
+  defp describe(:invalid_contents), do: {422, "\"contents\" must be a string"}
+  defp describe(:not_a_document), do: {409, "only documents can be renamed or trashed"}
+  defp describe(:trash_unavailable), do: {501, "no Trash is available on this system"}
+  defp describe(:trash_failed), do: {500, "the system could not move the file to the Trash"}
+  defp describe(:eisdir), do: {409, "that path is a directory"}
+  defp describe(:enotdir), do: {409, "a parent of that path is a file, not a directory"}
   defp describe(:enoent), do: {404, "no such file or directory"}
   defp describe(:eacces), do: {403, "permission denied"}
+  defp describe(:eperm), do: {403, "permission denied"}
   defp describe(other), do: {500, to_string(other)}
 end

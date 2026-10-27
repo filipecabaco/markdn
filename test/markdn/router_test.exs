@@ -37,6 +37,45 @@ defmodule Markdn.RouterTest do
     assert %{"contents" => "# A"} = Jason.decode!(read.resp_body)
   end
 
+  test "a new document is created with 201 and its normalised path", %{root: root} do
+    conn = call(:post, "/api/document/new", %{path: "./ideas/first.md", contents: "# First"})
+    assert conn.status == 201
+    assert %{"path" => "ideas/first.md", "created" => true} = Jason.decode!(conn.resp_body)
+    assert File.read!(Path.join(root, "ideas/first.md")) == "# First"
+  end
+
+  test "creating over an existing document is 409 and leaves it intact", %{root: root} do
+    fixture(root, "exists.md", "original")
+    conn = call(:post, "/api/document/new", %{path: "exists.md"})
+    assert conn.status == 409
+    assert File.read!(Path.join(root, "exists.md")) == "original"
+  end
+
+  test "a document is renamed and answers with its new path", %{root: root} do
+    fixture(root, "from.md", "x")
+    conn = call(:post, "/api/document/rename", %{from: "from.md", to: "sub/to.md"})
+    assert conn.status == 200
+    assert %{"path" => "sub/to.md"} = Jason.decode!(conn.resp_body)
+  end
+
+  test "renaming onto an existing document is 409", %{root: root} do
+    fixture(root, "a.md", "a")
+    fixture(root, "b.md", "b")
+    assert call(:post, "/api/document/rename", %{from: "a.md", to: "b.md"}).status == 409
+  end
+
+  test "a document is moved to the trash", %{root: root} do
+    fixture(root, "gone.md", "x")
+    conn = call(:post, "/api/document/trash", %{path: "gone.md"})
+    assert conn.status == 200
+    assert %{"trashed" => true} = Jason.decode!(conn.resp_body)
+    refute File.exists?(Path.join(root, "gone.md"))
+  end
+
+  test "creating without a path is 400" do
+    assert call(:post, "/api/document/new", %{contents: "x"}).status == 400
+  end
+
   test "a missing document is 404" do
     assert call(:get, "/api/document?path=ghost.md").status == 404
   end
@@ -143,6 +182,29 @@ defmodule Markdn.RouterTest do
       fixture(root, "a.md", "a")
 
       assert %{"files" => []} = Jason.decode!(call(:get, "/api/search/contents?q=").resp_body)
+    end
+  end
+
+  describe "/api/session" do
+    test "starts empty, then hands back what was saved" do
+      assert %{"document" => nil, "draft" => nil} =
+               Jason.decode!(call(:get, "/api/session").resp_body)
+
+      conn =
+        call(:post, "/api/session", %{
+          document: "a.md",
+          draft: %{path: "a.md", contents: "# Unsaved"}
+        })
+
+      assert conn.status == 200
+
+      assert %{"document" => "a.md", "draft" => %{"contents" => "# Unsaved"}} =
+               Jason.decode!(call(:get, "/api/session").resp_body)
+    end
+
+    test "rejects a value that does not fit" do
+      conn = call(:post, "/api/session", %{view: "sideways"})
+      assert conn.status == 422
     end
   end
 

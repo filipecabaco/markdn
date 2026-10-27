@@ -7,7 +7,11 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: "../priv/static",
-    emptyOutDir: false,
+    // Cleared on every build: each one emits new hashed names, and keeping the
+    // old ones let priv/static grow to 114 MB of dead bundles that the release
+    // then copied into the desktop app. The tracked .gitkeep comes back from
+    // public/, which Vite copies in after clearing.
+    emptyOutDir: true,
     assetsDir: "assets",
   },
   server: {

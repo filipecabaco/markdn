@@ -1,5 +1,6 @@
-import { useLayoutEffect, useMemo, useRef, type RefObject } from "react";
-import { highlightMarkdown, type TextRange } from "../markdown-syntax";
+import { useLayoutEffect, useRef, type RefObject } from "react";
+import { highlightLines, type TextRange } from "../markdown-syntax";
+import { patchLines } from "../patchLines";
 
 /**
  * A textarea with markdown syntax highlighting behind it.
@@ -28,6 +29,8 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   ariaLabel: string;
+  /** Id of an element describing the field, e.g. how keyboard focus leaves it. */
+  ariaDescribedBy?: string;
   /** Ranges to mark, e.g. search hits. Must be sorted and non-overlapping. */
   hits?: readonly TextRange[];
   /** Extra class on the wrapper, for pane-specific typography and padding. */
@@ -51,6 +54,7 @@ export function SourceArea({
   value,
   onChange,
   ariaLabel,
+  ariaDescribedBy,
   hits,
   className = "",
   textareaRef,
@@ -67,11 +71,22 @@ export function SourceArea({
   const layer = useRef<HTMLDivElement>(null);
 
   const highlighted = value.length <= MAX_HIGHLIGHT_CHARS;
+  // The markup each line element currently holds, so the next keystroke can
+  // tell which lines changed without reading the DOM back.
+  const rendered = useRef<string[]>([]);
 
-  const html = useMemo(
-    () => (highlighted ? highlightMarkdown(value, hits) : ""),
-    [highlighted, hits, value],
-  );
+  // Before paint, in the same frame as the textarea's own update: a layer a
+  // frame behind is a frame of the wrong characters under the caret.
+  useLayoutEffect(() => {
+    const behind = layer.current;
+    if (!behind) return;
+
+    const next = highlighted ? highlightLines(value, hits) : [];
+    patchLines(behind, rendered.current, next, (element, line) => {
+      element.innerHTML = line;
+    });
+    rendered.current = next;
+  }, [highlighted, hits, value]);
 
   // Typing at the bottom of the pane scrolls the textarea without any scroll
   // event this component sees first, so the layer is re-aligned after every
@@ -111,13 +126,9 @@ export function SourceArea({
         wrap === "off" ? " source--nowrap" : ""
       } ${className}`.trim()}
     >
-      {/* Escaped in `highlightMarkdown`; every class in it is a literal. */}
-      <div
-        className="source__layer"
-        aria-hidden="true"
-        ref={layer}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      {/* One element per source line, written by `patchLines`; the markup is
+          escaped in `highlightLines` and every class in it is a literal. */}
+      <div className="source__layer" aria-hidden="true" ref={layer} />
       <textarea
         ref={textarea}
         className="source__input"
@@ -126,6 +137,7 @@ export function SourceArea({
         wrap={wrap}
         placeholder={placeholder}
         aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy}
         onChange={(event) => onChange(event.target.value)}
         onScroll={sync}
         onKeyDown={onKeyDown}

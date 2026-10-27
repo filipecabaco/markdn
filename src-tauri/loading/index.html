@@ -1,0 +1,123 @@
+<!doctype html>
+<!--
+  What the window shows while the backend starts.
+
+  Bundled into the app (tauri.conf.json `frontendDist`), so it is on screen the
+  moment the window opens — before the BEAM has booted, and on a first launch
+  before Burrito has even unpacked it. The shell navigates away to the backend's
+  port once it answers; if it never does, the shell shows its own page saying why
+  and where the log is.
+
+  Self-contained on purpose: nothing it needs can come from the server it is
+  waiting for. The same enamel field and mark as the iOS loading page
+  (src-tauri/mobile), with DESIGN.md's tokens inlined.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>MarkDN</title>
+    <style>
+      :root {
+        --enamel: oklch(0.205 0.068 271);
+        --on-enamel: oklch(0.965 0.004 95);
+        --on-enamel-muted: oklch(0.8 0.025 268);
+        --font-sign: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
+        --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        background: var(--enamel);
+        color: var(--on-enamel-muted);
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: default;
+      }
+
+      .start {
+        display: grid;
+        justify-items: center;
+        gap: 16px;
+        max-width: 44ch;
+        padding: 24px;
+        text-align: center;
+      }
+
+      /* The wordmark's four lines meeting at the interchange: starting is the
+         one thing in motion, so the ring is all that moves. */
+      .mark {
+        width: 56px;
+        height: 56px;
+      }
+      .line {
+        stroke-width: 3;
+        stroke-linecap: round;
+      }
+      .ring {
+        fill: var(--enamel);
+        stroke: var(--on-enamel);
+        stroke-width: 2.5;
+        transform-origin: 12px 12px;
+        animation: arrive 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+      }
+      @keyframes arrive {
+        to {
+          transform: scale(1.25);
+        }
+      }
+
+      .status {
+        margin: 0;
+        font: 600 15px/1.3 var(--font-sign);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .hint {
+        margin: 0;
+        font: 13px/1.5 var(--font-ui);
+        opacity: 0.85;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .ring {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <!-- The native title bar is hidden, so the page is the window's handle. -->
+  <body data-tauri-drag-region>
+    <main class="start" data-tauri-drag-region>
+      <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true" data-tauri-drag-region>
+        <path class="line" stroke="oklch(0.585 0.215 27)" d="M3 3l9 9" />
+        <path class="line" stroke="oklch(0.585 0.205 262)" d="M21 3l-9 9" />
+        <path class="line" stroke="oklch(0.84 0.165 85)" d="M12 12h9" />
+        <path class="line" stroke="oklch(0.655 0.165 145)" d="M12 12v9" />
+        <circle class="ring" cx="12" cy="12" r="4" />
+      </svg>
+      <p class="status" role="status" data-tauri-drag-region>Opening MarkDN</p>
+      <p class="hint" id="hint" hidden data-tauri-drag-region>
+        The first launch unpacks the runtime and takes a few seconds. Later launches are
+        quicker.
+      </p>
+    </main>
+
+    <script>
+      "use strict";
+
+      // Only once the wait is long enough to wonder about: an ordinary launch is
+      // gone before this would show, and a first one is explained.
+      setTimeout(() => {
+        document.getElementById("hint").hidden = false;
+      }, 3500);
+    </script>
+  </body>
+</html>

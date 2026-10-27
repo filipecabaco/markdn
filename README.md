@@ -37,7 +37,7 @@ preview as you type.
 
 ![Rendered diagrams, code, and tables](docs/screenshots/render.png)
 
-**Find any document by feel.** `Cmd/Ctrl+K` and type roughly what you remember:
+**Find any document by feel.** `Cmd/Ctrl+P` and type roughly what you remember:
 `dsn` finds `work/design-notes.md` three folders down. Open it with no query and
 it lists what you touched last.
 
@@ -71,22 +71,51 @@ panel, saved in one small file you can also edit by hand.
 database. `Cmd/Ctrl+S` writes the same `.md`, `.markdown`, or `.mdx` you opened,
 in place.
 
+**Paste into Notion as real blocks.** "Copy document for Notion" in the command
+palette (or "Copy for Notion" on any file's right-click menu) puts the document
+on the clipboard as rich text, so Notion builds headings, lists, tables, quotes
+and code blocks from it instead of a wall of markdown. Components translate:
+alerts and callouts become quotes with a bold title, cards a heading, tabs every
+tab in turn, and mermaid a `mermaid` code block, which Notion draws. Apps that
+only take plain text get the markdown source. Images served from your folder
+can't be fetched by Notion and arrive as a line naming them.
+
+**New, renamed, or trashed, from the tree.** `Cmd/Ctrl+N` names a new document
+beside the one you are reading, creating any folders the name needs; a name
+that is already taken is refused, never overwritten. Typed into an untitled
+buffer first? `Cmd/Ctrl+S` asks for a name and saves what you wrote. Right-click
+any file to rename it, copy its path, or move it to the Trash, where it can come
+back from. The tree works from the keyboard too: arrows to walk it, `Shift+F10`
+for the same menu.
+
 **Your assistant works on the same file you do.** MarkDN speaks MCP, so Claude
 and other agents can list, read, and write the documents you have open — and the
-window updates the moment they do.
+window updates the moment they do. If you have unsaved changes when they write,
+MarkDN asks whether to reload theirs or keep yours instead of replacing your text.
 
 **Private by default.** Everything runs on your machine. Nothing leaves it, and
 MDX is rendered, never executed.
 
 ## Using it
 
+The keys are VS Code's, so the ones you already know work here.
+
 | | |
 | --- | --- |
-| `Cmd/Ctrl+K` | Find a document, or run a command |
-| `Cmd/Ctrl+Shift+P` | Commands only |
+| `Cmd/Ctrl+P` | Find a document (Quick Open) |
+| `Cmd/Ctrl+Shift+P` | Command palette |
 | `Cmd/Ctrl+Shift+F` | Search and edit across documents |
+| `Cmd/Ctrl+B` | Show or hide the sidebar |
+| `Cmd/Ctrl+Shift+V` | Toggle the preview |
+| `Cmd/Ctrl+K` `V` | Open the preview to the side (split) |
 | `Cmd/Ctrl+1` `2` `3` | Source, split, render |
-| `Cmd/Ctrl+S` | Save |
+| `Cmd/Ctrl+N` | New document |
+| `Cmd/Ctrl+S` | Save, or name and save an untitled document |
+| `F2` | Rename the file selected in the tree |
+| `Cmd+Backspace` | Move the selected file to the Trash |
+| `Cmd+Alt+C` / `Cmd+Alt+Shift+C` | Copy its path / relative path |
+| `Shift+F10` | Menu for the file selected in the tree |
+| `Ctrl+Shift+M` | Toggle whether Tab moves focus out of the editor |
 | `Cmd/Ctrl+Shift+C` | Insert a component |
 | `Cmd/Ctrl+,` | Settings |
 | `Cmd/Ctrl+Space` | Start, pause, resume auto-scroll |
@@ -105,7 +134,7 @@ http://localhost:43118/mcp
 It can list, read, and write your documents, and ask which components are
 available so the MDX it writes is MDX that renders. An assistant editing a file
 you have open is visible immediately, in the window, where you can keep or change
-it.
+it — and an edit it makes while you have unsaved changes is offered, not forced.
 
 ## Contributing
 

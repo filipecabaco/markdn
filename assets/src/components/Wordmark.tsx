@@ -1,12 +1,12 @@
 /**
- * The MarkDN mark: three stacked rules, the top one marked in signal red.
+ * The MarkDN mark: four lines meeting at one interchange ring.
  *
- * It encodes what the product does rather than decorating around it — blocks of a
- * document with the active one indexed, which is the same idea the sync rail draws
- * between the panes. Geometry only, so it survives 16px in a tab and 1024px in an
- * app icon without a second drawing.
+ * It is the product's idea in one drawing — documents are lines, and the place
+ * you are reading is the station they meet at. Lines bend only at 45° and 90°,
+ * as on the diagram it comes from, and it is geometry only, so it survives 16px
+ * in a tab and 1024px in an app icon without a second drawing.
  */
-export function Wordmark({ size = 18 }: { size?: number }) {
+export function Wordmark({ size = 22 }: { size?: number }) {
   return (
     <span className="wordmark">
       <svg
@@ -17,14 +17,13 @@ export function Wordmark({ size = 18 }: { size?: number }) {
         aria-hidden="true"
         className="wordmark__mark"
       >
-        <rect x="0.75" y="0.75" width="22.5" height="22.5" rx="2.25" className="wordmark__frame" />
-        <rect x="5" y="7" width="14" height="2.5" rx="0.5" className="wordmark__rule-active" />
-        <rect x="5" y="11.75" width="9" height="2" rx="0.5" className="wordmark__rule" />
-        <rect x="5" y="15.5" width="11" height="2" rx="0.5" className="wordmark__rule" />
+        <path className="wordmark__line wordmark__line--scarlet" d="M3 3l9 9" />
+        <path className="wordmark__line wordmark__line--cobalt" d="M21 3l-9 9" />
+        <path className="wordmark__line wordmark__line--amber" d="M12 12h9" />
+        <path className="wordmark__line wordmark__line--green" d="M12 12v9" />
+        <circle className="wordmark__ring" cx="12" cy="12" r="4" />
       </svg>
-      <span className="wordmark__text">
-        Mark<span className="wordmark__text-dn">DN</span>
-      </span>
+      <span className="wordmark__text">MarkDN</span>
     </span>
   );
 }

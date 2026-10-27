@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Midnight Line — MarkDN iPad</title>
+<style>
+  :root { --night:#0E1A3A; --por:#F2EFE6; --scarlet:#D7263D; --cobalt:#2F6FED; --amber:#F2A900; --green:#2E9E5B; }
+  * { box-sizing:border-box; margin:0; }
+  body { width:1194px; height:834px; overflow:hidden; font:16px/1.5 -apple-system, system-ui, sans-serif; background:var(--night); color:var(--por); display:grid; grid-template-columns:300px 1fr; }
+  .rail { padding:48px 28px; position:relative; }
+  .rail h1 { font-size:22px; font-weight:700; margin-bottom:6px; } .rail .lines { display:flex; gap:8px; margin-bottom:28px; }
+  .rail .lines span { padding:4px 10px; border-radius:999px; font-weight:700; font-size:13px; } .l1 { background:var(--scarlet); } .l2 { background:var(--cobalt); } .l3 { background:var(--amber); color:#1a1a1a; }
+  .line { position:relative; padding-left:34px; } .line::before { content:""; position:absolute; left:9px; top:8px; bottom:8px; width:6px; background:var(--scarlet); border-radius:3px; }
+  .st { position:relative; padding:12px 0; font-weight:600; } .st::before { content:""; position:absolute; left:-31px; top:16px; width:14px; height:14px; border-radius:50%; background:var(--por); border:3px solid var(--scarlet); }
+  .st.on::before { width:22px; height:22px; left:-35px; top:12px; background:var(--scarlet); border-color:var(--por); }
+  .st small { display:block; font-weight:400; opacity:.65; font-size:13px; }
+  main { background:var(--por); color:#141A2B; margin:16px 16px 16px 0; border-radius:14px; display:grid; grid-template-rows:auto 1fr; overflow:hidden; }
+  .bar { height:56px; display:flex; align-items:center; gap:14px; padding:0 24px; border-bottom:1px solid #DDD8CB; }
+  .seg { margin-left:auto; display:flex; background:#E5E1D6; border-radius:9px; padding:3px; } .seg span { padding:6px 14px; border-radius:7px; font-weight:600; } .seg .on { background:var(--night); color:var(--por); }
+  .panes { display:grid; grid-template-columns:1fr 1fr; } .src { padding:24px; font:15px/1.7 ui-monospace, Menlo, monospace; border-right:1px solid #DDD8CB; }
+  .ren { padding:24px; } .ren h2 { font-size:30px; margin-bottom:10px; } .ren p { margin-bottom:12px; font-size:17px; }
+  .alert { border-left:0; border:1px solid #C9D6F5; background:#E8EEFB; border-radius:10px; padding:12px 14px; }
+</style></head><body>
+<aside class="rail"><h1>MarkDN</h1><div class="lines"><span class="l1">docs</span><span class="l2">notes</span><span class="l3">specs</span></div>
+  <div class="line">
+    <div class="st">MarkDN<small>Welcome.md</small></div>
+    <div class="st on">Components render live<small>you are here</small></div>
+    <div class="st">Diagrams<small>mermaid</small></div>
+    <div class="st">Shortcuts<small>4 stations to end</small></div>
+  </div>
+</aside>
+<main><div class="bar"><b>Welcome.md</b><div class="seg"><span>Source</span><span class="on">Split</span><span>Render</span></div><b>Save</b></div>
+  <div class="panes"><div class="src"># MarkDN<br><br>Markdown and MDX, served by<br>**Francis** into a native window.</div>
+  <div class="ren"><h2>MarkDN</h2><p>Markdown and MDX, served by <b>Francis</b> into a native window.</p><div class="alert"><b>Components render live.</b> Nothing is evaluated.</div></div></div>
+</main>
+</body></html>
