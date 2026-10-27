@@ -274,7 +274,7 @@ body {
 }
 
 /* With the native title bar hidden, this header is the title bar. The left
-   inset clears the traffic lights parked over it; dragging comes from
+   inset clears the traffic lights parked over it (main.tsx marks the shell); dragging comes from
    data-tauri-drag-region on the header itself, since WKWebView has no
    -webkit-app-region. */
 .is-desktop .app__header {
@@ -584,6 +584,28 @@ body {
   padding: 4px 16px 24px;
   background: var(--enamel);
   color: var(--on-enamel);
+  color-scheme: dark;
+}
+/* Where the system shows classic scrollbars (a mouse attached, or Show scroll
+   bars: Always), the default was a light grey bar down the rail's edge. On
+   enamel it is a thin enamel thumb on no track. */
+.sidebar::-webkit-scrollbar,
+.phone-panel::-webkit-scrollbar {
+  width: 10px;
+}
+.sidebar::-webkit-scrollbar-track,
+.phone-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb,
+.phone-panel::-webkit-scrollbar-thumb {
+  border: 3px solid var(--enamel);
+  border-radius: 5px;
+  background: var(--enamel-line);
+}
+.sidebar::-webkit-scrollbar-thumb:hover,
+.phone-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--on-enamel-muted);
 }
 /* Collapsed outright, not animated: easing the width would re-lay out both
    panes on every frame. */
@@ -2526,6 +2548,7 @@ body {
   overscroll-behavior: contain;
   padding: 8px 16px 24px;
   background: var(--enamel);
+  color-scheme: dark;
 }
 .phone-panel__title {
   display: flex;

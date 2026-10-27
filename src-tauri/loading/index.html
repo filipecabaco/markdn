@@ -5,44 +5,26 @@
   Bundled into the app (tauri.conf.json `frontendDist`), so it is on screen the
   moment the window opens — before the BEAM has booted, and on a first launch
   before Burrito has even unpacked it. The shell navigates away to the backend's
-  port once it answers (main.rs `navigate_main_window`), or calls
-  `markdnStartupFailed(reason)` here if it never does.
+  port once it answers; if it never does, the shell shows its own page saying why
+  and where the log is.
 
   Self-contained on purpose: nothing it needs can come from the server it is
-  waiting for. Tokens are DESIGN.md's, inlined.
+  waiting for. The same enamel field and mark as the iOS loading page
+  (src-tauri/mobile), with DESIGN.md's tokens inlined.
 -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="dark" />
     <title>MarkDN</title>
     <style>
       :root {
-        --canvas: oklch(0.955 0.004 75);
-        --surface: oklch(0.985 0.003 80);
-        --line: oklch(0.865 0.006 75);
-        --line-strong: oklch(0.775 0.008 75);
-        --ink: oklch(0.245 0.01 70);
-        --ink-muted: oklch(0.495 0.008 70);
-        --ink-faint: oklch(0.505 0.008 70);
-        --signal: oklch(0.508 0.185 30);
-        --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
-        --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-        color-scheme: light;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --canvas: oklch(0.195 0.005 70);
-          --surface: oklch(0.168 0.005 70);
-          --line: oklch(0.3 0.007 70);
-          --line-strong: oklch(0.385 0.008 70);
-          --ink: oklch(0.92 0.006 80);
-          --ink-muted: oklch(0.665 0.007 75);
-          --ink-faint: oklch(0.635 0.008 75);
-          --signal: oklch(0.66 0.18 33);
-          color-scheme: dark;
-        }
+        --enamel: oklch(0.205 0.068 271);
+        --on-enamel: oklch(0.965 0.004 95);
+        --on-enamel-muted: oklch(0.8 0.025 268);
+        --font-sign: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
+        --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
       }
 
       html,
@@ -53,9 +35,8 @@
       body {
         display: grid;
         place-items: center;
-        background: var(--canvas);
-        color: var(--ink);
-        font: 13px/1.5 var(--font-ui);
+        background: var(--enamel);
+        color: var(--on-enamel-muted);
         -webkit-user-select: none;
         user-select: none;
         cursor: default;
@@ -64,87 +45,49 @@
       .start {
         display: grid;
         justify-items: center;
-        gap: 14px;
+        gap: 16px;
         max-width: 44ch;
         padding: 24px;
         text-align: center;
       }
 
-      /* The app's mark, drawn larger. Its red top rule is the active block —
-         here, the one thing in motion: starting is state, so it is the state
-         indicator, and nothing else on the page moves. */
+      /* The wordmark's four lines meeting at the interchange: starting is the
+         one thing in motion, so the ring is all that moves. */
       .mark {
-        width: 52px;
-        height: 52px;
-        margin-bottom: 4px;
+        width: 56px;
+        height: 56px;
       }
-      .mark__frame {
-        fill: var(--surface);
-        stroke: var(--line-strong);
-        stroke-width: 1.5;
+      .line {
+        stroke-width: 3;
+        stroke-linecap: round;
       }
-      .mark__rule {
-        fill: var(--ink-faint);
+      .ring {
+        fill: var(--enamel);
+        stroke: var(--on-enamel);
+        stroke-width: 2.5;
+        transform-origin: 12px 12px;
+        animation: arrive 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
       }
-      .mark__active {
-        fill: var(--signal);
-        transform-box: fill-box;
-        transform-origin: left center;
-        animation: index 1.1s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
-      }
-      @keyframes index {
-        from {
-          transform: scaleX(0.4);
+      @keyframes arrive {
+        to {
+          transform: scale(1.25);
         }
-      }
-
-      .word {
-        margin: 0;
-        font-size: 15px;
-        font-weight: 600;
-        letter-spacing: -0.005em;
-      }
-      .word span {
-        color: var(--ink-muted);
-        font-weight: 500;
       }
 
       .status {
         margin: 0;
-        color: var(--ink-muted);
+        font: 600 15px/1.3 var(--font-sign);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
       }
       .hint {
         margin: 0;
-        color: var(--ink-faint);
-        font-size: 12px;
-      }
-
-      /* Failure keeps the same frame and says why, in the log's own words. */
-      .detail {
-        margin: 6px 0 0;
-        padding: 12px 14px;
-        max-width: 64ch;
-        border: 1px solid var(--line);
-        border-radius: 3px;
-        background: var(--surface);
-        color: var(--ink-muted);
-        font: 12px/1.6 var(--font-mono);
-        text-align: left;
-        white-space: pre-wrap;
-        -webkit-user-select: text;
-        user-select: text;
-        cursor: text;
-      }
-      .is-failed .mark__active {
-        animation: none;
-      }
-      .is-failed .status {
-        color: var(--ink);
-        font-weight: 600;
+        font: 13px/1.5 var(--font-ui);
+        opacity: 0.85;
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .mark__active {
+        .ring {
           animation: none;
         }
       }
@@ -153,45 +96,28 @@
   <!-- The native title bar is hidden, so the page is the window's handle. -->
   <body data-tauri-drag-region>
     <main class="start" data-tauri-drag-region>
-      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true" data-tauri-drag-region>
-        <rect class="mark__frame" x="0.75" y="0.75" width="22.5" height="22.5" rx="2.25" />
-        <rect class="mark__active" x="5" y="7" width="14" height="2.5" rx="0.5" />
-        <rect class="mark__rule" x="5" y="11.75" width="9" height="2" rx="0.5" />
-        <rect class="mark__rule" x="5" y="15.5" width="11" height="2" rx="0.5" />
+      <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true" data-tauri-drag-region>
+        <path class="line" stroke="oklch(0.585 0.215 27)" d="M3 3l9 9" />
+        <path class="line" stroke="oklch(0.585 0.205 262)" d="M21 3l-9 9" />
+        <path class="line" stroke="oklch(0.84 0.165 85)" d="M12 12h9" />
+        <path class="line" stroke="oklch(0.655 0.165 145)" d="M12 12v9" />
+        <circle class="ring" cx="12" cy="12" r="4" />
       </svg>
-      <p class="word" data-tauri-drag-region>Mark<span>DN</span></p>
-      <p class="status" id="status" role="status" data-tauri-drag-region>Starting…</p>
+      <p class="status" role="status" data-tauri-drag-region>Opening MarkDN</p>
       <p class="hint" id="hint" hidden data-tauri-drag-region>
         The first launch unpacks the runtime and takes a few seconds. Later launches are
         quicker.
       </p>
-      <pre class="detail" id="detail" hidden></pre>
     </main>
 
     <script>
       "use strict";
 
-      const status = document.getElementById("status");
-      const hint = document.getElementById("hint");
-      const detail = document.getElementById("detail");
-
-      // Only once the wait is long enough to wonder about: an ordinary launch
-      // is gone before this would show, and a first one is explained.
-      const slow = setTimeout(() => {
-        hint.hidden = false;
+      // Only once the wait is long enough to wonder about: an ordinary launch is
+      // gone before this would show, and a first one is explained.
+      setTimeout(() => {
+        document.getElementById("hint").hidden = false;
       }, 3500);
-
-      // Called by the shell (main.rs `show_startup_error`) when the backend
-      // exits or never answers.
-      window.markdnStartupFailed = (reason) => {
-        clearTimeout(slow);
-        document.body.classList.add("is-failed");
-        document.title = "MarkDN — can't start";
-        status.textContent = "MarkDN can't start";
-        hint.hidden = true;
-        detail.textContent = reason;
-        detail.hidden = false;
-      };
     </script>
   </body>
 </html>
