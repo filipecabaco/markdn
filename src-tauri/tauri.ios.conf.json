@@ -1,0 +1,14 @@
+{
+  "build": {
+    "frontendDist": "mobile"
+  },
+  "bundle": {
+    "externalBin": [],
+    "iOS": {
+      "minimumSystemVersion": "15.0"
+    },
+    "resources": {
+      "../burrito_out/ios/backend": "ex_tauri/backend"
+    }
+  }
+}
