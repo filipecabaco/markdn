@@ -764,7 +764,8 @@ body {
   gap: 8px;
   width: 100%;
   min-height: var(--target);
-  padding: 4px 10px 4px 40px;
+  /* Depth steps the name in; the station stays on the line at 10px. */
+  padding: 4px 10px 4px calc(40px + var(--depth, 0) * 16px);
   border: 0;
   border-radius: var(--radius-control);
   background: transparent;
@@ -897,8 +898,17 @@ body {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
+/* Deep in a folder the name has less room than it wants; it gives way, not the
+   chevron, which would otherwise be pushed out past the rail. */
+.tree__name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .tree__chevron {
   display: inline-block;
+  flex: none;
   width: 0;
   height: 0;
   margin-left: auto;
@@ -911,15 +921,29 @@ body {
 .tree__item[aria-expanded="true"] > .tree__row .tree__chevron {
   transform: rotate(90deg);
 }
-.tree__loading,
-.tree__empty,
-.tree__error {
+div.tree__loading,
+div.tree__empty,
+div.tree__error {
   color: var(--on-enamel-muted);
   font-size: var(--t-base);
   padding: 8px 2px;
 }
-.tree__error {
+div.tree__error {
   color: var(--amber);
+}
+/* Inside a folder, a note rides the folder's line with no station of its own:
+   it says something about the line, it is not a place on it. */
+.tree__note {
+  cursor: default;
+  font-size: var(--t-small);
+  font-style: italic;
+}
+.tree__note::after {
+  display: none;
+}
+.tree__note:hover {
+  background: transparent;
+  color: var(--on-enamel-muted);
 }
 
 /* The open document's own line, first in the rail, headed by its line and

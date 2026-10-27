@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
@@ -55,6 +56,17 @@ function explorerCommand(event: KeyboardEvent<HTMLElement>): EntryCommand | null
     return event.shiftKey ? "copyRelativePath" : "copyPath";
   }
   return null;
+}
+
+/**
+ * A folder that could not be listed, in words. macOS keeps some folders under
+ * the home (Library/Accounts, Mail, Messages) from every app it has not been
+ * given Full Disk Access, which is the usual case and not a fault.
+ */
+export function unreadable(message: string): string {
+  return /permission denied|eperm|eacces/i.test(message)
+    ? "MarkDN isn't allowed to read this folder."
+    : `This folder couldn't be read: ${message}`;
 }
 
 /** Which row holds the tree's single Tab stop. Shared by every nested level. */
@@ -221,11 +233,26 @@ function Level({
     onEntryMenu(entry, event.clientX, event.clientY);
   };
 
-  if (error) return <div className="tree__error">{error}</div>;
-  if (!entries) return <div className="tree__loading">Loading…</div>;
-  if (entries.length === 0 && depth === 0) {
-    return <div className="tree__empty">No markdown documents here.</div>;
-  }
+  // At the root a note stands alone. Inside a folder it is a row on that folder's
+  // line, so the track runs into it, and ends there when nothing follows.
+  const note = (kind: "error" | "loading" | "empty", text: string) =>
+    depth === 0 ? (
+      <div className={`tree__${kind}`}>{text}</div>
+    ) : (
+      <ul className="tree" role="group">
+        <li
+          className={`tree__item tree__${kind}`}
+          data-terminus={tail || undefined}
+          style={{ "--depth": depth } as CSSProperties}
+        >
+          <div className="tree__row tree__file tree__note">{text}</div>
+        </li>
+      </ul>
+    );
+
+  if (error) return note("error", unreadable(error));
+  if (!entries) return note("loading", "Loading…");
+  if (entries.length === 0) return note("empty", "No markdown documents here.");
 
   return (
     <ul
@@ -233,7 +260,6 @@ function Level({
       className="tree"
       role={depth === 0 ? "tree" : "group"}
       aria-label={depth === 0 ? "Documents" : undefined}
-      style={{ paddingLeft: depth === 0 ? 0 : 12 }}
       onKeyDown={onKeyDown}
     >
       {entries.map((entry, index) => {
@@ -268,6 +294,8 @@ function Level({
             data-name={entry.name}
             data-type={entry.type}
             data-terminus={terminus || undefined}
+            // The station stays on its line at any depth; the name steps in.
+            style={{ "--depth": depth } as CSSProperties}
             // Each top-level folder is a line; everything inside it rides that
             // line's ink, which nested levels inherit through the CSS variable.
             data-ink={depth === 0 ? lineFor(directory ? `${entry.path}/` : entry.path) : undefined}
@@ -283,7 +311,7 @@ function Level({
               onContextMenu={menuFor(entry)}
             >
               {directory && <span className="tree__chevron" aria-hidden="true" />}
-              {entry.name}
+              <span className="tree__name">{entry.name}</span>
             </div>
             {open && (
               <Level

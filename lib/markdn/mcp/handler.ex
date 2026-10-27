@@ -156,6 +156,7 @@ defmodule Markdn.MCP.Handler do
   defp describe(:unsupported_extension), do: "not a markdown document (.md, .markdown, .mdx)"
   defp describe(:enoent), do: "no such file or directory"
   defp describe(:eacces), do: "permission denied"
+  defp describe(:eperm), do: "permission denied"
   defp describe(other), do: to_string(other)
 
   defp error(id, code, message) do

@@ -370,5 +370,6 @@ defmodule Markdn do
   defp describe(:enotdir), do: {409, "a parent of that path is a file, not a directory"}
   defp describe(:enoent), do: {404, "no such file or directory"}
   defp describe(:eacces), do: {403, "permission denied"}
+  defp describe(:eperm), do: {403, "permission denied"}
   defp describe(other), do: {500, to_string(other)}
 end

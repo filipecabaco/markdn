@@ -119,4 +119,32 @@ describe("FileTree explorer keys", () => {
 
     expect(onEntryCommand).not.toHaveBeenCalled();
   });
+
+  it("steps a nested document in by its depth", async () => {
+    const user = userEvent.setup();
+    setup();
+    await screen.findByRole("tree");
+
+    await user.click(screen.getByText("notes"));
+
+    expect(await screen.findByRole("treeitem", { name: /^inner\.md/ })).toHaveStyle("--depth: 1");
+    expect(item("a.md")).toHaveStyle("--depth: 0");
+  });
+
+  it("says in words why a folder could not be opened, on its line", async () => {
+    vi.mocked(listDocuments).mockImplementation((path = ".") =>
+      path === "notes"
+        ? Promise.reject(new Error("permission denied"))
+        : Promise.resolve({ entries: LISTINGS[path] ?? [] }),
+    );
+    const user = userEvent.setup();
+    setup();
+    await screen.findByRole("tree");
+
+    await user.click(screen.getByText("notes"));
+
+    const message = await screen.findByText("MarkDN isn't allowed to read this folder.");
+    expect(message.closest("li")).toHaveAttribute("data-terminus");
+    expect(screen.queryByText(/eperm|permission denied/)).not.toBeInTheDocument();
+  });
 });
