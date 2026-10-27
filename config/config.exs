@@ -11,11 +11,14 @@ config :ex_tauri,
   fullscreen: false,
   width: 1400,
   height: 900,
-  # ex_tauri 0.2.0 defaults to Phoenix. MarkDN is a Francis app: the dev sidecar
-  # runs `mix francis.server`, and the production sidecar gets no PHX_* vars
-  # (PORT and SECRET_KEY_BASE are always injected regardless).
+  # ex_tauri defaults to Phoenix. MarkDN is a Francis app: the dev sidecar runs
+  # `mix francis.server`, and the production sidecar gets no PHX_* vars (PORT
+  # and SECRET_KEY_BASE are always injected regardless).
   dev_command: ~w(mix francis.server),
-  sidecar_env: []
+  sidecar_env: [],
+  # One packager for the desktop and iOS: ampoule packs the release into a
+  # single binary running the BEAM as WebAssembly, on OTP 28 (mise.toml).
+  packager: :ampoule
 
 # Serve the built React bundle app-relative via :code.priv_dir. The default
 # "priv/static" is cwd-relative and 404s inside a release, which is exactly how

@@ -49,23 +49,11 @@ defmodule Markdn.MixProject do
 
   defp releases do
     [
-      # The Tauri sidecar. `mix ex_tauri.dev` sets BURRITO_SKIP=true for a plain
-      # release; the shipped build is Burrito-wrapped into a single binary.
-      desktop: [
-        steps: [&build_assets/1, :assemble] ++ burrito_steps(),
-        burrito: [
-          targets: [
-            "aarch64-apple-darwin": [os: :darwin, cpu: :aarch64],
-            "x86_64-apple-darwin": [os: :darwin, cpu: :x86_64],
-            "x86_64-unknown-linux-gnu": [os: :linux, cpu: :x86_64]
-          ]
-        ]
-      ]
+      # The Tauri sidecar, on the desktop and on iOS. ampoule packs it into one
+      # binary (`config :ex_tauri, :packager, :ampoule`; ampoule.toml lists the
+      # host programs it may start), for the build machine's own platform.
+      desktop: [steps: [&build_assets/1, :assemble]]
     ]
-  end
-
-  defp burrito_steps do
-    if System.get_env("BURRITO_SKIP") == "true", do: [], else: [&Burrito.wrap/1]
   end
 
   # Rebuild the React bundle into priv/static before the release copies priv in,

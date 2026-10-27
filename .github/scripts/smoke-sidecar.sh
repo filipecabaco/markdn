@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Boot the assembled :desktop release exactly as the Tauri shell would, and assert
-# it actually serves.
+# Boot the ampoule-packed sidecar exactly as the Tauri shell would, and assert it
+# actually serves.
 #
 # Compiling proves nothing about the thing that breaks most often: static asset
 # resolution. In dev the bundle is read from a cwd-relative "priv/static"; inside
@@ -14,18 +14,26 @@
 set -uo pipefail
 
 PORT="${MARKDN_SMOKE_PORT:-43118}"
-BIN="_build/prod/rel/desktop/bin/desktop"
+# The one binary ampoule packed for this platform (_build/prod/ampoule/desktop-<target>).
+BIN="${MARKDN_SMOKE_BIN:-$(find _build/prod/ampoule -maxdepth 1 -name 'desktop-*' -type f 2>/dev/null | head -n1)}"
+LOG="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/markdn-smoke.log"
 
-[ -x "$BIN" ] || { echo "::error::no desktop release at ${BIN}"; exit 1; }
+[ -n "$BIN" ] && [ -x "$BIN" ] || { echo "::error::no ampoule-packed sidecar in _build/prod/ampoule"; exit 1; }
 
-"$BIN" daemon
+# As the shell starts it: `start` in the foreground of its own process, the port
+# in PORT, stopped with SIGTERM (a clean `init:stop/0`).
+PORT="$PORT" "$BIN" start >"$LOG" 2>&1 &
+pid=$!
 
 # Invoked by the trap below, which shellcheck cannot see. Both codes are listed
 # because they are the same finding under different shellcheck versions: 0.9.x
 # reports the body as unreachable (SC2317), 0.11.x reports the function as never
 # invoked (SC2329). CI runners and developer machines do not agree on which.
 # shellcheck disable=SC2317,SC2329
-cleanup() { "$BIN" stop >/dev/null 2>&1 || true; }
+cleanup() {
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+}
 trap cleanup EXIT
 
 ready=0
@@ -36,6 +44,7 @@ done
 
 if [ "$ready" != "1" ]; then
   echo "::error::desktop sidecar did not serve :${PORT} within 60s"
+  cat "$LOG"
   exit 1
 fi
 

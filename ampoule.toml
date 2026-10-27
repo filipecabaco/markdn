@@ -1,0 +1,10 @@
+# How ampoule packs MarkDN's backend (`mix ex_tauri.build`, `mix ex_tauri.ios`).
+#
+# A packed app may start no host program unless it is listed here. MarkDN starts
+# exactly one kind, to move a document to the Trash (Markdn.Documents.trash/1):
+# /usr/bin/trash on macOS 15+, Finder through osascript on older macOS, and
+# `gio trash` on Linux. Each allowed program is also mounted read-only at its
+# host path, so the checks that pick one still find it; any missing on a host
+# are left out.
+[process]
+allow = ["/usr/bin/trash", "osascript", "gio"]
