@@ -174,6 +174,9 @@ jobs:
     env:
       MIX_ENV: prod
       VERSION: ${{ needs.version.outputs.version }}
+      # mise only installs Zig here (see the Zig step); without this, its shims
+      # would stand in for the Erlang, Elixir, Node and pnpm set up separately.
+      MISE_DISABLE_TOOLS: erlang,elixir,node,pnpm
 
     steps:
       - uses: actions/checkout@v7
@@ -218,13 +221,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: assets/pnpm-lock.yaml
 
-      # Burrito wraps the sidecar with Zig and needs `xz` on PATH.
-      # Node 20 holdout: setup-zig has no node24 release yet (latest is v2.2.1,
-      # `runs.using: node20`), so this step still emits the deprecation warning.
-      # Bump to the first node24 tag when upstream cuts one.
-      - uses: mlugg/setup-zig@v2
+      # Burrito wraps the sidecar with Zig and needs `xz` on PATH. Zig comes
+      # from mise.toml, the version local builds use, through mise-action (on
+      # node24; mlugg/setup-zig has no node24 release). MISE_DISABLE_TOOLS on
+      # the job keeps mise to Zig alone: Erlang, Elixir, Node and pnpm come from
+      # the steps above, and a mise shim for them would shadow those.
+      - uses: jdx/mise-action@v5
         with:
-          version: "0.16.0"
+          install_args: zig
 
       - name: Install Linux system deps
         if: runner.os == 'Linux'
