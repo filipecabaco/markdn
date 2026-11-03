@@ -12,7 +12,22 @@ stamps the resolved number into both before building.
 
 ## [Unreleased]
 
+### Security
+
+- **Only markdn's window can use the document API.** Any program on the machine
+  could call `/api` on the backend's loopback port and read or write your
+  files. `/api` and the live socket now need this launch's token, which the app
+  hands its own window as an `HttpOnly` cookie (ex_tauri's `ExTauri.Token`).
+  `/mcp` stays open to MCP clients, and the `markdn` command is unaffected.
+- Bandit 1.14.1, for an HTTP/2 memory amplification (CVE-2026-116078).
+
 ### Changed
+
+- **ampoule 0.1.13 and ex_tauri 0.7.1.** On macOS, launches after the first map
+  ampoule's compiled engine from a per-user cache instead of decompressing it
+  into the backend's memory. The iOS build runs the backend inside the app
+  (ERTS linked in), as an iPhone or iPad requires, rather than as a child
+  process that only the simulator allowed.
 
 - **A new look, and the name in lowercase.** markdn now looks like a stock
   shadcn app: zinc neutrals, Geist, sentence case and one brand colour, kept for

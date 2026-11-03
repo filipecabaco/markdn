@@ -44,11 +44,11 @@ concurrency:
 
 env:
   # Exact patch, version-type strict: the sidecar is packed by ampoule, whose
-  # runtime runs a release only from the OTP it was built with (0.1.8 embeds
+  # runtime runs a release only from the OTP it was built with (0.1.13 embeds
   # ERTS 16.4.0.4, OTP 28.5.0.4). Keep in sync with ci.yml and mise.toml.
   OTP_VERSION: "28.5.0.4"
   ELIXIR_VERSION: "1.20.4"
-  AMPOULE_VERSION: "0.1.8"
+  AMPOULE_VERSION: "0.1.13"
   # Tauri CLI major. Pinned here rather than derived from the app version:
   # ex_tauri 0.2.0's installer reuses `config :ex_tauri, :version` as the cargo
   # constraint (`^<major>`), which ties the app's version number to Tauri's. CI
