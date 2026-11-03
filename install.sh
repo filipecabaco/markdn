@@ -34,7 +34,15 @@ else
 fi
 
 printf 'Fetching release metadata...\n'
-RELEASE_JSON="$(curl -fsSL "${API}")" || die "could not reach the GitHub release API"
+# Unauthenticated, the API allows 60 requests an hour per IP, which a shared
+# network or CI runner can use up. A GITHUB_TOKEN in the environment lifts that.
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  RELEASE_JSON="$(curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API}")" \
+    || die "could not reach the GitHub release API"
+else
+  RELEASE_JSON="$(curl -fsSL "${API}")" \
+    || die "could not reach the GitHub release API (rate limited? set GITHUB_TOKEN)"
+fi
 
 TAG="$(printf '%s\n' "${RELEASE_JSON}" \
   | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' | head -1)"

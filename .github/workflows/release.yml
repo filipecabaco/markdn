@@ -382,6 +382,9 @@ jobs:
         os: [macos-14, ubuntu-22.04]
     env:
       MARKDN_VERSION: ${{ needs.version.outputs.version }}
+      # Shared runners exhaust the unauthenticated API limit; install.sh uses
+      # this for its one release lookup.
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
         with:
