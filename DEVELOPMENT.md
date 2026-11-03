@@ -1,6 +1,6 @@
 # Development
 
-Everything behind the product: how to run MarkDN from source, how the MDX
+Everything behind the product: how to run markdn from source, how the MDX
 pipeline works, how the desktop app is packaged, and how CI and releases are
 wired.
 
@@ -157,11 +157,11 @@ the guest reports Linux on every host. The shell passes the real ones in
 (`EX_TAURI_HOME`, `EX_TAURI_HOST_OS`) and mounts the home at its own path;
 `Markdn.Host` is what the code asks instead of `System.user_home!/0` or
 `:os.type/0`, so the default root and `settings.json` stay where they always
-were. The backend logs to `~/Library/Logs/MarkDN/markdn_desktop.log` (on Linux,
+were. The backend logs to `~/Library/Logs/markdn/markdn_desktop.log` (on Linux,
 `ExTauri.Paths.log_dir/0`); the shell's own log, sidecar output included, is in
 `~/Library/Logs/app.markdn.desktop/`.
 
-A packed app starts no host program unless `ampoule.toml` allows it. MarkDN
+A packed app starts no host program unless `ampoule.toml` allows it. markdn
 starts one kind, to move a document to the Trash: `/usr/bin/trash`,
 `osascript` (older macOS) and `gio` (Linux) are listed there. A new
 `System.cmd/3` needs its program added, or it fails with `:enoent`.
@@ -179,6 +179,26 @@ The page is self-contained (inline styles and script, DESIGN.md tokens inlined)
 because nothing it needs can come from the server it is waiting for. Dev runs are
 unaffected: `mix ex_tauri.dev` opens on `devUrl`.
 
+### App icons
+
+Every icon under `src-tauri/icons` is generated from `src-tauri/icons/source/`:
+`icon.svg` is the mark on the macOS icon grid (transparent corners), and
+`icon-ios.svg` is the same mark full-bleed, because iOS masks the icon itself
+and rejects transparency. To change the icon, edit the SVGs, then:
+
+```bash
+rsvg-convert -w 1024 -h 1024 src-tauri/icons/source/icon.svg -o src-tauri/icons/source/icon.png
+(cd src-tauri && npx --yes @tauri-apps/cli@2 icon icons/source/icon.png)
+
+# The iOS set from the full-bleed variant, over the one `tauri icon` just wrote.
+rsvg-convert -w 1024 -h 1024 src-tauri/icons/source/icon-ios.svg | magick - -alpha off /tmp/icon-ios.png
+(cd src-tauri && npx --yes @tauri-apps/cli@2 icon /tmp/icon-ios.png -o /tmp/icon-ios)
+cp /tmp/icon-ios/ios/*.png src-tauri/icons/ios/
+```
+
+`tauri icon` resets `android/values/ic_launcher_background.xml` to white; set it
+back to `#131316`, the icon's ground.
+
 ### Regenerating the shell
 
 `src-tauri/src/main.rs` is ex_tauri's template output and speaks its heartbeat
@@ -191,7 +211,7 @@ settings live and what the Homebrew cask's `zap` removes — and the window's
 ```bash
 mix run --no-start -e '
   File.write!("src-tauri/src/main.rs",
-    ExTauri.Install.Helpers.main_src("localhost", "43118", "markdn", "MarkDN", "http", ExTauri.release_name()))'
+    ExTauri.Install.Helpers.main_src("localhost", "43118", "markdn", "markdn", "http", ExTauri.release_name()))'
 ```
 
 If a local build stops with **"Tauri CLI not found at

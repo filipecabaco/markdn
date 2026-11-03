@@ -7,7 +7,7 @@
 
 ## The Question
 
-**Can MarkDN support MDX components (custom React components) that can be edited and viewed in real-time?**
+**Can markdn support MDX components (custom React components) that can be edited and viewed in real-time?**
 
 **Answer:** ✅ **Yes** - with a unified component registry approach
 
