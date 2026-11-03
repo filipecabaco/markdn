@@ -17,11 +17,13 @@ vi.mock("./api", () => ({
   trashDocument: vi.fn(),
   searchDocuments: vi.fn(),
   searchContents: vi.fn(),
+  takeOpenRequest: vi.fn(),
 }));
 
 /** Stands in for the live-sync socket, so a test can play another writer. */
 class FakeSocket {
   static last: FakeSocket | null = null;
+  onopen: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   send = vi.fn();
   close = vi.fn();
@@ -86,6 +88,7 @@ beforeEach(() => {
   const empty: api.Session = { document: null, view: null, draft: null };
   vi.mocked(api.getSession).mockResolvedValue(empty);
   vi.mocked(api.saveSession).mockResolvedValue(empty);
+  vi.mocked(api.takeOpenRequest).mockResolvedValue({ document: null, root: null, error: null });
 });
 
 afterEach(() => {
@@ -306,5 +309,62 @@ describe("VS Code shortcuts", () => {
     await user.keyboard("{Meta>}k{/Meta}x");
 
     expect(screen.getByRole("status")).toHaveTextContent("(⌘K, X) is not a command");
+  });
+});
+
+describe("a document opened from outside the app", () => {
+  const nothing = { document: null, root: null, error: null };
+
+  it("opens what was asked for before the window was listening", async () => {
+    vi.mocked(api.takeOpenRequest).mockResolvedValueOnce({ ...nothing, document: "b.md" });
+    render(<App />);
+
+    const editor = await screen.findByRole("textbox", { name: "Markdown source" });
+    await waitFor(() => expect(editor).toHaveValue("# B"));
+  });
+
+  it("checks again when the server says there is a new request", async () => {
+    render(<App />);
+    const editor = await screen.findByRole("textbox", { name: "Markdown source" });
+    await waitFor(() => expect(api.takeOpenRequest).toHaveBeenCalled());
+
+    vi.mocked(api.takeOpenRequest).mockResolvedValueOnce({ ...nothing, document: "a.md" });
+    FakeSocket.last?.emit({ type: "open" });
+
+    await waitFor(() => expect(editor).toHaveValue("# A"));
+  });
+
+  it("asks before replacing unsaved edits", async () => {
+    const user = userEvent.setup();
+    await dirtyA(user);
+
+    vi.mocked(api.takeOpenRequest).mockResolvedValueOnce({ ...nothing, document: "b.md" });
+    FakeSocket.last?.emit({ type: "open" });
+
+    expect(
+      await screen.findByRole("alertdialog", { name: "Unsaved changes in a.md." }),
+    ).toBeInTheDocument();
+    expect(api.readDocument).not.toHaveBeenCalledWith("b.md");
+  });
+
+  it("rebuilds the tree when the root moved, and says why nothing opened", async () => {
+    render(<App />);
+    await screen.findByRole("tree");
+    await waitFor(() => expect(api.takeOpenRequest).toHaveBeenCalled());
+    vi.mocked(api.getSettings).mockClear();
+    vi.mocked(api.listDocuments).mockClear();
+
+    vi.mocked(api.takeOpenRequest).mockResolvedValueOnce({
+      document: null,
+      root: "/elsewhere",
+      error: "notes.txt is not a markdown document.",
+    });
+    FakeSocket.last?.emit({ type: "open" });
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "notes.txt is not a markdown document.",
+    );
+    await waitFor(() => expect(api.getSettings).toHaveBeenCalled());
+    await waitFor(() => expect(api.listDocuments).toHaveBeenCalledWith("."));
   });
 });

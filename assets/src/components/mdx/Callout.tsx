@@ -8,11 +8,12 @@ export interface CalloutProps {
   children?: ReactNode;
 }
 
+/** An aside: a quiet panel, set apart by its ground rather than a border. */
 export function Callout({ type = "note", title, children }: CalloutProps) {
   return (
-    <aside className={`mdx-callout mdx-callout--${type}`}>
-      {title && <div className="mdx-callout__title">{title}</div>}
-      <div className="mdx-callout__body">{children}</div>
+    <aside className="rounded-lg bg-muted px-4 py-3 text-sm" data-type={type}>
+      {title && <div className="mb-1 font-medium">{title}</div>}
+      <div className="mdx-body text-muted-foreground">{children}</div>
     </aside>
   );
 }

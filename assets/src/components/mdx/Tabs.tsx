@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * Tabbed panels.
@@ -100,8 +101,13 @@ export function Tabs({ defaultValue, children }: TabsProps) {
   };
 
   return (
-    <div className="mdx-tabs">
-      <div className="mdx-tabs__bar" role="tablist" ref={bar} onKeyDown={onKeyDown}>
+    <div className="flex flex-col gap-2">
+      <div
+        className="inline-flex h-8 w-fit items-center gap-0.5 rounded-lg bg-muted p-0.5"
+        role="tablist"
+        ref={bar}
+        onKeyDown={onKeyDown}
+      >
         {tabs.map((tab) => {
           const selected = tab.value === active;
           const { tab: tabId, panel } = ids(tab.value);
@@ -114,7 +120,10 @@ export function Tabs({ defaultValue, children }: TabsProps) {
               aria-selected={selected}
               aria-controls={panel}
               tabIndex={selected ? 0 : -1}
-              className={`mdx-tabs__tab${selected ? " is-active" : ""}`}
+              className={cn(
+                "inline-flex h-full items-center rounded-md px-2.5 text-[0.8125rem] font-medium whitespace-nowrap text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50",
+                selected && "bg-background text-foreground shadow-sm dark:bg-input/40",
+              )}
               onClick={() => setSelected(tab.value)}
             >
               {tab.label}
@@ -147,13 +156,13 @@ export function Tab({ value, label, children }: TabProps) {
   }, [key, label, register, unregister]);
 
   // A <Tab> outside <Tabs> still shows its content rather than vanishing.
-  if (!context) return <div className="mdx-tabs__panel">{children}</div>;
+  if (!context) return <div className="mdx-body">{children}</div>;
   if (context.active !== key) return null;
 
   const { tab, panel } = context.ids(key);
 
   return (
-    <div className="mdx-tabs__panel" role="tabpanel" id={panel} aria-labelledby={tab} tabIndex={0}>
+    <div className="mdx-body rounded-lg border px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50" role="tabpanel" id={panel} aria-labelledby={tab} tabIndex={0}>
       {children}
     </div>
   );

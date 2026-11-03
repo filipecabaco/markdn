@@ -41,25 +41,25 @@ export function ComponentPicker({ onInsert, onClose }: Props) {
   }, [onClose]);
 
   return (
-    <div className="picker__backdrop" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 px-4 pt-[12vh] dark:bg-black/50" onMouseDown={onClose}>
       <div
         ref={ref}
-        className="picker"
+        className="flex w-full max-w-md flex-col gap-0.5 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-label="Insert component"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <h2 className="picker__title">Insert component</h2>
+        <h2 className="px-2 pt-1 pb-2 text-sm font-medium">Insert component</h2>
         {Object.entries(REGISTRY).map(([name, entry]) => (
           <button
             key={name}
             type="button"
-            className="picker__option"
+            className="flex w-full flex-col items-start gap-0.5 rounded-md px-2 py-1.5 text-left outline-none hover:bg-accent focus-visible:bg-accent"
             onClick={() => onInsert(SNIPPETS[name] ?? `<${name} />`)}
           >
-            <span className="picker__name">{name}</span>
-            <span className="picker__description">{entry.description}</span>
+            <span className="font-mono text-sm">&lt;{name}&gt;</span>
+            <span className="text-xs text-muted-foreground">{entry.description}</span>
           </button>
         ))}
       </div>

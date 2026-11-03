@@ -10,6 +10,7 @@ import {
   saveDocument,
   saveSession,
   saveSettings,
+  takeOpenRequest,
   type Settings,
   type SettingsResponse,
 } from "./api";
@@ -22,18 +23,22 @@ import { ContextMenu, type MenuItem } from "./components/ContextMenu";
 import { DecisionBar, type Decision } from "./components/DecisionBar";
 import { PathField } from "./components/PathField";
 import { Preview } from "./components/Preview";
+import { Outline } from "./components/Outline";
+import { Segmented } from "./components/Segmented";
 import { SettingsPanel } from "./components/SettingsPanel";
-import { SyncRail } from "./components/SyncRail";
-import { DocumentLine } from "./components/DocumentLine";
 import { TabBar, type PhoneTab } from "./components/TabBar";
-import { Wordmark } from "./components/Wordmark";
+import { Wordmark } from "./components/Mark";
+import { Button } from "./components/ui/button";
+import { Kbd } from "./components/ui/kbd";
+import { cn } from "./lib/utils";
+import { PanelLeft, Plus, Search, Settings as SettingsIcon, X } from "lucide-react";
 import { useAutoScroll } from "./hooks/useAutoScroll";
 import { useLineOffsets } from "./hooks/useLineOffsets";
 import { useLinkedPanes } from "./hooks/useLinkedPanes";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import { usePacedValue } from "./hooks/usePacedValue";
 import { copyRich, notionHtml, notionHtmlNow, preloadNotionExport } from "./notionExport";
-import { changedRange, headingsOf, lineFor, lineName, stationName, stationsIn } from "./lines";
+import { changedRange, displayName, headingsOf, sectionsIn } from "./lines";
 
 type View = "split" | "editor" | "preview";
 
@@ -73,7 +78,7 @@ const SETTINGS_DEBOUNCE_MS = 500;
 // Unsaved edits are kept for the next window once typing pauses this long.
 const DRAFT_DEBOUNCE_MS = 800;
 
-const WELCOME = `# MarkDN
+const WELCOME = `# markdn
 
 Markdown and MDX, served by **Francis** into a native window.
 
@@ -111,6 +116,8 @@ export function App() {
   // or with the untitled buffer for a first Save), or renaming one.
   const [field, setField] = useState<Field | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; entry: Entry | null } | null>(null);
+  // Bumped whenever the server may hold a request to open a document (see below).
+  const [inboxCheck, setInboxCheck] = useState(0);
   const socket = useRef<WebSocket | null>(null);
   // Read by the socket's handler, so the socket need not reconnect on every open.
   const pathRef = useRef<string | null>(null);
@@ -123,8 +130,8 @@ export function App() {
   contentRef.current = content;
   // A question for the user, shown in place of the status strip.
   const [decision, setDecision] = useState<Decision | null>(null);
-  // Stations an agent's write changed, by heading line: service alerts on the
-  // document's line, each cleared when the reader goes there.
+  // Sections an agent's write changed, by heading line, each marked in the
+  // outline until the reader goes there.
   const [alerts, setAlerts] = useState<Set<number>>(() => new Set());
 
   // The open document went away underneath the editor. Its text is kept as an
@@ -171,16 +178,15 @@ export function App() {
 
   const lineCount = useMemo(() => content.split("\n").length, [content]);
 
-  // --- The document's line ------------------------------------------------
+  // --- The outline ---------------------------------------------------------
 
   const headings = useMemo(() => headingsOf(previewContent), [previewContent]);
-  const ink = lineFor(path);
 
   useEffect(() => setAlerts(new Set()), [path]);
 
-  // The station in view: in a rendered pane the last heading scrolled past the
+  // The section in view: in a rendered pane the last heading scrolled past the
   // top of the pane, in the source alone the heading above the caret.
-  const [scrolledStation, setScrolledStation] = useState<number | null>(null);
+  const [scrolledSection, setScrolledSection] = useState<number | null>(null);
   useEffect(() => {
     const scroller = previewRef.current;
     if (view === "editor" || !scroller) return;
@@ -198,7 +204,7 @@ export function App() {
         if (!block || block.getBoundingClientRect().top > edge) break;
         found = heading.line;
       }
-      setScrolledStation(found);
+      setScrolledSection(found);
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
@@ -212,7 +218,7 @@ export function App() {
     };
   }, [view, headings, phoneTab]);
 
-  const caretStation = useMemo(() => {
+  const caretSection = useMemo(() => {
     let found: number | null = headings[0]?.line ?? null;
     for (const heading of headings) {
       if (heading.line > linked.caretLine) break;
@@ -221,7 +227,7 @@ export function App() {
     return found;
   }, [headings, linked.caretLine]);
 
-  const currentStation = view === "editor" ? caretStation : scrolledStation;
+  const currentSection = view === "editor" ? caretSection : scrolledSection;
 
   const jumpTo = useCallback(
     (line: number) => {
@@ -422,18 +428,25 @@ export function App() {
 
   // Theme and text size are applied to the document element rather than passed
   // down as props: they are ambient, and the CSS already reads them from :root.
+  // Dark is the `.dark` class, as shadcn has it; "system" follows the OS live.
   useEffect(() => {
     const theme = config?.settings.theme ?? "system";
-    if (theme === "system") delete document.documentElement.dataset.theme;
-    else document.documentElement.dataset.theme = theme;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () =>
+      document.documentElement.classList.toggle(
+        "dark",
+        theme === "dark" || (theme === "system" && media.matches),
+      );
+    apply();
+    if (theme !== "system") return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
   }, [config?.settings.theme]);
 
   useEffect(() => {
     const size = config?.settings.editorFontSize;
-    document.documentElement.style.setProperty(
-      "--editor-font-size",
-      size ? `${size}px` : "var(--t-base)",
-    );
+    if (size) document.documentElement.style.setProperty("--editor-font-size", `${size}px`);
+    else document.documentElement.style.removeProperty("--editor-font-size");
   }, [config?.settings.editorFontSize]);
 
   // --- Document ------------------------------------------------------------
@@ -442,14 +455,24 @@ export function App() {
   // saving the open document pushes a notification down it, and the document is
   // re-read so the two views cannot drift apart. Any write may have added a file
   // (an MCP write creates as readily as it saves), so the tree is re-listed too.
+  //
+  // It is also how a request to open a file from outside the app arrives: an
+  // "open" message means the server holds one, and every (re)connect checks,
+  // since a request made while no window was listening waits there for one.
   useEffect(() => {
     const url = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`;
     const ws = new WebSocket(url);
     socket.current = ws;
 
+    ws.onopen = () => setInboxCheck((check) => check + 1);
+
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data as string);
+        if (message.type === "open") {
+          setInboxCheck((check) => check + 1);
+          return;
+        }
         if (!["saved", "created", "renamed", "trashed"].includes(message.type)) return;
 
         setTreeRevision((revision) => revision + 1);
@@ -458,10 +481,10 @@ export function App() {
           const changed: string = message.path;
           const reloadFromDisk = () =>
             readDocument(changed).then((result) => {
-              // Whatever changed under the reader is a service alert on the
-              // stations it touched, so it can be found without a diff.
+              // Whatever changed under the reader is marked on the sections
+              // it touched, so it can be found without a diff.
               const range = changedRange(contentRef.current, result.contents);
-              if (range) setAlerts(stationsIn(headingsOf(result.contents), range));
+              if (range) setAlerts(sectionsIn(headingsOf(result.contents), range));
               setContent(result.contents);
               setSaved(true);
             });
@@ -603,6 +626,41 @@ export function App() {
     (directory?: string) => guard("start new", () => startNew("", directory)),
     [guard, startNew],
   );
+
+  // --- Opened from outside -------------------------------------------------
+
+  // `markdn notes.md` in a terminal, or Finder's Open With, leaves a request
+  // with the server; the window takes it once its session has been restored
+  // (or the restore would land on top of it), and again whenever the socket
+  // says there is a new one.
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  useEffect(() => {
+    if (!sessionLoaded) return;
+
+    // Not cancelled on cleanup: taking the request removes it from the server,
+    // so an answer that arrives must be acted on or it is lost.
+    takeOpenRequest()
+      .then(async (request) => {
+        if (request.error) setStatus(request.error);
+
+        // The server moved the root to reach what was asked for. Every path in
+        // the window is relative to the old one, so the tree is rebuilt and the
+        // open document's name no longer means anything: unsaved text is kept
+        // as an untitled buffer, as when a document is deleted under the editor.
+        if (request.root !== null) {
+          setConfig(await getSettings());
+          setTreeGeneration((generation) => generation + 1);
+          if (savedRef.current) setPath(null);
+          else forget();
+          pathRef.current = null;
+        }
+
+        if (request.document) openRef.current(request.document);
+      })
+      .catch(() => {});
+  }, [forget, inboxCheck, sessionLoaded]);
 
   const create = useCallback(
     (target: string) => {
@@ -1077,81 +1135,78 @@ export function App() {
     return () => document.removeEventListener("keydown", onKey);
   }, [canSplit, requestNew, save, searching, toggleSidebar]);
 
-  return (
-    <div className="app">
-      {/* The desktop shell hides the native title bar, so this header is one:
-          a mousedown on the bar itself (not on a control) drags the window. */}
-      <header className="app__header" data-tauri-drag-region>
-        {/* First in the bar, beside the traffic lights: where macOS puts it. */}
-        <button
-          type="button"
-          className="sidebar-toggle"
-          aria-controls="sidebar"
-          aria-expanded={compact ? railOpen : !sidebarCollapsed}
-          aria-label={(compact ? !railOpen : sidebarCollapsed) ? "Show sidebar" : "Hide sidebar"}
-          title={`${(compact ? !railOpen : sidebarCollapsed) ? "Show" : "Hide"} sidebar (⌘B)`}
-          onClick={compact ? () => setRailOpen((open) => !open) : toggleSidebar}
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <rect className="sidebar-toggle__pane" x="2" y="3" width="4" height="10" />
-            <rect className="sidebar-toggle__frame" x="1.5" y="2.5" width="13" height="11" rx="1.5" />
-            <path className="sidebar-toggle__frame" d="M6 2.5v11" />
-          </svg>
-        </button>
+  const sidebarHidden = phone ? phoneTab !== "documents" : compact ? !railOpen : sidebarCollapsed;
+  const sidebarShown = compact ? railOpen : !sidebarCollapsed;
+  const fileName = path ? path.slice(path.lastIndexOf("/") + 1) : "Untitled";
 
-        <Wordmark />
+  return (
+    <div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
+      {/* The desktop shell hides the native title bar, so this header is one:
+          a mousedown on the bar itself (not on a control) drags the window,
+          and on macOS it insets past the traffic lights. */}
+      <header
+        className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center gap-1.5 border-b px-2 pt-[env(safe-area-inset-top)] in-[.is-desktop]:pl-[84px]"
+        data-tauri-drag-region
+      >
+        {!phone && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-controls="sidebar"
+            aria-expanded={sidebarShown}
+            aria-label={sidebarShown ? "Hide sidebar" : "Show sidebar"}
+            title={`${sidebarShown ? "Hide" : "Show"} sidebar (⌘B)`}
+            onClick={compact ? () => setRailOpen((open) => !open) : toggleSidebar}
+          >
+            <PanelLeft />
+          </Button>
+        )}
+
+        <Wordmark compact={phone} className="px-1" />
+
+        <span className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
 
         {phoneTitle ? (
-          <h1 className="app__title">{phoneTitle}</h1>
+          <h1 className="truncate text-sm font-semibold">{phoneTitle}</h1>
         ) : (
-        /* The document as a sign: its line, then its station. */
-        <div className="app__doc" data-tauri-drag-region>
-          <span className="app__line" data-ink={ink}>
-            {lineName(path)}
-          </span>
-          <span className="app__path" title={path ?? "untitled"}>
-            {path ? stationName(path) : "untitled"}
-          </span>
-          <span
-            className={`app__state${saved ? "" : " is-dirty"}`}
-            title={saved ? "Saved" : "Unsaved changes"}
-          >
-            {saved ? "saved" : "edited"}
-          </span>
-        </div>
+          <div className="flex min-w-0 items-baseline gap-2 text-sm" data-tauri-drag-region>
+            <span className="min-w-0 truncate" title={path ?? "Untitled"}>
+              {path && parentOf(path) && (
+                <span className="text-muted-foreground">{parentOf(path)}</span>
+              )}
+              <span className="font-medium">{fileName}</span>
+            </span>
+            <span
+              className={cn(
+                "shrink-0 text-xs text-muted-foreground",
+                !saved && "text-foreground",
+              )}
+              title={saved ? "Saved" : "Unsaved changes"}
+            >
+              {saved ? "saved" : "edited"}
+            </span>
+          </div>
         )}
+
+        <div className="h-full min-w-2 flex-1" data-tauri-drag-region />
 
         {phone && phoneTitle === "Documents" ? (
           <>
-            <button
-              type="button"
-              className="app__icon"
-              aria-label="New document"
-              onClick={() => requestNew()}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="app__icon"
+            <Button variant="ghost" size="icon" aria-label="New document" onClick={() => requestNew()}>
+              <Plus />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label="Settings"
               onClick={() => setShowSettings(true)}
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  strokeLinejoin="round"
-                  d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-                />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
+              <SettingsIcon />
+            </Button>
           </>
         ) : phone && phoneTitle ? null : phone ? (
-          <button
-            type="button"
-            className="button button--quiet"
+          <Button
+            variant="ghost"
             aria-pressed={view === "editor"}
             onClick={() => {
               setPhoneTab("read");
@@ -1160,137 +1215,129 @@ export function App() {
             }}
           >
             {view === "editor" ? "Done" : "Edit"}
-          </button>
+          </Button>
         ) : (
-        <div className="segmented" role="group" aria-label="View">
-
-          {VIEWS.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              className={`segmented__item${view === mode.id ? " is-active" : ""}`}
-              aria-pressed={view === mode.id}
-              disabled={searching || (mode.id === "split" && !canSplit)}
-              title={
-                searching
-                  ? "Close the search to change view"
-                  : mode.id === "split" && !canSplit
-                    ? "Window too narrow for split view"
-                    : undefined
-              }
-              onClick={() => setView(mode.id)}
-            >
-              {mode.label}
-              <kbd className="segmented__key">{mode.key}</kbd>
-            </button>
-          ))}
-        </div>
+          <Segmented
+            label="View"
+            value={view}
+            onChange={setView}
+            options={VIEWS.map((mode) => ({
+              id: mode.id,
+              label: mode.label,
+              disabled: searching || (mode.id === "split" && !canSplit),
+              title: searching
+                ? "Close the search to change view"
+                : mode.id === "split" && !canSplit
+                  ? "Window too narrow for split view"
+                  : `${mode.label} (⌘${mode.key})`,
+              hint: <Kbd className="hidden h-4 min-w-4 bg-transparent px-0.5 lg:inline-flex">{mode.key}</Kbd>,
+            }))}
+          />
         )}
 
-        <button
-          type="button"
-          className="button button--quiet app__settings"
-          onClick={() => setShowSettings(true)}
-          title="Settings (⌘,)"
-          aria-label="Settings"
-        >
-          Settings
-        </button>
+        {!phone && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setShowSettings(true)}
+            title="Settings (⌘,)"
+            aria-label="Settings"
+          >
+            <SettingsIcon />
+          </Button>
+        )}
 
         {/* On iPhone, Save appears when there is something to save, and only
             beside the document; a control that can never be pressed is noise. */}
         {(!phone || (!saved && !phoneTitle)) && (
-          <button
-            type="button"
-            className="button"
+          <Button
+            size="sm"
+            variant={saved ? "outline" : "default"}
             onClick={save}
             disabled={saved}
-            title={path ? undefined : "Save as a new document"}
+            title={path ? "Save (⌘S)" : "Save as a new document"}
           >
             Save
-            <kbd className="button__key">⌘S</kbd>
-          </button>
+            {!phone && (
+              <Kbd className={cn("h-4 bg-transparent px-0", !saved && "text-primary-foreground/70")}>
+                ⌘S
+              </Kbd>
+            )}
+          </Button>
         )}
       </header>
 
       {decision ? (
         <DecisionBar decision={decision} onDone={() => setDecision(null)} />
-      ) : status && (
-        <div className="banner" role="status">
-          <span className="banner__dot" />
-          {status}
-          <button type="button" className="banner__dismiss" onClick={() => setStatus(null)}>
-            Dismiss
-          </button>
-        </div>
+      ) : (
+        status && (
+          <div
+            className="flex shrink-0 items-center gap-3 border-b bg-muted/60 px-3 py-1.5 text-sm"
+            role="status"
+          >
+            <span className="min-w-0 flex-1">{status}</span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Dismiss"
+              title="Dismiss"
+              onClick={() => setStatus(null)}
+            >
+              <X />
+            </Button>
+          </div>
+        )
       )}
 
-      <div className="app__body">
+      <div className="relative flex min-h-0 flex-1">
         {/* Entries open their own menu and stop the event; a right-click that
             reaches the sidebar itself landed on empty space. */}
         <aside
           id="sidebar"
-          className="sidebar"
-          hidden={phone ? phoneTab !== "documents" : compact ? !railOpen : sidebarCollapsed}
+          className={cn(
+            "flex w-64 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground",
+            compact && "absolute inset-y-0 left-0 z-30 w-[min(320px,86vw)] shadow-xl",
+            phone && "w-full border-r-0",
+          )}
+          hidden={sidebarHidden}
           onContextMenu={(event) => {
             if (wantsNativeMenu(event.target)) return;
             event.preventDefault();
             setMenu({ x: event.clientX, y: event.clientY, entry: null });
           }}
         >
-          {/* The open document's own line first: where the reader is in it is
-              the thing looked for most, the network of documents second. */}
+          {/* The palette as a field (a button dressed as one, since the palette
+              is the search surface), search across documents, and New. On
+              iPhone the Search tab and the bar's + stand in for them. */}
           {!phone && (
-            <section className="sidebar__now" aria-label={`Outline of ${stationName(path)}`}>
-              <h2 className="sidebar__heading">
-                <span className="app__line" data-ink={ink}>
-                  {lineName(path)}
-                </span>
-                <span className="sidebar__heading-name">{stationName(path)}</span>
-              </h2>
-              <DocumentLine
-                title={stationName(path)}
-                headings={headings}
-                ink={ink}
-                current={currentStation}
-                alerts={alerts}
-                onJump={jumpTo}
-              />
-            </section>
-          )}
-
-          {/* One row: the palette as a field (a button dressed as one, since the
-              palette is the search surface), search across documents, and New.
-              On iPhone the Search tab and the bar's + stand in for them. */}
-          {!phone && (
-            <div className="sidebar__controls">
-              <button type="button" className="sidebar__search" onClick={() => setPalette("all")}>
-                <span>Find a document…</span>
-                <kbd>⌘P</kbd>
-              </button>
+            <div className="flex shrink-0 items-center gap-1 p-2">
               <button
                 type="button"
-                className={`sidebar__icon${searching ? " is-active" : ""}`}
+                className="flex h-8 min-w-0 flex-1 items-center justify-between gap-2 rounded-lg border bg-background px-2.5 text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                onClick={() => setPalette("all")}
+              >
+                <span className="truncate">Find a document…</span>
+                <Kbd>⌘P</Kbd>
+              </button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className={cn(searching && "bg-sidebar-accent")}
                 aria-label="Search in documents"
                 title="Search in documents (⌘⇧F)"
                 onClick={() => setSearching(true)}
               >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="11" cy="11" r="6" />
-                  <path d="m15.5 15.5 4.5 4.5" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className="sidebar__icon"
+                <Search />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 aria-label="New document"
                 title="New document (⌘N)"
                 onClick={() => requestNew()}
               >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </button>
+                <Plus />
+              </Button>
             </div>
           )}
 
@@ -1315,43 +1362,68 @@ export function App() {
             />
           ) : null}
 
-          <p className="sidebar__root" title={root ?? ""}>
-            {rootLabel}
-          </p>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <p
+              className="shrink-0 truncate px-4 pt-1 pb-1.5 text-xs font-medium text-muted-foreground"
+              title={root ?? ""}
+            >
+              {rootLabel}
+            </p>
+            <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+              <FileTree
+                key={treeGeneration}
+                path="."
+                selected={path}
+                onSelect={open}
+                revision={treeRevision}
+                onEntryMenu={(entry, x, y) => setMenu({ x, y, entry })}
+                onEntryCommand={runEntryCommand}
+              />
+            </div>
+          </div>
 
-          <FileTree
-            key={treeGeneration}
-            path="."
-            selected={path}
-            onSelect={open}
-            revision={treeRevision}
-            onEntryMenu={(entry, x, y) => setMenu({ x, y, entry })}
-            onEntryCommand={runEntryCommand}
-          />
+          {/* The open document's outline, below the files, as an editor's
+              explorer has it. On iPhone it is a tab of its own. */}
+          {!phone && (
+            <section
+              className="flex max-h-[40%] min-h-0 shrink-0 flex-col border-t"
+              aria-label={`Outline of ${displayName(path)}`}
+            >
+              <h2 className="shrink-0 px-4 pt-2.5 pb-1.5 text-xs font-medium text-muted-foreground">
+                Outline
+              </h2>
+              <div className="min-h-0 overflow-y-auto px-2 pb-2">
+                <Outline
+                  title={displayName(path)}
+                  headings={headings}
+                  current={currentSection}
+                  alerts={alerts}
+                  onJump={jumpTo}
+                />
+              </div>
+            </section>
+          )}
         </aside>
 
         {compact && railOpen && (
           <button
             type="button"
-            className="rail-scrim"
+            className="absolute inset-0 z-20 bg-black/30 dark:bg-black/50"
             aria-label="Close sidebar"
             onClick={() => setRailOpen(false)}
           />
         )}
 
         {phone && phoneTab === "outline" && !searching && (
-          <section className="phone-panel" aria-label="Outline">
-            <h2 className="phone-panel__title">
-              <span className="app__line" data-ink={ink}>
-                {lineName(path)}
-              </span>
-              {stationName(path)}
-            </h2>
-            <DocumentLine
-              title={stationName(path)}
+          <section
+            className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3"
+            aria-label="Outline"
+          >
+            <h2 className="px-2 text-sm font-semibold">{displayName(path)}</h2>
+            <Outline
+              title={displayName(path)}
               headings={headings}
-              ink={ink}
-              current={currentStation}
+              current={currentSection}
               alerts={alerts}
               onJump={jumpTo}
             />
@@ -1371,8 +1443,10 @@ export function App() {
         )}
 
         <main
-          className={`panes panes--${view}`}
-          data-ink={ink}
+          className={cn(
+            "grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)]",
+            view === "split" ? "grid-cols-2 divide-x" : "grid-cols-1",
+          )}
           hidden={searching || (phone && phoneTab !== "read")}
         >
           {view !== "preview" && (
@@ -1389,14 +1463,6 @@ export function App() {
                 setContent(next);
                 setSaved(false);
               }}
-            />
-          )}
-
-          {view === "split" && (
-            <SyncRail
-              blocks={linked.blocks}
-              activeLine={linked.activeLine}
-              scrollerRef={previewRef}
             />
           )}
 

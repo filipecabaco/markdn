@@ -118,9 +118,8 @@ export function Editor({
   };
 
   return (
-    <div className="editor">
+    <div className="relative flex min-h-0 min-w-0">
       <SourceArea
-        className="source--editor"
         textareaRef={textarea}
         value={value}
         ariaLabel="Markdown source"
@@ -135,7 +134,7 @@ export function Editor({
         onSelect={onCaretChange}
         onClick={onCaretChange}
       />
-      <p id={hint} className="visually-hidden">
+      <p id={hint} className="sr-only">
         {tabMovesFocus
           ? "Tab moves focus. Control+Shift+M makes it insert spaces again."
           : "Tab inserts two spaces. Shift+Tab moves focus back; Escape then Tab, or Control+Shift+M, moves it forward."}
@@ -143,13 +142,21 @@ export function Editor({
       {/* The same word VS Code puts in its status bar, so the mode is never a
           surprise the next time Tab does not indent. */}
       {tabMovesFocus && (
-        <div className="editor__mode" role="status">
+        <div
+          className="pointer-events-none absolute bottom-2 left-3 z-10 rounded-md border bg-background px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
+          role="status"
+        >
           Tab moves focus
         </div>
       )}
-      <div className="editor__meter" aria-hidden="true">
+      {/* Above the textarea, so a long line scrolling past the corner runs
+          under the readout instead of printing its glyphs across the numbers. */}
+      <div
+        className="pointer-events-none absolute right-4 bottom-2 z-10 flex gap-1 rounded-md bg-background/80 px-1.5 py-0.5 font-mono text-xs text-muted-foreground tabular-nums"
+        aria-hidden="true"
+      >
         <span>{caretLine ?? 1}</span>
-        <span className="editor__meter-sep">/</span>
+        <span className="opacity-50">/</span>
         <span>{lineCount ?? 1}</span>
       </div>
       {picking && <ComponentPicker onInsert={insert} onClose={() => onPickingChange(false)} />}

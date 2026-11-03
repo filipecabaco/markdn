@@ -6,7 +6,7 @@
     },
     "windows": [
       {
-        "title": "MarkDN",
+        "title": "markdn",
         "width": 1400,
         "fullscreen": false,
         "height": 900,
@@ -30,6 +30,18 @@
     "externalBin": [
       "../burrito_out/desktop"
     ],
+    "resources": {
+      "cli/markdn": "cli/markdn"
+    },
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown", "mdx"],
+        "name": "Markdown document",
+        "description": "Markdown or MDX document",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -40,6 +52,6 @@
     "targets": "all"
   },
   "identifier": "app.markdn.desktop",
-  "productName": "MarkDN",
+  "productName": "markdn",
   "version": "0.1.0"
 }

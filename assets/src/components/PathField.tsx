@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 
 /**
  * Inline field for naming a document: a new one, or a new name for one.
@@ -104,10 +106,10 @@ export function PathField({
   };
 
   return (
-    <form className="newdoc" onSubmit={submit}>
-      <input
+    <form className="flex flex-col gap-1 px-2 pb-2" onSubmit={submit}>
+      <Input
         ref={input}
-        className="newdoc__input"
+        className="h-7 bg-background font-mono text-xs md:text-xs"
         aria-label={label}
         placeholder="notes/untitled.md"
         spellCheck={false}
@@ -128,14 +130,14 @@ export function PathField({
           if (!busy && !error && value === initial) onCancel();
         }}
       />
-      <div className="newdoc__hint">
+      <div className="px-0.5 text-xs text-muted-foreground">
         {error ? (
-          <span id="newdoc-error" className="newdoc__error" role="alert">
+          <span id="newdoc-error" className="text-destructive" role="alert">
             {error}
           </span>
         ) : (
-          <span>
-            <kbd>↵</kbd> {verb} · <kbd>esc</kbd> cancel
+          <span className="inline-flex items-center gap-1">
+            <Kbd>↵</Kbd> {verb} · <Kbd>esc</Kbd> cancel
           </span>
         )}
       </div>

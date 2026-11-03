@@ -4,7 +4,7 @@ import { App } from "./App";
 import "./styles.css";
 
 // The Mac shell hides the native title bar, so the header stands in for it and
-// insets past the traffic lights (.is-desktop in styles.css). The shell exposes
+// insets past the traffic lights (`in-[.is-desktop]` on the header). The shell exposes
 // its API to this page, which is how it is told apart from a browser; the same
 // shell on iPhone and iPad reports a touch screen, and has no traffic lights.
 if ("__TAURI__" in window && navigator.maxTouchPoints === 0) {

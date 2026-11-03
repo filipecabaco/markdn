@@ -1,6 +1,6 @@
 defmodule Markdn.MCP.Handler do
   @moduledoc """
-  Model Context Protocol server exposing MarkDN's documents as tools.
+  Model Context Protocol server exposing markdn's documents as tools.
 
   Speaks JSON-RPC 2.0 over the Streamable HTTP transport: the request arrives as
   the `POST /mcp` body and the response *is* the response body. Notifications
@@ -62,7 +62,7 @@ defmodule Markdn.MCP.Handler do
       %{
         name: "list_documents",
         description:
-          "List markdown documents and directories one level under a path, relative to the MarkDN root.",
+          "List markdown documents and directories one level under a path, relative to the markdn root.",
         inputSchema: %{
           type: "object",
           properties: %{
@@ -100,7 +100,7 @@ defmodule Markdn.MCP.Handler do
       %{
         name: "list_components",
         description:
-          "List the MDX components the MarkDN renderer will render, with their props. Use before writing MDX so the document only references components that exist.",
+          "List the MDX components the markdn renderer will render, with their props. Use before writing MDX so the document only references components that exist.",
         inputSchema: %{type: "object", properties: %{}}
       }
     ]
@@ -152,7 +152,7 @@ defmodule Markdn.MCP.Handler do
     %{content: [%{type: "text", text: "error: #{describe(reason)}"}], isError: true}
   end
 
-  defp describe(:outside_root), do: "path is outside the MarkDN root"
+  defp describe(:outside_root), do: "path is outside the markdn root"
   defp describe(:unsupported_extension), do: "not a markdown document (.md, .markdown, .mdx)"
   defp describe(:enoent), do: "no such file or directory"
   defp describe(:eacces), do: "permission denied"

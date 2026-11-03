@@ -1,6 +1,6 @@
 defmodule Markdn.Host do
   @moduledoc """
-  The machine MarkDN is running on, as the person using it sees it.
+  The machine markdn is running on, as the person using it sees it.
 
   The packed backend runs under ampoule, whose own `HOME` is a private `/tmp`
   deleted on exit and whose guest reports Linux on every host. The ex_tauri

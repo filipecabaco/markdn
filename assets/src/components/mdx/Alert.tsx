@@ -1,38 +1,22 @@
 import type { ReactNode } from "react";
+import { CircleAlert, CircleCheck, CircleX, Info, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type AlertType = "info" | "warning" | "error" | "success";
 
-/**
- * Drawn glyphs on a 12px grid, one 1.25px stroke, square ends — the same
- * machined geometry as the mark. Emoji rendered as a different picture on every
- * platform and brought their own colours into a palette that has one accent.
- * Each kind has its own outline so the four differ in shape, not only in colour.
- */
-const GLYPHS: Record<AlertType, ReactNode> = {
-  info: (
-    <>
-      <rect x="1.5" y="1.5" width="9" height="9" />
-      <path d="M6 5.25v3.5M6 3.25v.75" />
-    </>
-  ),
-  warning: (
-    <>
-      <path d="M6 1.25 10.9 10H1.1Z" />
-      <path d="M6 4.5v2.75M6 8.25V9" />
-    </>
-  ),
-  error: (
-    <>
-      <path d="M4 1.25h4L10.75 4v4L8 10.75H4L1.25 8V4Z" />
-      <path d="m4.25 4.25 3.5 3.5m0-3.5-3.5 3.5" />
-    </>
-  ),
-  success: (
-    <>
-      <rect x="1.5" y="1.5" width="9" height="9" />
-      <path d="m3.75 6.25 1.6 1.6 2.9-3.6" />
-    </>
-  ),
+/** Each kind has its own outline, so the four differ in shape, not only colour. */
+const ICONS: Record<AlertType, LucideIcon> = {
+  info: Info,
+  warning: CircleAlert,
+  error: CircleX,
+  success: CircleCheck,
+};
+
+const TONE: Record<AlertType, string> = {
+  info: "text-foreground",
+  success: "text-foreground",
+  warning: "text-warning",
+  error: "text-destructive",
 };
 
 export interface AlertProps {
@@ -41,27 +25,22 @@ export interface AlertProps {
   children?: ReactNode;
 }
 
+/** shadcn's Alert: a bordered card, icon beside the title, body below. */
 export function Alert({ type = "info", title, children }: AlertProps) {
   // A document can name any string; fall back rather than render an unstyled box.
-  const kind = type in GLYPHS ? type : "info";
+  const kind = type in ICONS ? type : "info";
+  const Icon = ICONS[kind];
 
   return (
-    <div className={`mdx-alert mdx-alert--${kind}`} role="note">
-      <div className="mdx-alert__header">
-        <svg
-          className="mdx-alert__icon"
-          viewBox="0 0 12 12"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.25"
-          strokeLinecap="square"
-          aria-hidden="true"
-        >
-          {GLYPHS[kind]}
-        </svg>
-        <span className="mdx-alert__title">{title ?? kind}</span>
+    <div
+      className="grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-1 rounded-lg border bg-card px-4 py-3 text-sm text-card-foreground"
+      role="note"
+    >
+      <Icon aria-hidden="true" className={cn("mdx-alert__icon mt-0.5 size-4", TONE[kind])} />
+      <div className={cn("font-medium first-letter:uppercase", kind === "error" && "text-destructive")}>
+        {title ?? kind}
       </div>
-      {children && <div className="mdx-alert__body">{children}</div>}
+      {children && <div className="mdx-body col-start-2 text-muted-foreground">{children}</div>}
     </div>
   );
 }

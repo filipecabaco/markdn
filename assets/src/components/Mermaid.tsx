@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Notice } from "./mdx/Notice";
 
 /**
  * Renders a mermaid diagram.
@@ -31,16 +32,16 @@ function tokenHex(name: string): string | undefined {
 }
 
 /**
- * The diagram drawn on the document card: its surface, its ink and its rules,
+ * The diagram drawn on the document: its background, its text and its rules,
  * read at render time so it follows the theme setting as well as the OS one.
  * mermaid bakes its palette in at initialize, so this runs before every render.
  */
 function themeFromTokens() {
-  const surface = tokenHex("--surface");
-  const panel = tokenHex("--panel");
-  const ink = tokenHex("--ink");
-  const muted = tokenHex("--ink-muted");
-  const rule = tokenHex("--line-control");
+  const surface = tokenHex("--background");
+  const panel = tokenHex("--muted");
+  const ink = tokenHex("--foreground");
+  const muted = tokenHex("--muted-foreground");
+  const rule = tokenHex("--ring");
   return {
     background: surface,
     mainBkg: panel,
@@ -54,7 +55,7 @@ function themeFromTokens() {
     nodeBorder: rule,
     lineColor: muted,
     edgeLabelBackground: surface,
-    fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--font-ui").trim() || undefined,
+    fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--font-sans").trim() || undefined,
   };
 }
 
@@ -106,14 +107,13 @@ export function Mermaid({ chart }: { chart: string }) {
 
   if (error) {
     return (
-      <div className="mdx-warning" role="note">
-        <strong>Diagram error</strong>
-        <pre>{error}</pre>
-      </div>
+      <Notice title="Diagram error">
+        <pre className="font-mono text-xs whitespace-pre-wrap">{error}</pre>
+      </Notice>
     );
   }
 
-  if (!svg) return <div className="mermaid-pending">Rendering diagram…</div>;
+  if (!svg) return <div className="mb-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Rendering diagram…</div>;
 
   // mermaid's own output, generated under securityLevel: 'strict'.
   return <div className="mermaid" dangerouslySetInnerHTML={{ __html: svg }} />;

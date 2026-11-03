@@ -7,6 +7,7 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { CodeBlock } from "./CodeBlock";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { Notice } from "./mdx/Notice";
 import { MdxNode } from "./mdx/MdxNode";
 import { COMPONENT_NAMES } from "./mdx/registry";
 import { remarkComponentRegistry } from "./mdx/remarkRegistry";
@@ -114,15 +115,19 @@ function PreviewImage({ src, alt, title, url }: ImageProps & { url: string | und
 
   if (failed) {
     return (
-      <span className="preview__missing" role="img" aria-label={alt || "Image not found"}>
-        Image not found: <code>{src}</code>
+      <span
+        className="mb-4 block rounded-lg border border-dashed px-3 py-2.5 text-sm text-muted-foreground"
+        role="img"
+        aria-label={alt || "Image not found"}
+      >
+        Image not found: <code className="font-mono break-all text-foreground">{src}</code>
       </span>
     );
   }
 
   return (
     <img
-      className="preview__image"
+      className="mb-4 block h-auto max-w-full rounded-lg"
       src={url}
       alt={alt ?? ""}
       title={title}
@@ -220,10 +225,9 @@ export function Preview({
         fallback={(error) => (
           <>
             {intendsMdx(content, documentPath) && (
-              <div className="mdx-warning" role="note">
-                <strong>MDX could not be parsed — showing plain markdown.</strong>
-                <span>{error.message}</span>
-              </div>
+              <Notice title="MDX could not be parsed — showing plain markdown.">
+                {error.message}
+              </Notice>
             )}
             {plain}
           </>

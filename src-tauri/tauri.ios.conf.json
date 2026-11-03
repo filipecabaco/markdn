@@ -4,10 +4,12 @@
   },
   "bundle": {
     "externalBin": [],
+    "fileAssociations": [],
     "iOS": {
       "minimumSystemVersion": "15.0"
     },
     "resources": {
+      "cli/markdn": null,
       "../burrito_out/ios/backend": "ex_tauri/backend"
     }
   }

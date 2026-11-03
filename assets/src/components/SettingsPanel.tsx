@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { X } from "lucide-react";
 import type { Settings, SettingsResponse, Theme, ViewMode } from "../api";
 import { MAX_SPEED, MIN_SPEED } from "../hooks/useAutoScroll";
 import { useModal } from "../hooks/useModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Segmented } from "./Segmented";
 
 /**
  * Settings, backed by the JSON file the panel names at the bottom.
@@ -30,6 +35,32 @@ const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "split", label: "Split" },
   { id: "preview", label: "Render" },
 ];
+
+function Row({
+  label,
+  htmlFor,
+  note,
+  children,
+}: {
+  label: string;
+  htmlFor?: string;
+  note?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="grid gap-x-6 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] sm:items-center">
+      <div className="flex flex-col gap-0.5">
+        <label className="text-sm font-medium" htmlFor={htmlFor}>
+          {label}
+        </label>
+        {note && <span className="text-xs text-muted-foreground">{note}</span>}
+      </div>
+      <div className="flex min-w-0 flex-col gap-1.5">{children}</div>
+    </section>
+  );
+}
+
+const range = "w-full cursor-pointer accent-primary";
 
 export function SettingsPanel({ state, onChange, onClose }: Props) {
   const { settings, rootLocked } = state;
@@ -61,172 +92,148 @@ export function SettingsPanel({ state, onChange, onClose }: Props) {
   };
 
   return (
-    <div className="picker__backdrop" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 px-4 py-[8vh] dark:bg-black/50"
+      onMouseDown={onClose}
+    >
       <div
         ref={dialog}
-        className="settings"
+        className="flex w-full max-w-2xl flex-col rounded-xl border bg-popover text-popover-foreground shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <h2 className="picker__title">Settings</h2>
+        <header className="flex items-center justify-between border-b px-5 py-3">
+          <h2 className="text-base font-semibold">Settings</h2>
+          <Button variant="ghost" size="icon-sm" aria-label="Close settings" onClick={onClose}>
+            <X />
+          </Button>
+        </header>
 
-        <div className="settings__body">
-          <section className="settings__row">
-            <label className="settings__label" htmlFor="settings-root">
-              Document root
-              <span className="settings__note">
-                Everything MarkDN can read or write, for the editor and for MCP clients.
-              </span>
-            </label>
-
-            <div className="settings__control settings__control--stack">
-              <div className="settings__inline">
-                <input
-                  id="settings-root"
-                  className="settings__input"
-                  value={root}
-                  disabled={rootLocked || busy}
-                  spellCheck={false}
-                  placeholder={state.root}
-                  onChange={(event) => setRoot(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") applyRoot();
-                  }}
-                />
-                <button
-                  type="button"
-                  className="button"
-                  disabled={rootLocked || busy || root.trim() === (settings.root ?? "")}
-                  onClick={applyRoot}
-                >
-                  Apply
-                </button>
-              </div>
-
-              {rootLocked ? (
-                <p className="settings__note settings__note--warn">
-                  Pinned by <code>MARKDN_ROOT</code> for this launch. Unset it to change the
-                  root from here.
-                </p>
-              ) : (
-                <p className="settings__note">
-                  Empty means your home directory. Currently <code>{state.root}</code>.
-                </p>
-              )}
+        <div className="divide-y px-5">
+          <Row
+            label="Document root"
+            htmlFor="settings-root"
+            note="Everything markdn can read or write, for the editor and for MCP clients."
+          >
+            <div className="flex gap-2">
+              <Input
+                id="settings-root"
+                className="font-mono text-xs md:text-xs"
+                value={root}
+                disabled={rootLocked || busy}
+                spellCheck={false}
+                placeholder={state.root}
+                onChange={(event) => setRoot(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") applyRoot();
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={rootLocked || busy || root.trim() === (settings.root ?? "")}
+                onClick={applyRoot}
+              >
+                Apply
+              </Button>
             </div>
-          </section>
+            {rootLocked ? (
+              <p className="text-xs text-warning">
+                Pinned by <code className="font-mono">MARKDN_ROOT</code> for this launch. Unset it
+                to change the root from here.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Empty means your home directory. Currently{" "}
+                <code className="font-mono break-all">{state.root}</code>.
+              </p>
+            )}
+          </Row>
 
-          <section className="settings__row">
-            <span className="settings__label">Theme</span>
-            <div className="settings__control">
-              <div className="segmented" role="group" aria-label="Theme">
-                {THEMES.map((theme) => (
-                  <button
-                    key={theme.id}
-                    type="button"
-                    className={`segmented__item${settings.theme === theme.id ? " is-active" : ""}`}
-                    aria-pressed={settings.theme === theme.id}
-                    onClick={() => apply({ theme: theme.id })}
-                  >
-                    {theme.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
+          <Row label="Theme">
+            <Segmented
+              label="Theme"
+              options={THEMES}
+              value={settings.theme}
+              onChange={(theme) => apply({ theme })}
+            />
+          </Row>
 
-          <section className="settings__row">
-            <label className="settings__label">
-              Default view
-              <span className="settings__note">The pane layout a new window opens with.</span>
-            </label>
-            <div className="settings__control">
-              <div className="segmented" role="group" aria-label="Default view">
-                {VIEWS.map((view) => (
-                  <button
-                    key={view.id}
-                    type="button"
-                    className={`segmented__item${
-                      settings.defaultView === view.id ? " is-active" : ""
-                    }`}
-                    aria-pressed={settings.defaultView === view.id}
-                    onClick={() => apply({ defaultView: view.id })}
-                  >
-                    {view.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
+          <Row label="Default view" note="The pane layout a new window opens with.">
+            <Segmented
+              label="Default view"
+              options={VIEWS}
+              value={settings.defaultView}
+              onChange={(defaultView) => apply({ defaultView })}
+            />
+          </Row>
 
-          <section className="settings__row">
-            <label className="settings__label" htmlFor="settings-font">
-              Editor text size
-            </label>
-            <div className="settings__control settings__control--inline">
+          <Row label="Editor text size" htmlFor="settings-font">
+            <div className="flex items-center gap-3">
               <input
                 id="settings-font"
                 type="range"
+                className={range}
                 min={10}
                 max={24}
                 step={1}
                 value={settings.editorFontSize}
                 onChange={(event) => apply({ editorFontSize: Number(event.target.value) })}
               />
-              <output className="settings__value">{settings.editorFontSize}px</output>
+              <output className="w-16 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+                {settings.editorFontSize}px
+              </output>
             </div>
-          </section>
+          </Row>
 
-          <section className="settings__row">
-            <label className="settings__label" htmlFor="settings-speed">
-              Auto-scroll speed
-              <span className="settings__note">
-                Also adjustable with <kbd>+</kbd> and <kbd>−</kbd> while scrolling.
-              </span>
-            </label>
-            <div className="settings__control settings__control--inline">
+          <Row
+            label="Auto-scroll speed"
+            htmlFor="settings-speed"
+            note="Also adjustable with + and − while scrolling."
+          >
+            <div className="flex items-center gap-3">
               <input
                 id="settings-speed"
                 type="range"
+                className={range}
                 min={MIN_SPEED}
                 max={MAX_SPEED}
                 step={5}
                 value={settings.autoScrollSpeed}
                 onChange={(event) => apply({ autoScrollSpeed: Number(event.target.value) })}
               />
-              <output className="settings__value">{settings.autoScrollSpeed} px/s</output>
+              <output className="w-16 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+                {settings.autoScrollSpeed} px/s
+              </output>
             </div>
-          </section>
+          </Row>
 
-          <section className="settings__row">
-            <label className="settings__label" htmlFor="settings-hidden">
-              Show hidden files
-              <span className="settings__note">
-                Include dot-directories in the tree and in search.
-              </span>
-            </label>
-            <div className="settings__control">
-              <input
-                id="settings-hidden"
-                type="checkbox"
-                checked={settings.showHiddenFiles}
-                onChange={(event) => apply({ showHiddenFiles: event.target.checked })}
-              />
-            </div>
-          </section>
+          <Row
+            label="Show hidden files"
+            htmlFor="settings-hidden"
+            note="Include dot-directories in the tree and in search."
+          >
+            <Switch
+              id="settings-hidden"
+              checked={settings.showHiddenFiles}
+              onCheckedChange={(checked) => apply({ showHiddenFiles: checked })}
+            />
+          </Row>
 
           {error && (
-            <p className="settings__error" role="alert">
+            <p className="py-3 text-sm text-destructive" role="alert">
               {error}
             </p>
           )}
         </div>
 
-        <footer className="settings__footer">
-          <span>Stored in</span>
-          <code title={state.path}>{state.path}</code>
+        <footer className="flex min-w-0 items-center gap-2 rounded-b-xl border-t bg-muted/50 px-5 py-2.5 text-xs text-muted-foreground">
+          <span className="shrink-0">Stored in</span>
+          <code className="min-w-0 truncate font-mono" title={state.path}>
+            {state.path}
+          </code>
         </footer>
       </div>
     </div>

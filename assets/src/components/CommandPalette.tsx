@@ -2,6 +2,8 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { searchDocuments, type SearchHit } from "../api";
 import { fuzzyMatch } from "../fuzzy";
 import { useModal } from "../hooks/useModal";
+import { Kbd } from "@/components/ui/kbd";
+import { cn } from "@/lib/utils";
 
 /**
  * One palette for both commands and documents.
@@ -59,7 +61,7 @@ function highlight(text: string, matches: number[]) {
   return parts.map((part, index) =>
     part.on ? (
       // eslint-disable-next-line react/no-array-index-key -- runs are positional
-      <mark key={index} className="palette__hit">
+      <mark key={index} className="bg-transparent font-semibold text-foreground">
         {part.text}
       </mark>
     ) : (
@@ -185,17 +187,17 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
   let lastSection: string | null = null;
 
   return (
-    <div className="picker__backdrop" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 px-4 pt-[12vh] dark:bg-black/50" onMouseDown={onClose}>
       <div
         ref={dialog}
-        className="palette"
+        className="flex max-h-[76vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <input
-          className="palette__input"
+          className="h-11 w-full shrink-0 border-b bg-transparent px-4 text-sm outline-none placeholder:text-muted-foreground"
           value={query}
           autoFocus
           spellCheck={false}
@@ -210,10 +212,10 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
           onKeyDown={onKeyDown}
         />
 
-        <div className="palette__list" ref={listRef} role="listbox" id={listId}>
-          {error && <div className="palette__empty">{error}</div>}
+        <div className="min-h-0 flex-1 overflow-y-auto p-1" ref={listRef} role="listbox" id={listId}>
+          {error && <div className="px-3 py-6 text-center text-sm text-muted-foreground">{error}</div>}
           {!error && items.length === 0 && (
-            <div className="palette__empty">No documents or commands match.</div>
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground">No documents or commands match.</div>
           )}
 
           {items.map((item, index) => {
@@ -223,7 +225,7 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
 
             return (
               <div key={item.key}>
-                {header && <div className="palette__section">{header}</div>}
+                {header && <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">{header}</div>}
                 {/* Not a tab stop: focus stays in the input, as in every
                     palette, and the arrows move the highlight. A click must not
                     take focus either, or the input stops hearing Escape. */}
@@ -234,24 +236,27 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
                   tabIndex={-1}
                   aria-selected={index === active}
                   data-active={index === active}
-                  className={`palette__row${index === active ? " is-active" : ""}`}
+                  className={cn(
+                    "flex w-full cursor-default items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm outline-none",
+                    index === active && "bg-accent text-accent-foreground",
+                  )}
                   onMouseMove={() => setActive(index)}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => run(item)}
                 >
                   {item.kind === "command" ? (
                     <>
-                      <span className="palette__label">
+                      <span className="min-w-0 truncate">
                         {highlight(item.command.title, item.matches)}
                       </span>
                       {item.command.hint && (
-                        <kbd className="palette__hint">{item.command.hint}</kbd>
+                        <Kbd className="ml-auto">{item.command.hint}</Kbd>
                       )}
                     </>
                   ) : (
                     <>
-                      <span className="palette__label">{item.hit.name}</span>
-                      <span className="palette__path">
+                      <span className="min-w-0 truncate">{item.hit.name}</span>
+                      <span className="ml-auto min-w-0 truncate text-xs text-muted-foreground">
                         {highlight(item.hit.path, item.hit.matches)}
                       </span>
                     </>
@@ -262,19 +267,19 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
           })}
         </div>
 
-        <div className="palette__footer">
-          <span>
-            <kbd>↑</kbd>
-            <kbd>↓</kbd> move
+        <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1 border-t px-3 py-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Kbd>↑</Kbd>
+            <Kbd>↓</Kbd> move
           </span>
-          <span>
-            <kbd>↵</kbd> open
+          <span className="inline-flex items-center gap-1">
+            <Kbd>↵</Kbd> open
           </span>
-          <span>
-            <kbd>&gt;</kbd> commands
+          <span className="inline-flex items-center gap-1">
+            <Kbd>&gt;</Kbd> commands
           </span>
-          <span>
-            <kbd>esc</kbd> close
+          <span className="inline-flex items-center gap-1">
+            <Kbd>esc</Kbd> close
           </span>
         </div>
       </div>

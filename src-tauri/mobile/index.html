@@ -3,11 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b1230" />
-    <title>MarkDN</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <title>markdn</title>
     <style>
-      /* Shown on iPhone and iPad until the backend answers: the enamel shell with
-         the mark, so the app opens into its own world rather than a white flash. */
+      /* Shown on iPhone and iPad until the backend answers: the mark's tiles
+         sliding together, the same start-up indicator as the desktop window
+         (src-tauri/loading), so the app never opens on a blank flash. */
+      html {
+        background: #fff;
+        color: #18181b;
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #0a0a0a;
+          color: #fafafa;
+        }
+      }
       html,
       body {
         height: 100%;
@@ -16,54 +29,101 @@
       body {
         display: grid;
         place-items: center;
-        background: oklch(0.205 0.068 271);
-        color: oklch(0.8 0.025 268);
-        font: 600 15px/1.3 "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+        font: 15px/1.4 system-ui, -apple-system, sans-serif;
       }
       main {
         display: grid;
         justify-items: center;
-        gap: 16px;
+        gap: 14px;
+      }
+      p {
+        margin: 0;
+        color: #71717a;
+      }
+      @media (prefers-color-scheme: dark) {
+        p {
+          color: #a1a1aa;
+        }
       }
       svg {
         width: 56px;
         height: 56px;
       }
-      .line {
-        stroke-width: 3;
-        stroke-linecap: round;
+      .tile {
+        fill: currentColor;
       }
-      .ring {
-        fill: oklch(0.205 0.068 271);
-        stroke: oklch(0.965 0.004 95);
-        stroke-width: 2.5;
-        transform-origin: 12px 12px;
-        animation: arrive 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+      .brand {
+        fill: oklch(0.58 0.18 262);
       }
-      @keyframes arrive {
-        to {
-          transform: scale(1.25);
+      @media (prefers-color-scheme: dark) {
+        .brand {
+          fill: oklch(0.68 0.16 260);
+        }
+      }
+      svg rect {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: slide 2100ms cubic-bezier(0.16, 1, 0.3, 1) infinite both;
+      }
+      svg rect[data-tile="0"] {
+        --from: translateY(-90%);
+      }
+      svg rect[data-tile="1"] {
+        --from: translateY(-45%);
+        animation-delay: 90ms;
+      }
+      svg rect[data-tile="3"] {
+        --from: translateY(-45%);
+        animation-delay: 180ms;
+      }
+      svg rect[data-tile="2"] {
+        --from: translateY(-70%);
+        animation-delay: 300ms;
+      }
+      @keyframes slide {
+        0% {
+          transform: var(--from);
+          opacity: 0;
+        }
+        24% {
+          transform: none;
+          opacity: 1;
+        }
+        68% {
+          transform: none;
+          opacity: 1;
+        }
+        86%,
+        100% {
+          transform: translateY(35%);
+          opacity: 0;
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .ring {
-          animation: none;
+        svg rect {
+          animation: breathe 1600ms ease-in-out infinite alternate;
+          animation-delay: 0ms;
+        }
+        @keyframes breathe {
+          from {
+            opacity: 0.45;
+          }
+          to {
+            opacity: 1;
+          }
         }
       }
     </style>
   </head>
   <body>
     <main>
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path class="line" stroke="oklch(0.585 0.215 27)" d="M3 3l9 9" />
-        <path class="line" stroke="oklch(0.585 0.205 262)" d="M21 3l-9 9" />
-        <path class="line" stroke="oklch(0.84 0.165 85)" d="M12 12h9" />
-        <path class="line" stroke="oklch(0.655 0.165 145)" d="M12 12v9" />
-        <circle class="ring" cx="12" cy="12" r="4" />
+      <svg viewBox="-6 -6 72 72" aria-hidden="true">
+        <rect data-tile="0" class="tile" x="0" y="0" width="60" height="17" rx="5" />
+        <rect data-tile="1" class="tile" x="0" y="20" width="16" height="40" rx="5" />
+        <rect data-tile="2" class="brand" x="22" y="20" width="16" height="40" rx="5" />
+        <rect data-tile="3" class="tile" x="44" y="20" width="16" height="40" rx="5" />
       </svg>
-      <p>Opening MarkDN</p>
+      <p>Opening markdn</p>
     </main>
   </body>
 </html>

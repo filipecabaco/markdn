@@ -8,7 +8,7 @@
  *
  *   https://… , data: , blob:   left alone; the browser can fetch these itself
  *   /shared/logo.svg            passed through as-is; the server resolves it
- *                               against the MarkDN root and rejects an escape
+ *                               against the markdn root and rejects an escape
  *   ./diagram.svg               joined to the open document's directory first
  *
  * Everything that is not already a URL goes through `/api/image`, which enforces

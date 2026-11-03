@@ -131,7 +131,7 @@ describe("FileTree explorer keys", () => {
     expect(item("a.md")).toHaveStyle("--depth: 0");
   });
 
-  it("says in words why a folder could not be opened, on its line", async () => {
+  it("says in words why a folder could not be opened, inside it", async () => {
     vi.mocked(listDocuments).mockImplementation((path = ".") =>
       path === "notes"
         ? Promise.reject(new Error("permission denied"))
@@ -143,8 +143,8 @@ describe("FileTree explorer keys", () => {
 
     await user.click(screen.getByText("notes"));
 
-    const message = await screen.findByText("MarkDN isn't allowed to read this folder.");
-    expect(message.closest("li")).toHaveAttribute("data-terminus");
+    const message = await screen.findByText("markdn isn't allowed to read this folder.");
+    expect(message.closest("li")).toHaveStyle("--depth: 1");
     expect(screen.queryByText(/eperm|permission denied/)).not.toBeInTheDocument();
   });
 });

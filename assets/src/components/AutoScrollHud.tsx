@@ -1,4 +1,8 @@
+import { Minus, Plus } from "lucide-react";
 import type { AutoScroll } from "../hooks/useAutoScroll";
+import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
+import { cn } from "@/lib/utils";
 
 /**
  * The readout for auto-scroll.
@@ -21,51 +25,43 @@ export function AutoScrollHud({ autoScroll }: Props) {
   if (!autoScroll.active) return null;
 
   const { paused, nudging, pause, resume } = autoScroll;
-
-  // Three states, one line: held by the reader's arrow keys reads differently
-  // from held by the pause button, and both differ from running.
-  const state = paused ? "is-paused" : nudging ? "is-nudging" : "";
   const label = paused ? "Paused" : nudging ? "Manual" : "Auto-scroll";
 
   return (
-    <div className={`autoscroll ${state}`.trim()} role="status" aria-live="off">
-      <span className="autoscroll__pulse" aria-hidden="true" />
-      <span className="autoscroll__label">{label}</span>
+    <div
+      className="fixed bottom-[calc(16px+env(safe-area-inset-bottom))] left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-xl border bg-popover p-1 pl-3 text-sm text-popover-foreground shadow-lg"
+      role="status"
+      aria-live="off"
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "size-2 rounded-full bg-foreground",
+          !paused && !nudging && "animate-pulse motion-reduce:animate-none",
+          paused && "bg-muted-foreground",
+        )}
+      />
+      <span className="mr-1 font-medium">{label}</span>
 
-      <button
-        type="button"
-        className="autoscroll__step"
-        onClick={autoScroll.slower}
-        aria-label="Slower"
-        title="Slower (−)"
-      >
-        −
-      </button>
-      <span className="autoscroll__speed">{autoScroll.speed} px/s</span>
-      <button
-        type="button"
-        className="autoscroll__step"
-        onClick={autoScroll.faster}
-        aria-label="Faster"
-        title="Faster (+)"
-      >
-        +
-      </button>
+      <Button variant="ghost" size="icon-sm" onClick={autoScroll.slower} aria-label="Slower" title="Slower (−)">
+        <Minus />
+      </Button>
+      <span className="w-16 text-center text-xs text-muted-foreground tabular-nums">
+        {autoScroll.speed} px/s
+      </span>
+      <Button variant="ghost" size="icon-sm" onClick={autoScroll.faster} aria-label="Faster" title="Faster (+)">
+        <Plus />
+      </Button>
 
-      <button
-        type="button"
-        className="autoscroll__control"
-        onClick={paused ? resume : pause}
-        title={`${paused ? "Resume" : "Pause"} (space)`}
-      >
+      <Button variant="ghost" size="sm" onClick={paused ? resume : pause} title={`${paused ? "Resume" : "Pause"} (space)`}>
         {paused ? "Resume" : "Pause"}
-        <kbd>space</kbd>
-      </button>
+        <Kbd>space</Kbd>
+      </Button>
 
-      <button type="button" className="autoscroll__control" onClick={autoScroll.stop}>
+      <Button variant="ghost" size="sm" onClick={autoScroll.stop}>
         Stop
-        <kbd>esc</kbd>
-      </button>
+        <Kbd>esc</Kbd>
+      </Button>
     </div>
   );
 }

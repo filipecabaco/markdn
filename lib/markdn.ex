@@ -2,7 +2,7 @@ defmodule Markdn do
   @moduledoc """
   Application entry point and HTTP router.
 
-  MarkDN is a markdown/MDX viewer and editor. Francis serves three things on one
+  markdn is a markdown/MDX viewer and editor. Francis serves three things on one
   loopback port:
 
     - the built React SPA out of `priv/static`,
@@ -43,11 +43,18 @@ defmodule Markdn do
       [
         # Duplicate keys: every connected websocket registers under :all so a save
         # can be fanned out to the other windows.
-        {Registry, keys: :duplicate, name: Markdn.Sockets},
-        {Bandit,
-         [plug: __MODULE__, startup_log: false] ++
-           Application.get_env(:markdn, :bandit_opts, [])}
-      ] ++ shutdown_manager()
+        {Registry, keys: :duplicate, name: Markdn.Sockets}
+      ] ++
+        shutdown_manager() ++
+        [
+          # After the ShutdownManager it subscribes to, before Bandit: the shell
+          # connects its channel only once the port answers, so every file it
+          # was asked to open is heard.
+          {Markdn.Opener, subscribe: desktop_sidecar?()},
+          {Bandit,
+           [plug: __MODULE__, startup_log: false] ++
+             Application.get_env(:markdn, :bandit_opts, [])}
+        ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Markdn.Supervisor)
   end
@@ -68,7 +75,7 @@ defmodule Markdn do
   # The sidecar's stdout is a pipe Tauri owns: nobody sees it when the app is
   # launched from Finder, and a dead GUI leaves it broken, which destabilises
   # node IO on the path ShutdownManager needs to stop the VM. Log to a file
-  # instead, in the platform's log directory (~/Library/Logs/MarkDN on macOS):
+  # instead, in the platform's log directory (~/Library/Logs/markdn on macOS):
   # under ampoule the VM's own tmp is private and gone on exit. Best-effort — a
   # failure here keeps the default handler.
   defp redirect_logs_to_file do
@@ -166,6 +173,10 @@ defmodule Markdn do
       {:error, reason} -> api_error(conn, reason)
     end
   end)
+
+  # A file or folder handed to the app from outside (`markdn notes.md`), waiting
+  # for a window to open it. Taken, not read: the first window to ask opens it.
+  post("/api/open/take", fn _conn -> Markdn.Opener.take() end)
 
   get("/api/document", fn conn ->
     with path when is_binary(path) <- conn.params["path"],
@@ -314,6 +325,16 @@ defmodule Markdn do
     broadcast(Jason.encode!(%{type: "saved", path: path}), nil)
   end
 
+  @doc """
+  Tells every connected window that a file is waiting to be opened (see
+  `Markdn.Opener`). The message carries no path: whichever window asks first
+  takes it, so two windows never both open it.
+  """
+  @spec notify_open() :: :ok
+  def notify_open do
+    broadcast(Jason.encode!(%{type: "open"}), nil)
+  end
+
   defp settings_payload do
     %{
       settings: Settings.all(),
@@ -353,7 +374,7 @@ defmodule Markdn do
     json(conn, status, %{error: message})
   end
 
-  defp describe(:outside_root), do: {403, "path is outside the MarkDN root"}
+  defp describe(:outside_root), do: {403, "path is outside the markdn root"}
   defp describe(:unsupported_extension), do: {415, "not a markdown document"}
   defp describe(:missing_path), do: {400, "missing \"path\""}
   defp describe(:invalid_settings), do: {400, "settings must be a JSON object"}

@@ -182,7 +182,7 @@ jobs:
       - name: Shellcheck
         run: |
           shellcheck --version
-          shellcheck -s sh install.sh
+          shellcheck -s sh install.sh src-tauri/cli/markdn
           shellcheck .github/scripts/*.sh
 
       - name: Installer end-to-end

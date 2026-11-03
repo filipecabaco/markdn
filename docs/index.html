@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MarkDN — a markdown and MDX editor that renders the whole document</title>
+    <title>markdn — a markdown and MDX editor that renders the whole document</title>
     <meta
       name="description"
       content="A native markdown and MDX editor for your notes folder. Diagrams, components and code rendered live, a fuzzy palette over every document, search-and-edit across the whole folder, a teleprompter for long reads, and MCP so your assistant edits the file you have open."
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 
-    <meta property="og:title" content="MarkDN" />
+    <meta property="og:title" content="markdn" />
     <meta
       property="og:description"
       content="A markdown and MDX editor that renders the whole document. Your folder, your files, on your machine."
@@ -18,91 +18,42 @@
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://filipecabaco.github.io/markdn/screenshots/ipad-split.png" />
     <meta name="twitter:card" content="summary_large_image" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=Chivo+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="color-scheme" content="light dark" />
 
     <style>
       /*
-       * MarkDN — Midnight Line, at brand scale.
-       *
-       * The app's world: a document is a line. The page is the same transit
-       * diagram fired in midnight-blue enamel — enamel for the header, the hero
-       * and the closing bands, porcelain for the reading surfaces, four line
-       * inks that each mark one section's line bullet and nothing decorative.
-       * Signage is set in Barlow Condensed, uppercase; reading in Barlow.
+       * markdn at brand scale: the app's own system (DESIGN.md). Zinc neutrals,
+       * one radius, hairline borders, no shadows, and the one brand colour kept
+       * to the mark. System type throughout, so the page needs no font requests.
        */
-
       :root {
-        --enamel: oklch(0.205 0.068 271);
-        --enamel-raised: oklch(0.26 0.066 270);
-        --enamel-line: oklch(0.39 0.052 270);
-        --on-enamel: oklch(0.965 0.004 95);
-        --on-enamel-muted: oklch(0.8 0.025 268);
-
-        --scarlet: oklch(0.585 0.215 27);
-        --cobalt: oklch(0.585 0.205 262);
-        --amber: oklch(0.84 0.165 85);
-        --green: oklch(0.655 0.165 145);
-        --band-ink: var(--scarlet);
-        --band-ink-on: oklch(0.985 0.003 95);
-
-        --paper: oklch(0.968 0.004 95);
-        --panel: oklch(0.925 0.008 265);
-        --surface: oklch(0.985 0.003 95);
-        --line: oklch(0.875 0.01 265);
-        --line-strong: oklch(0.775 0.014 265);
-        --line-control: oklch(0.565 0.025 265);
-
-        --ink: oklch(0.235 0.04 268);
-        --ink-muted: oklch(0.455 0.03 268);
-        --ink-faint: oklch(0.48 0.025 268);
-
-        --signal: oklch(0.54 0.205 27);
-        --signal-ink: oklch(0.985 0.003 95);
-        --signal-tint: oklch(0.54 0.205 27 / 0.1);
-        --focus: oklch(0.53 0.21 262);
-
-        --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
-        --font-sign: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
-        --font-mono: "Chivo Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-
-        --measure: 62ch;
-        --gutter: clamp(1.25rem, 4vw, 4rem);
-        --frame: min(1240px, 100%);
-        --radius-card: 14px;
-        --radius-control: 10px;
-
-        --ease: cubic-bezier(0.22, 1, 0.36, 1);
-        --fast: 120ms;
-        --base: 200ms;
-
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.145 0 0);
+        --card: oklch(1 0 0);
+        --muted: oklch(0.97 0 0);
+        --muted-foreground: oklch(0.556 0 0);
+        --border: oklch(0.922 0 0);
+        --primary: oklch(0.205 0 0);
+        --primary-foreground: oklch(0.985 0 0);
+        --ring: oklch(0.708 0 0);
+        --brand: oklch(0.58 0.18 262);
+        --radius: 0.625rem;
+        --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
         color-scheme: light;
       }
-
-      /* Dark: the reading surfaces become deep enamel; the shell stays enamel. */
       @media (prefers-color-scheme: dark) {
         :root {
-          --paper: oklch(0.185 0.055 270);
-          --panel: oklch(0.265 0.055 270);
-          --surface: oklch(0.235 0.052 270);
-          --line: oklch(0.33 0.048 270);
-          --line-strong: oklch(0.42 0.045 270);
-          --line-control: oklch(0.6 0.04 268);
-
-          --ink: oklch(0.945 0.006 95);
-          --ink-muted: oklch(0.79 0.022 268);
-          --ink-faint: oklch(0.75 0.022 268);
-
-          --signal: oklch(0.66 0.2 27);
-          --signal-ink: oklch(0.18 0.05 270);
-          --signal-tint: oklch(0.66 0.2 27 / 0.16);
-          --focus: oklch(0.72 0.16 262);
-
+          --background: oklch(0.145 0 0);
+          --foreground: oklch(0.985 0 0);
+          --card: oklch(0.205 0 0);
+          --muted: oklch(0.269 0 0);
+          --muted-foreground: oklch(0.708 0 0);
+          --border: oklch(1 0 0 / 10%);
+          --primary: oklch(0.922 0 0);
+          --primary-foreground: oklch(0.205 0 0);
+          --ring: oklch(0.556 0 0);
+          --brand: oklch(0.68 0.16 260);
           color-scheme: dark;
         }
       }
@@ -112,669 +63,718 @@
       *::after {
         box-sizing: border-box;
       }
-
       html {
         scroll-behavior: smooth;
+        scroll-padding-top: 72px;
       }
-
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
       body {
         margin: 0;
-        background: var(--paper);
-        color: var(--ink);
-        font-family: var(--font-ui);
-        font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.0625rem);
-        line-height: 1.55;
+        background: var(--background);
+        color: var(--foreground);
+        font: 16px/1.6 var(--font-sans);
         -webkit-font-smoothing: antialiased;
-        text-rendering: optimizeLegibility;
       }
-
-      h1,
-      h2,
-      h3 {
-        margin: 0;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        line-height: 1.02;
-        text-wrap: balance;
-      }
-
-      p {
-        margin: 0;
-        text-wrap: pretty;
-      }
-
-      a {
-        color: inherit;
-      }
-
       img {
         max-width: 100%;
         height: auto;
         display: block;
       }
-
+      a {
+        color: inherit;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+      }
+      p + p {
+        margin-top: 0.85rem;
+      }
+      code,
+      kbd {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+      }
+      :not(pre) > code {
+        background: var(--muted);
+        border-radius: 0.3rem;
+        padding: 0.1em 0.35em;
+      }
+      kbd {
+        display: inline-block;
+        min-width: 1.6em;
+        padding: 0.05em 0.4em;
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 0.35rem;
+        background: var(--card);
+        text-align: center;
+        font-size: 0.8em;
+        line-height: 1.5;
+      }
       :focus-visible {
-        outline: 2px solid var(--signal);
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
-        border-radius: 1px;
       }
 
       .skip {
         position: absolute;
-        left: -9999px;
-        top: 0;
-        z-index: 100;
-        padding: 10px 14px;
-        background: var(--signal);
-        color: var(--signal-ink);
-        font: 500 0.8125rem var(--font-mono);
+        left: 1rem;
+        top: -3rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border-radius: var(--radius);
+        z-index: 10;
       }
       .skip:focus {
-        left: 0;
+        top: 1rem;
       }
 
-      /* ── Frame ─────────────────────────────────────────────────────────── */
-
-      .shell {
-        width: var(--frame);
+      .container {
+        width: min(1080px, 100% - 2.5rem);
         margin-inline: auto;
-        padding-inline: var(--gutter);
       }
 
-      /* Section indices are an engraved system, not a decorative kicker: they
-         number the panels of one instrument and appear nowhere else. */
-      .band {
-        border-top: 1px solid var(--line);
-      }
-      .band__inner {
-        width: var(--frame);
-        margin-inline: auto;
-        padding: clamp(3rem, 7vw, 6rem) var(--gutter);
-      }
-      .index {
-        display: block;
-        margin-bottom: 1.1rem;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        font-weight: 500;
-        letter-spacing: 0.16em;
-        color: var(--ink-faint);
-      }
-      .index b {
-        color: var(--signal);
-        font-weight: 500;
-      }
-
-      /* ── Header ────────────────────────────────────────────────────────── */
-
+      /* ── Header ──────────────────────────────────────────────────────── */
       .head {
         position: sticky;
         top: 0;
-        z-index: 30;
-        background: color-mix(in oklch, var(--paper) 88%, transparent);
-        backdrop-filter: blur(6px);
-        border-bottom: 1px solid var(--line);
+        z-index: 5;
+        background: color-mix(in oklab, var(--background) 92%, transparent);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: saturate(1.2) blur(8px);
+        -webkit-backdrop-filter: saturate(1.2) blur(8px);
       }
       .head__inner {
-        width: var(--frame);
-        margin-inline: auto;
-        padding: 0.65rem var(--gutter);
         display: flex;
         align-items: center;
         gap: 1.25rem;
+        height: 56px;
       }
-      .mark {
-        display: flex;
+      .wordmark {
+        display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.45rem;
         font-weight: 600;
         letter-spacing: -0.02em;
         text-decoration: none;
+        font-size: 1.05rem;
       }
-      .mark svg {
-        display: block;
+      .wordmark svg {
+        width: 1.45em;
+        height: 1.45em;
       }
-      .mark span b {
-        font-weight: 600;
-        color: var(--ink-faint);
+      .mark .tile {
+        fill: currentColor;
+      }
+      .mark .brand {
+        fill: var(--brand);
       }
       .head nav {
         margin-left: auto;
         display: flex;
         align-items: center;
-        gap: clamp(0.75rem, 2vw, 1.75rem);
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
+        gap: 0.25rem;
+        font-size: 0.875rem;
       }
       .head nav a {
         text-decoration: none;
-        color: var(--ink-muted);
-        transition: color var(--fast) var(--ease);
+        color: var(--muted-foreground);
+        padding: 0.35rem 0.6rem;
+        border-radius: calc(var(--radius) * 0.8);
       }
       .head nav a:hover {
-        color: var(--ink);
+        color: var(--foreground);
+        background: var(--muted);
       }
-      .head nav a.is-cta {
-        color: var(--ink);
-        border: 1px solid var(--line-control);
-        border-radius: 2px;
-        padding: 0.25rem 0.6rem;
-      }
-      .head nav a.is-cta:hover {
-        border-color: var(--signal);
-        color: var(--signal);
-      }
-      @media (max-width: 600px) {
-        .head nav a.is-hideable {
+      @media (max-width: 860px) {
+        .head nav .is-hideable {
           display: none;
         }
       }
 
-      /* ── Hero ──────────────────────────────────────────────────────────── */
-
-      /* Block padding only: the hero is also a .shell, and a `padding` shorthand
-         here zeroed the shell's side gutter, so the headline sat ~57px left of the
-         logo and of every band below it. */
-      .hero {
-        padding-block: clamp(3.5rem, 9vw, 7.5rem) clamp(2rem, 4vw, 3.5rem);
-      }
-      .hero h1 {
-        font-size: clamp(2.6rem, 8.2vw, 6.2rem);
-        max-width: 16ch;
-      }
-      .hero h1 em {
-        font-style: normal;
-        color: var(--signal);
-      }
-      .hero__lede {
-        margin-top: clamp(1.5rem, 3vw, 2rem);
-        max-width: 54ch;
-        font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.375rem);
-        line-height: 1.45;
-        color: var(--ink-muted);
-      }
-      .hero__actions {
-        margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
-        display: flex;
-        flex-wrap: wrap;
+      /* ── Buttons and commands ────────────────────────────────────────── */
+      .button {
+        display: inline-flex;
         align-items: center;
-        gap: 0.75rem 1.25rem;
+        gap: 0.4rem;
+        height: 2.25rem;
+        padding: 0 0.9rem;
+        border-radius: calc(var(--radius) * 0.8);
+        border: 1px solid var(--border);
+        background: var(--background);
+        color: var(--foreground);
+        font: 500 0.875rem/1 var(--font-sans);
+        text-decoration: none;
+        cursor: pointer;
       }
-
+      .button:hover {
+        background: var(--muted);
+      }
+      .head nav a.button--primary,
+      .button--primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .head nav a.button--primary:hover,
+      .button--primary:hover {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        opacity: 0.9;
+      }
       .command {
         display: flex;
-        align-items: stretch;
-        border: 1px solid var(--line-strong);
-        border-radius: 2px;
-        background: var(--surface);
-        font-family: var(--font-mono);
-        font-size: 0.875rem;
-        overflow: hidden;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+        padding: 0.35rem 0.35rem 0.35rem 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--muted);
       }
       .command code {
-        padding: 0.6rem 0.9rem;
-        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
         overflow-x: auto;
-      }
-      .command code::before {
-        content: "$ ";
-        color: var(--signal);
+        white-space: nowrap;
+        background: none;
+        padding: 0;
+        font-size: 0.8125rem;
+        scrollbar-width: none;
       }
       .command button {
-        border: 0;
-        border-left: 1px solid var(--line);
-        background: var(--panel);
-        color: var(--ink-muted);
-        font: inherit;
-        padding: 0 0.85rem;
+        flex: none;
+        height: 1.9rem;
+        padding: 0 0.7rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.6);
+        background: var(--background);
+        color: var(--foreground);
+        font: 500 0.8125rem/1 var(--font-sans);
         cursor: pointer;
-        transition:
-          color var(--fast) var(--ease),
-          background var(--fast) var(--ease);
       }
       .command button:hover {
-        color: var(--ink);
-        background: var(--signal-tint);
+        background: var(--card);
+      }
+
+      /* ── Hero ────────────────────────────────────────────────────────── */
+      .hero {
+        padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2.5rem, 6vw, 4rem);
+        text-align: center;
+      }
+      .hero h1 {
+        font-size: clamp(2.25rem, 5.5vw, 3.75rem);
+        letter-spacing: -0.035em;
+        max-width: 18ch;
+        margin-inline: auto;
+      }
+      .hero__lede {
+        margin: 1.25rem auto 0;
+        max-width: 60ch;
+        color: var(--muted-foreground);
+        font-size: 1.0625rem;
+      }
+      .hero__lede b {
+        color: var(--foreground);
+        font-weight: 500;
+      }
+      .hero__actions {
+        margin: 2rem auto 0;
+        max-width: 640px;
+        display: grid;
+        gap: 0.75rem;
+        justify-items: center;
+      }
+      .hero__actions .command {
+        width: 100%;
+        text-align: left;
       }
       .link-quiet {
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
-        color: var(--ink-muted);
-        text-decoration-color: var(--line-strong);
-        text-underline-offset: 4px;
+        color: var(--muted-foreground);
+        font-size: 0.875rem;
+        text-decoration: none;
       }
       .link-quiet:hover {
-        color: var(--signal);
+        color: var(--foreground);
+      }
+      .hero__devices {
+        margin: clamp(2.5rem, 6vw, 4rem) 0 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: clamp(1rem, 3vw, 2rem);
+        flex-wrap: wrap;
+      }
+      .device {
+        display: block;
+        border: 1px solid var(--border);
+        background: var(--card);
+        overflow: hidden;
+      }
+      .device--tablet {
+        width: min(760px, 100%);
+        border-radius: 1.25rem;
+        padding: 0.6rem;
+      }
+      .device--tablet img {
+        border-radius: 0.75rem;
+      }
+      .device--phone {
+        width: min(220px, 46%);
+        border-radius: 1.75rem;
+        padding: 0.45rem;
+      }
+      .device--phone img {
+        border-radius: 1.35rem;
+      }
+      figcaption {
+        margin-top: 0.75rem;
+        color: var(--muted-foreground);
+        font-size: 0.8125rem;
+        text-align: center;
+      }
+      .hero__devices figcaption {
+        flex-basis: 100%;
+      }
+      figcaption b {
+        color: var(--foreground);
+        font-weight: 500;
       }
 
-      /* ── Instrument panel: the shared frame every demo sits in ─────────── */
+      /* ── Sections ────────────────────────────────────────────────────── */
+      .section {
+        border-top: 1px solid var(--border);
+        padding-block: clamp(3rem, 7vw, 5rem);
+      }
+      .lede-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        gap: 1rem clamp(2rem, 5vw, 4rem);
+        align-items: start;
+      }
+      @media (max-width: 760px) {
+        .lede-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .eyebrow {
+        display: block;
+        margin-bottom: 0.6rem;
+        color: var(--muted-foreground);
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+      .lede-grid h2 {
+        font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+      }
+      .lede-grid p {
+        color: var(--muted-foreground);
+      }
+      .lede-grid p code {
+        color: var(--foreground);
+      }
+      .lede-grid p a {
+        color: var(--foreground);
+        text-underline-offset: 3px;
+      }
+      .stage {
+        margin-top: clamp(1.75rem, 4vw, 2.5rem);
+      }
 
       .panel {
-        border: 1px solid var(--line-strong);
-        border-radius: 3px;
-        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         overflow: hidden;
       }
       .panel__bar {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.4rem 0.7rem;
-        background: var(--panel);
-        border-bottom: 1px solid var(--line);
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        color: var(--ink-faint);
+        gap: 0.6rem;
+        min-height: 2.75rem;
+        padding: 0.4rem 0.6rem 0.4rem 0.9rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.875rem;
       }
       .panel__bar strong {
-        color: var(--ink);
         font-weight: 500;
       }
-      .panel__bar .spacer {
-        margin-left: auto;
+      .panel__bar span {
+        color: var(--muted-foreground);
+        font-size: 0.8125rem;
       }
-
+      .spacer {
+        flex: 1;
+      }
       .seg {
-        display: flex;
-        border: 1px solid var(--line-control);
-        border-radius: 2px;
-        overflow: hidden;
+        display: inline-flex;
+        padding: 3px;
+        gap: 2px;
+        background: var(--muted);
+        border-radius: calc(var(--radius) * 0.8);
       }
       .seg button {
+        height: 1.75rem;
+        padding: 0 0.7rem;
         border: 0;
-        border-right: 1px solid var(--line-control);
-        background: transparent;
-        color: var(--ink-muted);
-        font: inherit;
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        padding: 0.15rem 0.5rem;
+        border-radius: calc(var(--radius) * 0.6);
+        background: none;
+        color: var(--muted-foreground);
+        font: 500 0.8125rem/1 var(--font-sans);
         cursor: pointer;
       }
-      .seg button:last-child {
-        border-right: 0;
-      }
       .seg button[aria-pressed="true"] {
-        background: var(--signal);
-        color: var(--signal-ink);
+        background: var(--background);
+        color: var(--foreground);
+        box-shadow: 0 0 0 1px var(--border);
       }
 
-      /* ── Split demo ────────────────────────────────────────────────────── */
+      .shot {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--card);
+      }
 
+      .phones {
+        margin-top: clamp(2rem, 5vw, 3rem);
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 220px));
+        justify-content: center;
+        gap: clamp(1rem, 3vw, 2rem);
+      }
+      .phones figure {
+        margin: 0;
+      }
+      .phones img {
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+      }
+      @media (max-width: 560px) {
+        .phones {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      /* ── 01 · Linked panes demo ──────────────────────────────────────── */
       .split {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
-        height: clamp(320px, 52vh, 460px);
+        grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+        height: 380px;
       }
       .split[data-view="source"] {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) 0 0;
       }
       .split[data-view="render"] {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: 0 0 minmax(0, 1fr);
       }
-      .split[data-view="source"] .rail,
       .split[data-view="source"] .render,
-      .split[data-view="render"] .rail,
-      .split[data-view="render"] .source {
-        display: none;
+      .split[data-view="render"] .source,
+      .split:not([data-view="split"]) .rail {
+        visibility: hidden;
       }
-
       .source,
       .render {
         overflow-y: auto;
-        overscroll-behavior: contain;
-        scroll-behavior: auto;
+        padding: 1rem 1.1rem;
+        scrollbar-width: thin;
       }
       .source {
-        border-right: 1px solid var(--line);
-        padding: 14px 16px 60%;
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        line-height: 1.75;
-        color: var(--ink-muted);
+        font: 0.8125rem/1.7 var(--font-mono);
         white-space: pre-wrap;
+        color: var(--muted-foreground);
       }
-      .split[data-view="source"] .source {
-        border-right: 0;
+      .render {
+        font-size: 0.9375rem;
       }
-      .source .blk {
+      .blk {
         display: block;
-        padding: 1px 4px;
-        margin: 0 -4px;
-        border-radius: 2px;
-        transition: background var(--base) var(--ease);
+        border-radius: 0.35rem;
+        transition: background-color 120ms ease-out;
       }
       .source .blk.is-active {
-        background: var(--signal-tint);
-        color: var(--ink);
+        color: var(--foreground);
       }
-
-      /* The rail is the product's own idea: one strip of ticks, the block under
-         the reader marked in red, drawn between the two views of one document. */
+      .render .blk.is-active {
+        background: var(--muted);
+        box-shadow: 0 0 0 6px var(--muted);
+      }
+      .render h3 {
+        font-size: 1.1rem;
+        margin: 0.25rem 0 0.5rem;
+      }
+      .render p {
+        margin: 0 0 0.85rem;
+      }
+      .render figure {
+        margin: 0 0 0.9rem;
+        padding: 1.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.6);
+        background: var(--muted);
+        flex-wrap: wrap;
+      }
+      .render .node {
+        padding: 0.35rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.6);
+        background: var(--background);
+        font-size: 0.875rem;
+      }
+      .render .arrow {
+        color: var(--muted-foreground);
+      }
+      .callout {
+        margin: 0 0 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.6);
+        overflow: hidden;
+      }
+      .callout__head {
+        padding: 0.4rem 0.75rem;
+        background: var(--muted);
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+      .callout p {
+        margin: 0;
+        padding: 0.6rem 0.75rem;
+      }
+      .render table {
+        width: 100%;
+        margin: 0 0 0.9rem;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+      }
+      .render th,
+      .render td {
+        text-align: left;
+        padding: 0.4rem 0.6rem;
+        border: 1px solid var(--border);
+      }
+      .render th {
+        background: var(--muted);
+        font-weight: 500;
+      }
       .rail {
         position: relative;
-        border-right: 1px solid var(--line);
-        background: var(--panel);
+        border-inline: 1px solid var(--border);
+        background: var(--muted);
       }
       .rail__tick {
         position: absolute;
         left: 50%;
-        translate: -50% 0;
-        width: 12px;
+        width: 8px;
         height: 2px;
-        background: var(--line-strong);
-        transition:
-          width var(--base) var(--ease),
-          background var(--base) var(--ease);
+        margin-left: -4px;
+        border-radius: 1px;
+        background: var(--border);
       }
-      .rail__tick.is-active {
-        width: 22px;
-        background: var(--signal);
-      }
-
-      .render {
-        padding: 14px 18px 60%;
-        font-size: 0.9rem;
-        line-height: 1.6;
-      }
-      .render h3 {
-        font-size: 1.05rem;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.35rem;
-      }
-      .render p {
-        margin-bottom: 0.9rem;
-        color: var(--ink-muted);
-        max-width: 46ch;
-      }
-      .render .blk {
-        display: block;
-        padding: 2px 6px;
-        margin: 0 -6px 0.2rem;
-        border-radius: 2px;
-        transition: background var(--base) var(--ease);
-      }
-      .render .blk.is-active {
-        background: var(--signal-tint);
-      }
-      .render table {
-        border-collapse: collapse;
-        font-size: 0.8rem;
-        margin-bottom: 0.9rem;
-      }
-      .render th,
-      .render td {
-        border: 1px solid var(--line);
-        padding: 3px 9px;
-        text-align: left;
-      }
-      .render th {
-        background: var(--panel);
-        font-weight: 500;
-      }
-      .render .callout {
-        border: 1px solid var(--line-strong);
-        border-radius: 2px;
-        margin-bottom: 0.9rem;
-        overflow: hidden;
-      }
-      .render .callout__head {
-        background: var(--signal-tint);
-        border-bottom: 1px solid var(--line);
-        padding: 3px 9px;
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
-        letter-spacing: 0.1em;
-        color: var(--signal);
-      }
-      .render .callout p {
-        padding: 7px 9px 0;
-        margin-bottom: 7px;
-      }
-      .render figure {
-        margin: 0 0 0.9rem;
-        border: 1px solid var(--line);
-        border-radius: 2px;
-        padding: 14px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-      .render .node {
-        border: 1px solid var(--line-strong);
-        border-radius: 2px;
-        background: var(--panel);
-        padding: 5px 11px;
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-      }
-      .render .arrow {
-        color: var(--ink-faint);
-      }
-      .render code {
-        font-family: var(--font-mono);
-        font-size: 0.82em;
-        color: var(--signal);
-      }
-
-      /* ── Two-column section body ───────────────────────────────────────── */
-
-      .lede-grid {
-        display: grid;
-        gap: clamp(1.25rem, 3vw, 2.5rem) clamp(2rem, 5vw, 5rem);
-        grid-template-columns: minmax(0, 1fr);
-        margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
-      }
-      @media (min-width: 860px) {
-        .lede-grid {
-          grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-          align-items: end;
+      @media (prefers-color-scheme: dark) {
+        .rail__tick {
+          background: oklch(1 0 0 / 22%);
         }
       }
-      .lede-grid h2 {
-        font-size: clamp(1.9rem, 4vw, 3.1rem);
-        max-width: 14ch;
+      .rail__tick.is-active {
+        width: 12px;
+        margin-left: -6px;
+        background: var(--foreground);
       }
-      .lede-grid p {
-        max-width: var(--measure);
-        color: var(--ink-muted);
-      }
-      .lede-grid p + p {
-        margin-top: 0.85rem;
+      @media (max-width: 640px) {
+        .split {
+          height: 320px;
+        }
       }
 
-      /* ── Palette demo ──────────────────────────────────────────────────── */
-
+      /* ── 02 · Palette demo ───────────────────────────────────────────── */
       .palette-stage {
         display: grid;
-        gap: clamp(1rem, 2.5vw, 1.75rem);
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: clamp(1.25rem, 4vw, 2.5rem);
         align-items: start;
       }
-      @media (min-width: 860px) {
+      @media (max-width: 760px) {
         .palette-stage {
-          grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+          grid-template-columns: 1fr;
         }
       }
       .palette__input {
         width: 100%;
+        height: 3rem;
+        padding: 0 1rem;
         border: 0;
-        border-bottom: 1px solid var(--line);
-        background: var(--surface);
-        color: var(--ink);
-        font-family: var(--font-mono);
-        font-size: 0.95rem;
-        padding: 0.85rem 1rem;
-      }
-      .palette__input:focus {
+        border-bottom: 1px solid var(--border);
+        background: transparent;
+        color: var(--foreground);
+        font: 0.9375rem var(--font-sans);
         outline: none;
-        box-shadow: inset 0 -2px 0 var(--signal);
-      }
-      .palette__input::placeholder {
-        color: var(--ink-faint);
       }
       .palette__list {
-        max-height: 300px;
+        height: 300px;
         overflow-y: auto;
-        overscroll-behavior: contain;
+        padding: 0.35rem;
       }
       .palette__section {
-        padding: 8px 14px 3px;
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        letter-spacing: 0.14em;
-        color: var(--ink-faint);
+        padding: 0.6rem 0.6rem 0.3rem;
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
+        font-weight: 500;
       }
       .palette__row {
         display: flex;
         align-items: baseline;
-        gap: 10px;
+        gap: 0.75rem;
         width: 100%;
+        padding: 0.45rem 0.6rem;
         border: 0;
-        background: transparent;
-        color: var(--ink);
-        font: inherit;
+        border-radius: calc(var(--radius) * 0.6);
+        background: none;
+        color: var(--foreground);
+        font: 0.875rem var(--font-sans);
         text-align: left;
-        padding: 5px 14px;
         cursor: pointer;
       }
-      .palette__row.is-active {
-        background: var(--signal-tint);
-      }
-      .palette__row .name {
-        font-size: 0.875rem;
-        flex-shrink: 0;
+      .palette__row.is-active,
+      .palette__row:hover {
+        background: var(--muted);
       }
       .palette__row .path {
         margin-left: auto;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        color: var(--ink-faint);
+        color: var(--muted-foreground);
+        font-size: 0.8125rem;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
       }
       .palette__row mark {
         background: none;
-        color: var(--signal);
-        font-weight: 500;
+        color: inherit;
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .palette__row .path mark {
+        color: var(--foreground);
       }
       .palette__empty {
-        padding: 14px;
-        font-size: 0.85rem;
-        color: var(--ink-faint);
+        padding: 1.5rem 0.75rem;
+        color: var(--muted-foreground);
+        font-size: 0.875rem;
+        text-align: center;
       }
       .palette__foot {
         display: flex;
-        gap: 14px;
-        padding: 6px 14px;
-        border-top: 1px solid var(--line);
-        background: var(--panel);
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        color: var(--ink-faint);
-      }
-
-      .try {
-        border: 1px solid var(--line);
-        border-radius: 3px;
-        padding: clamp(0.9rem, 2vw, 1.25rem);
+        gap: 1rem;
+        padding: 0.55rem 0.9rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted-foreground);
+        font-size: 0.75rem;
       }
       .try h3 {
-        font-size: 0.9rem;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        margin-bottom: 0.6rem;
+        font-size: 0.9375rem;
+        margin-bottom: 0.75rem;
       }
       .try ul {
         list-style: none;
-        margin: 0;
+        margin: 0 0 1rem;
         padding: 0;
         display: flex;
         flex-wrap: wrap;
         gap: 0.4rem;
       }
       .try button {
-        border: 1px solid var(--line-control);
-        border-radius: 2px;
-        background: var(--surface);
-        color: var(--ink);
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        padding: 0.25rem 0.55rem;
+        height: 2rem;
+        padding: 0 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.8);
+        background: var(--background);
+        color: var(--foreground);
+        font: 0.8125rem var(--font-mono);
         cursor: pointer;
-        transition:
-          border-color var(--fast) var(--ease),
-          color var(--fast) var(--ease);
       }
       .try button:hover {
-        border-color: var(--signal);
-        color: var(--signal);
+        background: var(--muted);
       }
       .try p {
-        margin-top: 0.75rem;
-        font-size: 0.85rem;
-        color: var(--ink-muted);
+        color: var(--muted-foreground);
+        font-size: 0.875rem;
       }
 
-      /* ── Auto-scroll demo ──────────────────────────────────────────────── */
-
+      /* ── 05 · Teleprompter demo ──────────────────────────────────────── */
       .reader {
         position: relative;
       }
       .reader__pane {
-        height: clamp(280px, 46vh, 420px);
+        height: 340px;
         overflow-y: auto;
-        overscroll-behavior: contain;
-        padding: 16px 20px 40%;
-        font-size: 0.92rem;
-        line-height: 1.65;
-        color: var(--ink-muted);
+        padding: 1.25rem 1.5rem 5rem;
+        scrollbar-width: thin;
+        max-width: none;
       }
       .reader__pane h3 {
-        color: var(--ink);
-        font-size: 1rem;
-        margin: 1.4rem 0 0.4rem;
-      }
-      .reader__pane h3:first-child {
-        margin-top: 0;
+        font-size: 1.1rem;
+        margin: 0.5rem 0 0.5rem;
       }
       .reader__pane p {
-        max-width: 58ch;
-        margin-bottom: 0.85rem;
+        margin: 0 0 1rem;
+        max-width: 64ch;
+        color: var(--muted-foreground);
       }
       .hud {
         position: absolute;
-        right: 12px;
-        bottom: 12px;
+        left: 50%;
+        bottom: 1rem;
+        transform: translateX(-50%);
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 5px 8px 5px 10px;
-        background: var(--panel);
-        border: 1px solid var(--line-strong);
-        border-radius: 2px;
-        font-size: 0.78rem;
+        gap: 0.5rem;
+        padding: 0.35rem 0.4rem 0.35rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--background);
+        font-size: 0.8125rem;
+        white-space: nowrap;
       }
       .hud__pulse {
-        width: 6px;
-        height: 6px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
-        background: var(--signal);
-        animation: pulse 1.6s var(--ease) infinite;
+        background: var(--brand);
+        animation: pulse 1.2s ease-in-out infinite alternate;
       }
       .hud.is-held .hud__pulse {
-        background: var(--ink-faint);
+        background: var(--muted-foreground);
         animation: none;
       }
       @keyframes pulse {
-        50% {
-          opacity: 0.25;
+        from {
+          opacity: 0.35;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .hud__pulse {
+          animation: none;
         }
       }
       .hud__label {
-        color: var(--ink-muted);
         min-width: 5.5em;
       }
       .hud__speed {
@@ -782,595 +782,186 @@
         font-size: 0.75rem;
         min-width: 4.5em;
         text-align: center;
+        color: var(--muted-foreground);
       }
       .hud button {
-        border: 1px solid var(--line-control);
-        border-radius: 2px;
-        background: var(--surface);
-        color: var(--ink);
-        font: inherit;
-        font-size: 0.78rem;
-        padding: 2px 8px;
-        line-height: 1.4;
+        height: 1.75rem;
+        min-width: 1.75rem;
+        padding: 0 0.6rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--background);
+        color: var(--foreground);
+        font: 500 0.8125rem/1 var(--font-sans);
         cursor: pointer;
       }
-      .hud button:hover {
-        border-color: var(--signal);
-      }
       .hud button.step {
-        width: 24px;
-        padding: 2px 0;
-        font-family: var(--font-mono);
+        padding: 0;
+      }
+      .hud button:hover {
+        background: var(--muted);
+      }
+      .hud #hud-toggle {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-foreground);
       }
 
-      /* ── Feature list ──────────────────────────────────────────────────── */
-
+      /* ── Facts, MCP, spec, install ───────────────────────────────────── */
       .facts {
+        margin-top: clamp(2rem, 4vw, 3rem);
         display: grid;
-        gap: 0;
-        grid-template-columns: minmax(0, 1fr);
-        border-top: 1px solid var(--line);
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
       }
-      @media (min-width: 760px) {
-        .facts {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        .facts > div:nth-child(odd) {
-          padding-right: clamp(1rem, 3vw, 3rem);
-          border-right: 1px solid var(--line);
-        }
-        .facts > div:nth-child(even) {
-          padding-left: clamp(1rem, 3vw, 3rem);
-        }
+      .card {
+        padding: 1.1rem 1.2rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
-      .facts > div {
-        padding-block: clamp(1.1rem, 2.5vw, 1.6rem);
-        border-bottom: 1px solid var(--line);
-      }
-      .facts h3 {
-        font-size: 1.0625rem;
-        font-weight: 600;
-        letter-spacing: -0.015em;
+      .card h3 {
+        font-size: 0.9375rem;
         margin-bottom: 0.4rem;
       }
-      .facts p {
-        color: var(--ink-muted);
-        font-size: 0.95rem;
-        max-width: 46ch;
+      .card p {
+        color: var(--muted-foreground);
+        font-size: 0.9rem;
       }
 
-      /* ── Shot ──────────────────────────────────────────────────────────── */
-
-      .shot {
-        border: 1px solid var(--line-strong);
-        border-radius: 3px;
-        overflow: hidden;
-        background: var(--panel);
-      }
-      .shot img {
-        width: 100%;
-      }
-      figcaption {
-        margin-top: 0.7rem;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        color: var(--ink-faint);
-      }
-
-      /* ── MCP band: the one drenched surface ────────────────────────────── */
-
-      .mcp {
-        background: var(--signal);
-        color: var(--signal-ink);
-        border-top: 1px solid var(--signal);
-      }
-      /* As strong as the band's body text: at 72% this 12px label measured 4.1:1
-         on the red, under the 4.5:1 small text needs. Its mono caps already set it
-         apart without fading it. */
-      .mcp .index,
-      .mcp .index b {
-        color: color-mix(in oklch, var(--signal-ink) 88%, transparent);
-      }
-      .mcp h2 {
-        font-size: clamp(1.9rem, 4.2vw, 3.1rem);
-        max-width: 18ch;
-      }
-      .mcp p {
-        color: color-mix(in oklch, var(--signal-ink) 88%, transparent);
-        max-width: var(--measure);
-      }
-      .mcp .endpoint {
-        display: inline-block;
-        margin-top: 1.5rem;
-        border: 1px solid color-mix(in oklch, var(--signal-ink) 45%, transparent);
-        border-radius: 2px;
-        padding: 0.5rem 0.85rem;
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-      }
       .flow {
+        margin-top: clamp(1.75rem, 4vw, 2.5rem);
         display: grid;
-        gap: 0.5rem;
-        margin-top: clamp(1.5rem, 3vw, 2rem);
+        gap: 0.75rem;
+        justify-items: center;
+        color: var(--muted-foreground);
+        font-size: 0.875rem;
       }
       .flow__row {
         display: flex;
-        align-items: center;
-        gap: 0.6rem;
         flex-wrap: wrap;
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
       }
       .flow__box {
-        border: 1px solid color-mix(in oklch, var(--signal-ink) 45%, transparent);
-        border-radius: 2px;
-        padding: 0.3rem 0.7rem;
+        padding: 0.45rem 0.85rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.8);
+        background: var(--card);
+        color: var(--foreground);
       }
       .flow__box.is-file {
-        background: color-mix(in oklch, var(--signal-ink) 16%, transparent);
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        background: var(--muted);
+      }
+      .endpoint {
+        margin: 1.5rem auto 0;
+        width: fit-content;
+        padding: 0.45rem 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--muted);
+        font: 0.875rem var(--font-mono);
       }
 
-      /* ── Spec table ────────────────────────────────────────────────────── */
-
+      .spec-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.25rem;
+        align-items: start;
+      }
       .spec {
         width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        font-size: 0.875rem;
       }
       .spec caption {
         text-align: left;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        letter-spacing: 0.14em;
-        color: var(--ink-faint);
-        padding-bottom: 0.6rem;
+        padding: 0 0 0.6rem;
+        font-weight: 600;
+        font-size: 0.9375rem;
       }
       .spec th,
       .spec td {
+        padding: 0.55rem 0.9rem;
         text-align: left;
-        padding: 0.5rem 0.75rem 0.5rem 0;
-        border-bottom: 1px solid var(--line);
-        vertical-align: baseline;
+        vertical-align: top;
+        border-top: 1px solid var(--border);
+      }
+      .spec tr:first-child th,
+      .spec tr:first-child td {
+        border-top: 0;
       }
       .spec th {
-        font-weight: 400;
+        width: 38%;
+        font-weight: 500;
         white-space: nowrap;
-        width: 1%;
-        padding-right: 2rem;
       }
       .spec td {
-        color: var(--ink-muted);
+        color: var(--muted-foreground);
       }
-      kbd {
-        display: inline-block;
-        border: 1px solid var(--line-control);
-        border-radius: 2px;
-        background: var(--surface);
-        padding: 0.05em 0.4em;
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        color: var(--ink);
-      }
-      .spec-grid {
-        display: grid;
-        gap: clamp(2rem, 5vw, 4rem);
-        grid-template-columns: minmax(0, 1fr);
-      }
-      @media (min-width: 860px) {
-        .spec-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      /* ── Install ───────────────────────────────────────────────────────── */
 
       .install-grid {
+        margin-top: clamp(1.75rem, 4vw, 2.5rem);
         display: grid;
-        gap: clamp(1.25rem, 3vw, 2rem);
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
       }
-      @media (min-width: 760px) {
-        .install-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+      .install-grid .card h3 {
+        margin-bottom: 0.75rem;
       }
-      .install-card h3 {
-        font-size: 0.8125rem;
-        font-family: var(--font-mono);
-        font-weight: 400;
-        letter-spacing: 0.12em;
-        color: var(--ink-faint);
-        margin-bottom: 0.6rem;
+      .install-grid .card p {
+        margin-top: 0.75rem;
+      }
+      .terminal {
+        margin: 0;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.8);
+        background: var(--muted);
+        font: 0.8125rem/1.8 var(--font-mono);
+        overflow-x: auto;
+      }
+      .terminal .comment {
+        color: var(--muted-foreground);
       }
       .note {
-        margin-top: 1.5rem;
+        margin-top: 1.25rem;
+        color: var(--muted-foreground);
         font-size: 0.875rem;
-        color: var(--ink-faint);
-        max-width: var(--measure);
       }
 
-      /* ── Footer ────────────────────────────────────────────────────────── */
-
+      /* ── Footer ──────────────────────────────────────────────────────── */
       footer {
-        border-top: 1px solid var(--line);
-        background: var(--panel);
+        border-top: 1px solid var(--border);
+        padding-block: 1.75rem;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
       }
       .foot__inner {
-        width: var(--frame);
-        margin-inline: auto;
-        padding: 2rem var(--gutter);
         display: flex;
         flex-wrap: wrap;
-        gap: 1rem 2rem;
         align-items: center;
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        color: var(--ink-faint);
+        gap: 0.5rem 1.25rem;
       }
-      .foot__inner a {
-        color: var(--ink-muted);
-        text-decoration-color: var(--line-strong);
-        text-underline-offset: 4px;
+      .foot__inner .wordmark {
+        color: var(--foreground);
+        font-size: 0.95rem;
       }
-      .foot__inner a:hover {
-        color: var(--signal);
+      .foot__inner a:not(.wordmark) {
+        text-decoration: none;
+      }
+      .foot__inner a:not(.wordmark):hover {
+        color: var(--foreground);
       }
       .foot__inner .spacer {
-        margin-left: auto;
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
-        *,
-        *::before,
-        *::after {
-          animation-duration: 0.001ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.001ms !important;
-        }
-      }
-
-      /* ══ Midnight Line ════════════════════════════════════════════════════
-       * The world, applied over the page's structure. Everything above sets
-       * layout and the demos; this sets the shell, the signage and the lines.
-       */
-
-      :focus-visible {
-        outline: 2px solid var(--focus);
-        outline-offset: 3px;
-        border-radius: 4px;
-      }
-      ::selection {
-        background: color-mix(in oklch, var(--cobalt) 22%, transparent);
-      }
-
-      h1,
-      h2,
-      h3 {
-        font-family: var(--font-sign);
-        font-weight: 600;
-        letter-spacing: 0.005em;
-        line-height: 0.98;
-        text-transform: uppercase;
-      }
-      /* Inside a rendered document, headings are the document's, not signage. */
-      .render h3,
-      .reader__pane h3 {
-        font-family: var(--font-ui);
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        line-height: 1.2;
-        text-transform: none;
-      }
-      .facts h3,
-      .try h3,
-      .install-card h3 {
-        letter-spacing: 0.06em;
-        line-height: 1.15;
-      }
-
-      /* Each section rides its own line: its bullet is the line's ink. */
-      #panes,
-      #read {
-        --band-ink: var(--scarlet);
-      }
-      #find,
-      section.band:not([id]) {
-        --band-ink: var(--cobalt);
-      }
-      #search,
-      #mcp {
-        --band-ink: var(--amber);
-        --band-ink-on: var(--enamel);
-      }
-      #files,
-      #install,
-      #devices {
-        --band-ink: var(--green);
-        --band-ink-on: var(--enamel);
-      }
-
-      /* The section index is the line's bullet and its name board: a round
-         bullet carrying the number, the line's name beside it in signage. */
-      .index {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        margin-bottom: 1.25rem;
-        font-family: var(--font-sign);
-        font-size: 0.9375rem;
-        font-weight: 600;
-        letter-spacing: 0.14em;
-        color: var(--ink-muted);
-      }
-      .index b {
-        display: inline-grid;
-        place-items: center;
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: 50%;
-        background: var(--band-ink);
-        color: var(--band-ink-on);
-        font-size: 1rem;
-        letter-spacing: 0;
-      }
-
-      /* ── Header: the enamel bar ──────────────────────────────────────── */
-
-      .head {
-        background: var(--enamel);
-        backdrop-filter: none;
-        border-bottom: 0;
-        color: var(--on-enamel);
-      }
-      .mark {
-        gap: 0.6rem;
-        font-family: var(--font-sign);
-        font-size: 1.375rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-      }
-      .head nav {
-        font-family: var(--font-sign);
-        font-size: 1rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-      .head nav a {
-        color: var(--on-enamel-muted);
-      }
-      .head nav a:hover {
-        color: var(--on-enamel);
-      }
-      .head nav a.is-cta {
-        padding: 0.4rem 0.95rem;
-        border: 0;
-        border-radius: var(--radius-control);
-        background: var(--scarlet);
-        color: oklch(0.985 0.003 95);
-      }
-      .head nav a.is-cta:hover {
-        background: oklch(0.54 0.215 27);
-        color: oklch(0.985 0.003 95);
-      }
-
-      /* ── Hero: the enamel field, the devices on it ───────────────────── */
-
-      .hero {
-        position: relative;
-        background: var(--enamel);
-        color: var(--on-enamel);
-        box-shadow: 0 0 0 100vmax var(--enamel);
-        clip-path: inset(0 -100vmax);
-        padding-block: clamp(3.5rem, 8vw, 6.5rem) clamp(3rem, 6vw, 5rem);
-      }
-      .hero h1 {
-        font-size: clamp(3rem, 9vw, 7rem);
-        max-width: 14ch;
-      }
-      .hero h1 em {
-        color: var(--amber);
-      }
-      .hero__lede {
-        color: var(--on-enamel-muted);
-      }
-      .hero__lede b {
-        color: var(--on-enamel);
-        font-weight: 600;
-      }
-      .hero .command {
-        border-color: var(--enamel-line);
-        background: var(--enamel-raised);
-        color: var(--on-enamel);
-      }
-      .hero .command button {
-        border-left-color: var(--enamel-line);
-        background: transparent;
-        color: var(--on-enamel-muted);
-        font-family: var(--font-sign);
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-      .hero .command button:hover {
-        background: var(--enamel);
-        color: var(--on-enamel);
-      }
-      .hero .link-quiet {
-        color: var(--on-enamel-muted);
-        text-decoration-color: var(--enamel-line);
-      }
-      .hero .link-quiet:hover {
-        color: var(--on-enamel);
-      }
-
-      /* The iPad carries the split; the iPhone, reading, stands in front of it
-         at the iPad's lower edge, where a hand would hold it. */
-      .hero__devices {
-        position: relative;
-        margin: clamp(3rem, 6vw, 4.5rem) 0 0;
-        padding-right: clamp(3.5rem, 12vw, 9rem);
-      }
-      .hero__devices .device {
-        display: block;
-        border: clamp(6px, 1vw, 12px) solid oklch(0.13 0.03 270);
-        border-radius: clamp(18px, 2.6vw, 34px);
-        background: oklch(0.13 0.03 270);
-        overflow: hidden;
-      }
-      .hero__devices .device img {
-        width: 100%;
-        border-radius: clamp(10px, 1.6vw, 22px);
-      }
-      .hero__devices .device--phone {
-        position: absolute;
-        right: 0;
-        bottom: clamp(-2.5rem, -4vw, -1rem);
-        width: clamp(7rem, 21vw, 15rem);
-        border-radius: clamp(20px, 3.4vw, 40px);
-      }
-      .hero__devices .device--phone img {
-        border-radius: clamp(14px, 2.6vw, 30px);
-      }
-      .hero__devices figcaption {
-        margin-top: clamp(2.5rem, 5vw, 3.5rem);
-        color: var(--on-enamel-muted);
-      }
-
-      /* ── Demo panels: the app's own shell ─────────────────────────────── */
-
-      .panel {
-        border: 1px solid var(--line-strong);
-        border-radius: var(--radius-card);
-      }
-      .panel__bar {
-        gap: 0.9rem;
-        padding: 0.55rem 0.7rem 0.55rem 1rem;
-        background: var(--enamel);
-        border-bottom: 0;
-        color: var(--on-enamel-muted);
-        font-family: var(--font-sign);
-        font-size: 0.875rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-      .panel__bar strong {
-        color: var(--on-enamel);
-        font-weight: 600;
-        font-size: 1rem;
-        letter-spacing: 0.04em;
-      }
-      .seg {
-        gap: 2px;
-        padding: 3px;
-        border: 1px solid var(--enamel-line);
-        border-radius: var(--radius-control);
-      }
-      .seg button {
-        border: 0;
-        border-radius: 7px;
-        padding: 0.3rem 0.75rem;
-        color: var(--on-enamel-muted);
-        font-family: var(--font-sign);
-        font-size: 0.875rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-      .seg button[aria-pressed="true"] {
-        background: var(--on-enamel);
-        color: var(--enamel);
-      }
-      .rail__tick {
-        background: var(--scarlet);
-      }
-
-      .command,
-      .palette__input {
-        border-radius: var(--radius-control);
-      }
-      .shot {
-        border-radius: var(--radius-card);
-      }
-
-      /* ── iPad and iPhone ─────────────────────────────────────────────── */
-
-      .phones {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: clamp(0.75rem, 2.5vw, 2rem);
-        margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
-        padding: clamp(1.25rem, 3vw, 2.5rem);
-        border-radius: var(--radius-card);
-        background: var(--enamel);
-      }
-      .phones figure {
-        margin: 0;
-      }
-      .phones img {
-        border: clamp(4px, 0.8vw, 8px) solid oklch(0.13 0.03 270);
-        border-radius: clamp(16px, 3vw, 30px);
-      }
-      .phones figcaption {
-        color: var(--on-enamel-muted);
-        font-family: var(--font-sign);
-        font-size: 0.9375rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-      .phones figcaption b {
-        color: var(--on-enamel);
-        font-weight: 600;
-      }
-      @media (max-width: 600px) {
-        .phones {
-          grid-template-columns: minmax(0, 1fr);
-          max-width: 22rem;
-          margin-inline: auto;
-        }
-      }
-
-      /* ── The MCP band: the amber line, on enamel ─────────────────────── */
-
-      .mcp {
-        background: var(--enamel);
-        color: var(--on-enamel);
-        border-top: 0;
-      }
-      .mcp .index,
-      .mcp p {
-        color: var(--on-enamel-muted);
-      }
-      .mcp .index b {
-        color: var(--enamel);
-      }
-      .mcp .endpoint {
-        border-color: var(--enamel-line);
-        border-radius: var(--radius-control);
-        color: var(--on-enamel);
-      }
-
-      /* ── Footer: the line's end ──────────────────────────────────────── */
-
-      footer {
-        background: var(--enamel);
-        border-top: 0;
-      }
-      .foot__inner {
-        color: var(--on-enamel-muted);
-      }
-      .foot__inner a {
-        color: var(--on-enamel);
-        text-decoration-color: var(--enamel-line);
-      }
-      .foot__inner a:hover {
-        color: var(--amber);
+        text-align: right;
       }
     </style>
   </head>
@@ -1379,16 +970,15 @@
     <a class="skip" href="#main">Skip to content</a>
 
     <header class="head">
-      <div class="head__inner">
-        <a class="mark" href="#top">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M3 3l9 9" stroke="oklch(0.585 0.215 27)" stroke-width="3" stroke-linecap="round" />
-            <path d="M21 3l-9 9" stroke="oklch(0.585 0.205 262)" stroke-width="3" stroke-linecap="round" />
-            <path d="M12 12h9" stroke="oklch(0.84 0.165 85)" stroke-width="3" stroke-linecap="round" />
-            <path d="M12 12v9" stroke="oklch(0.655 0.165 145)" stroke-width="3" stroke-linecap="round" />
-            <circle cx="12" cy="12" r="4" fill="oklch(0.205 0.068 271)" stroke="oklch(0.965 0.004 95)" stroke-width="2.5" />
+      <div class="container head__inner">
+        <a class="wordmark" href="#top">
+          <svg class="mark" viewBox="-6 -6 72 72" aria-hidden="true">
+            <rect class="tile" x="0" y="0" width="60" height="17" rx="5" />
+            <rect class="tile" x="0" y="20" width="16" height="40" rx="5" />
+            <rect class="brand" x="22" y="20" width="16" height="40" rx="5" />
+            <rect class="tile" x="44" y="20" width="16" height="40" rx="5" />
           </svg>
-          <span>MarkDN</span>
+          <span>markdn</span>
         </a>
         <nav aria-label="Sections">
           <a class="is-hideable" href="#devices">iPad &amp; iPhone</a>
@@ -1398,14 +988,14 @@
           <a class="is-hideable" href="#files">Files</a>
           <a class="is-hideable" href="#read">Read</a>
           <a class="is-hideable" href="#mcp">Assistants</a>
-          <a class="is-cta" href="#install">Install</a>
+          <a class="button button--primary" href="#install">Install</a>
         </nav>
       </div>
     </header>
 
     <main id="main">
-      <section class="shell hero" id="top">
-        <h1>Every part of the document, <em>rendered</em>.</h1>
+      <section class="container hero" id="top">
+        <h1>Every part of the document, rendered.</h1>
         <p class="hero__lede">
           A Markdown and MDX editor for macOS and Linux, and in preview on <b>iPad and
           iPhone</b>: diagrams, components and highlighted code, live beside the source you
@@ -1426,7 +1016,7 @@
               width="1600"
               height="1103"
               decoding="async"
-              alt="MarkDN on an iPad in landscape: the specs folder drawn as a blue line with README.md as its ringed station, README's headings as a line beneath it with What you get lit, and the source and rendered document side by side"
+              alt="markdn on an iPad in landscape: the specs folder drawn as a blue line with README.md as its ringed station, README's headings as a line beneath it with What you get lit, and the source and rendered document side by side"
             />
           </span>
           <span class="device device--phone">
@@ -1435,7 +1025,7 @@
               width="506"
               height="1100"
               decoding="async"
-              alt="MarkDN on an iPhone reading README.md rendered, with the Read, Documents, Outline and Search tabs along the bottom"
+              alt="markdn on an iPhone reading README.md rendered, with the Read, Documents, Outline and Search tabs along the bottom"
             />
           </span>
           <figcaption>iPad Pro and iPhone 17 Pro, in the iOS simulator. Preview.</figcaption>
@@ -1443,19 +1033,18 @@
       </section>
 
       <!-- iPad and iPhone ------------------------------------------------- -->
-      <section class="band" id="devices">
-        <div class="band__inner">
+      <section class="section" id="devices">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>i</b> / GLASS</span>
+              <span class="eyebrow">iPad and iPhone</span>
               <h2>Read on the couch. Fix it on the train.</h2>
             </div>
             <div>
               <p>
-                On an iPad your folders are lines and every document a station on one. Open a
-                document and its headings become a line of their own: tap a station to go there,
-                and the section you are reading is the lit ring. On an iPhone it opens to the
-                rendered document, with the folder, the outline and search a thumb away.
+                On an iPad the folder sits beside the document, and its outline takes you to
+                any heading with a tap. On an iPhone it opens to the rendered document, with
+                the folder, the outline and search a thumb away.
               </p>
               <p>
                 A preview: it runs in the iOS simulator today, built with
@@ -1475,7 +1064,7 @@
                 decoding="async"
                 alt="The Documents tab: the notes and specs folders as yellow and blue lines, README.md a station on the blue one, and DEVELOPMENT.md and Welcome.md on the red main line"
               />
-              <figcaption><b>Documents</b> · folders as lines</figcaption>
+              <figcaption><b>Documents</b> · your folder</figcaption>
             </figure>
             <figure>
               <img
@@ -1495,20 +1084,20 @@
                 height="1100"
                 loading="lazy"
                 decoding="async"
-                alt="The Outline tab: README's headings as stations on a blue line, MarkDN ringed as the current section"
+                alt="The Outline tab: README's headings as stations on a blue line, markdn ringed as the current section"
               />
-              <figcaption><b>Outline</b> · headings as stations</figcaption>
+              <figcaption><b>Outline</b> · every heading</figcaption>
             </figure>
           </div>
         </div>
       </section>
 
-      <!-- 01 · Two panes ------------------------------------------------- -->
-      <section class="band" id="panes">
-        <div class="band__inner">
+      <!-- Two panes ------------------------------------------------------ -->
+      <section class="section" id="panes">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>01</b> / SYNC</span>
+              <span class="eyebrow">Sync</span>
               <h2>Two panes, one document.</h2>
             </div>
             <div>
@@ -1521,7 +1110,7 @@
             </div>
           </div>
 
-          <div class="panel">
+          <div class="panel stage">
             <div class="panel__bar">
               <strong>design-notes.md</strong>
               <span>saved</span>
@@ -1541,12 +1130,12 @@
         </div>
       </section>
 
-      <!-- 02 · Find ------------------------------------------------------ -->
-      <section class="band" id="find">
-        <div class="band__inner">
+      <!-- Find ----------------------------------------------------------- -->
+      <section class="section" id="find">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>02</b> / PALETTE</span>
+              <span class="eyebrow">Palette</span>
               <h2>Type roughly what you remember.</h2>
             </div>
             <div>
@@ -1558,7 +1147,7 @@
             </div>
           </div>
 
-          <div class="palette-stage">
+          <div class="palette-stage stage">
             <div class="panel">
               <input
                 class="palette__input"
@@ -1593,12 +1182,12 @@
         </div>
       </section>
 
-      <!-- 03 · Search across documents ----------------------------------- -->
-      <section class="band" id="search">
-        <div class="band__inner">
+      <!-- Search across documents ---------------------------------------- -->
+      <section class="section" id="search">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>03</b> / MULTIBUFFER</span>
+              <span class="eyebrow">Multibuffer</span>
               <h2>Fix it in twelve files without opening twelve files.</h2>
             </div>
             <div>
@@ -1612,7 +1201,7 @@
             </div>
           </div>
 
-          <figure style="margin: clamp(1.5rem, 3vw, 2.25rem) 0 0">
+          <figure class="stage" style="margin-inline: 0">
             <div class="shot">
               <img
                 src="screenshots/multibuffer.png"
@@ -1630,12 +1219,12 @@
         </div>
       </section>
 
-      <!-- 04 · Files ----------------------------------------------------- -->
-      <section class="band" id="files">
-        <div class="band__inner">
+      <!-- Files ---------------------------------------------------------- -->
+      <section class="section" id="files">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>04</b> / FILES</span>
+              <span class="eyebrow">Files</span>
               <h2>Name&nbsp;it, rename&nbsp;it, trash&nbsp;it.</h2>
             </div>
             <div>
@@ -1653,7 +1242,7 @@
             </div>
           </div>
 
-          <figure style="margin: clamp(1.5rem, 3vw, 2.25rem) 0 0">
+          <figure class="stage" style="margin-inline: 0">
             <div class="shot">
               <img
                 src="screenshots/files.png"
@@ -1671,12 +1260,12 @@
         </div>
       </section>
 
-      <!-- 05 · Read ------------------------------------------------------ -->
-      <section class="band" id="read">
-        <div class="band__inner">
+      <!-- Read ----------------------------------------------------------- -->
+      <section class="section" id="read">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>05</b> / TELEPROMPTER</span>
+              <span class="eyebrow">Teleprompter</span>
               <h2>Long documents scroll themselves.</h2>
             </div>
             <div>
@@ -1688,7 +1277,7 @@
             </div>
           </div>
 
-          <div class="panel reader">
+          <div class="panel reader stage">
             <div class="panel__bar">
               <strong>release-notes.md</strong>
               <span class="spacer"></span>
@@ -1708,11 +1297,11 @@
       </section>
 
       <!-- Renders everything --------------------------------------------- -->
-      <section class="band">
-        <div class="band__inner">
+      <section class="section">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>06</b> / RENDER</span>
+              <span class="eyebrow">Render</span>
               <h2>The parts other previewers drop.</h2>
             </div>
             <div>
@@ -1725,7 +1314,7 @@
             </div>
           </div>
 
-          <figure style="margin: 0">
+          <figure class="stage" style="margin-inline: 0">
             <div class="shot">
               <img
                 src="screenshots/render.png"
@@ -1733,14 +1322,14 @@
                 height="1800"
                 loading="lazy"
                 decoding="async"
-                alt="MarkDN rendering a document with a mermaid flowchart, a syntax-highlighted code fence and a table"
+                alt="markdn rendering a document with a mermaid flowchart, a syntax-highlighted code fence and a table"
               />
             </div>
             <figcaption>Render view. Mermaid, Shiki-highlighted code, tables, MDX components.</figcaption>
           </figure>
 
-          <div class="facts" style="margin-top: clamp(2rem, 4vw, 3rem)">
-            <div>
+          <div class="facts">
+            <div class="card">
               <h3>Your folder, untouched</h3>
               <p>
                 Nothing is imported or filed in a database. Save writes the
@@ -1748,35 +1337,35 @@
                 place.
               </p>
             </div>
-            <div>
+            <div class="card">
               <h3>Components that render</h3>
               <p>
                 <code>Alert</code>, <code>Callout</code>, <code>Card</code> and
                 <code>Tabs</code>, insertable from a menu so you are never typing JSX by hand.
               </p>
             </div>
-            <div>
-              <h3>Two designed themes</h3>
+            <div class="card">
+              <h3>Open from the terminal</h3>
               <p>
-                Light and dark are drawn separately, not one palette inverted. Pick either, or
-                follow the system.
+                <code>markdn README.md</code> opens a file in the running window, or starts
+                the app on it. <code>markdn ~/notes</code> opens a folder as the root.
               </p>
             </div>
-            <div>
+            <div class="card">
               <h3>Settings, not preferences</h3>
               <p>
                 Six things that change what the app does: folder, theme, default view, text
                 size, scroll speed, hidden files.
               </p>
             </div>
-            <div>
+            <div class="card">
               <h3>Quick on long files</h3>
               <p>
                 The editor redraws only the lines you change. On a long document the preview
                 catches up when you pause, instead of holding up every key.
               </p>
             </div>
-            <div>
+            <div class="card">
               <h3>Keyboard all the way</h3>
               <p>
                 The tree, tabs, menus and dialogs all work without a mouse, and Tab never
@@ -1789,27 +1378,27 @@
       </section>
 
       <!-- MCP ------------------------------------------------------------- -->
-      <section class="mcp" id="mcp">
-        <div class="band__inner">
+      <section class="section" id="mcp">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>07</b> / MCP</span>
+              <span class="eyebrow">MCP</span>
               <h2>Your assistant edits the file you have open.</h2>
             </div>
             <div>
               <p>
-                MarkDN serves the documents it is showing you over MCP. Ask Claude to
+                markdn serves the documents it is showing you over MCP. Ask Claude to
                 restructure a spec or fold review notes into a draft, and the change lands in
                 the window you are already reading. No paste back, no second copy of the file
                 drifting out of date.
               </p>
-              <p style="margin-top: 0.85rem">
+              <p>
                 It can ask which components exist, so the MDX it writes is MDX that renders.
                 And it only ever sees the folder you pointed the app at.
               </p>
-              <p style="margin-top: 0.85rem">
+              <p>
                 It never writes over you, either. If the file has unsaved changes when the
-                assistant saves it, MarkDN asks whether to reload theirs or keep yours, rather
+                assistant saves it, markdn asks whether to reload theirs or keep yours, rather
                 than swapping the text under your cursor.
               </p>
             </div>
@@ -1834,155 +1423,167 @@
       </section>
 
       <!-- Spec ------------------------------------------------------------ -->
-      <section class="band">
-        <div class="band__inner">
-          <div class="spec-grid">
-            <table class="spec">
-              <caption>KEYS · AS IN VS CODE</caption>
-              <tbody>
-                <tr>
-                  <th><kbd>⌘P</kbd></th>
-                  <td>Find a document</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘⇧P</kbd></th>
-                  <td>Command palette</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘⇧F</kbd></th>
-                  <td>Search and edit across documents</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘1</kbd> <kbd>2</kbd> <kbd>3</kbd></th>
-                  <td>Source, split, render</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘B</kbd></th>
-                  <td>Show or hide the sidebar</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘⇧V</kbd></th>
-                  <td>Toggle the preview</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘K</kbd> <kbd>V</kbd></th>
-                  <td>Preview to the side</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘N</kbd></th>
-                  <td>New document</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘S</kbd></th>
-                  <td>Save, or name and save an untitled one</td>
-                </tr>
-                <tr>
-                  <th><kbd>⇧F10</kbd></th>
-                  <td>Menu for the file selected in the tree</td>
-                </tr>
-                <tr>
-                  <th><kbd>F2</kbd> <kbd>⌘⌫</kbd></th>
-                  <td>Rename, or move to the Trash</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘⇧C</kbd></th>
-                  <td>Insert a component</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘,</kbd></th>
-                  <td>Settings</td>
-                </tr>
-                <tr>
-                  <th><kbd>⌘Space</kbd></th>
-                  <td>Start, pause, resume auto-scroll</td>
-                </tr>
-                <tr>
-                  <th><kbd>↑</kbd> <kbd>↓</kbd></th>
-                  <td>Scroll by hand, any time</td>
-                </tr>
-                <tr>
-                  <th><kbd>+</kbd> <kbd>−</kbd></th>
-                  <td>Auto-scroll faster, slower</td>
-                </tr>
-              </tbody>
-            </table>
+      <section class="section">
+        <div class="container spec-grid">
+          <table class="spec">
+            <caption>Keys, as in VS Code</caption>
+            <tbody>
+              <tr>
+                <th><kbd>⌘P</kbd></th>
+                <td>Find a document</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘⇧P</kbd></th>
+                <td>Command palette</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘⇧F</kbd></th>
+                <td>Search and edit across documents</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘1</kbd> <kbd>2</kbd> <kbd>3</kbd></th>
+                <td>Source, split, render</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘B</kbd></th>
+                <td>Show or hide the sidebar</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘⇧V</kbd></th>
+                <td>Toggle the preview</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘K</kbd> <kbd>V</kbd></th>
+                <td>Preview to the side</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘N</kbd></th>
+                <td>New document</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘S</kbd></th>
+                <td>Save, or name and save an untitled one</td>
+              </tr>
+              <tr>
+                <th><kbd>⇧F10</kbd></th>
+                <td>Menu for the file selected in the tree</td>
+              </tr>
+              <tr>
+                <th><kbd>F2</kbd> <kbd>⌘⌫</kbd></th>
+                <td>Rename, or move to the Trash</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘⇧C</kbd></th>
+                <td>Insert a component</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘,</kbd></th>
+                <td>Settings</td>
+              </tr>
+              <tr>
+                <th><kbd>⌘Space</kbd></th>
+                <td>Start, pause, resume auto-scroll</td>
+              </tr>
+              <tr>
+                <th><kbd>↑</kbd> <kbd>↓</kbd></th>
+                <td>Scroll by hand, any time</td>
+              </tr>
+              <tr>
+                <th><kbd>+</kbd> <kbd>−</kbd></th>
+                <td>Auto-scroll faster, slower</td>
+              </tr>
+            </tbody>
+          </table>
 
-            <table class="spec">
-              <caption>SPECIFICATION</caption>
-              <tbody>
-                <tr>
-                  <th>Formats</th>
-                  <td>.md · .markdown · .mdx</td>
-                </tr>
-                <tr>
-                  <th>Renders</th>
-                  <td>GFM, mermaid, highlighted code, MDX components, images</td>
-                </tr>
-                <tr>
-                  <th>Components</th>
-                  <td>Alert, Callout, Card, Tabs, Tab</td>
-                </tr>
-                <tr>
-                  <th>Platforms</th>
-                  <td>macOS 13+ (Apple silicon and Intel), Linux x86-64</td>
-                </tr>
-                <tr>
-                  <th>Agents</th>
-                  <td>MCP over local HTTP</td>
-                </tr>
-                <tr>
-                  <th>Files</th>
-                  <td>New, rename, Trash. Never overwrites by accident</td>
-                </tr>
-                <tr>
-                  <th>Network</th>
-                  <td>None. Everything stays on the machine</td>
-                </tr>
-                <tr>
-                  <th>Source</th>
-                  <td>Elixir and React, on GitHub</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <table class="spec">
+            <caption>Specification</caption>
+            <tbody>
+              <tr>
+                <th>Formats</th>
+                <td>.md · .markdown · .mdx</td>
+              </tr>
+              <tr>
+                <th>Renders</th>
+                <td>GFM, mermaid, highlighted code, MDX components, images</td>
+              </tr>
+              <tr>
+                <th>Components</th>
+                <td>Alert, Callout, Card, Tabs, Tab</td>
+              </tr>
+              <tr>
+                <th>Platforms</th>
+                <td>macOS 13+ (Apple silicon and Intel), Linux x86-64</td>
+              </tr>
+              <tr>
+                <th>Terminal</th>
+                <td><code>markdn &lt;file or folder&gt;</code></td>
+              </tr>
+              <tr>
+                <th>Agents</th>
+                <td>MCP over local HTTP</td>
+              </tr>
+              <tr>
+                <th>Files</th>
+                <td>New, rename, Trash. Never overwrites by accident</td>
+              </tr>
+              <tr>
+                <th>Network</th>
+                <td>None. Everything stays on the machine</td>
+              </tr>
+              <tr>
+                <th>Source</th>
+                <td>Elixir and React, on GitHub</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
       <!-- Install --------------------------------------------------------- -->
-      <section class="band" id="install">
-        <div class="band__inner">
+      <section class="section" id="install">
+        <div class="container">
           <div class="lede-grid">
             <div>
-              <span class="index"><b>08</b> / INSTALL</span>
+              <span class="eyebrow">Install</span>
               <h2>Two commands, one window.</h2>
             </div>
             <div>
               <p>
-                MarkDN opens on your home folder and you point it wherever your notes live.
+                markdn opens on your home folder and you point it wherever your notes live.
                 Nothing to sign in to, nothing to sync.
               </p>
             </div>
           </div>
 
           <div class="install-grid">
-            <div class="install-card">
-              <h3>MACOS · HOMEBREW</h3>
+            <div class="card">
+              <h3>macOS · Homebrew</h3>
               <div class="command">
                 <code id="cmd-brew">brew tap filipecabaco/markdn https://github.com/filipecabaco/markdn &amp;&amp; brew install --cask markdn</code>
                 <button type="button" data-copy="cmd-brew">copy</button>
               </div>
             </div>
-            <div class="install-card">
-              <h3>MACOS AND LINUX · ONE LINE</h3>
+            <div class="card">
+              <h3>macOS and Linux · one line</h3>
               <div class="command">
                 <code id="cmd-curl">curl -fsSL https://raw.githubusercontent.com/filipecabaco/markdn/main/install.sh | sh</code>
                 <button type="button" data-copy="cmd-curl">copy</button>
               </div>
             </div>
+            <div class="card">
+              <h3>Open from the terminal</h3>
+              <pre class="terminal"><span class="comment"># a file: in the open window, or starts markdn on it</span>
+markdn README.md
+<span class="comment"># a folder: becomes the root</span>
+markdn ~/notes</pre>
+              <p class="note" style="margin-top: 0.75rem">
+                Both installers put <code>markdn</code> on your PATH.
+              </p>
+            </div>
           </div>
 
           <p class="note">
-            MarkDN ships unsigned for now, so the installer clears the macOS quarantine flag
+            markdn ships unsigned for now, so the installer clears the macOS quarantine flag
             for you. Building from source is documented in the repo.
           </p>
         </div>
@@ -1990,8 +1591,16 @@
     </main>
 
     <footer>
-      <div class="foot__inner">
-        <span>MarkDN</span>
+      <div class="container foot__inner">
+        <a class="wordmark" href="#top">
+          <svg class="mark" viewBox="-6 -6 72 72" aria-hidden="true">
+            <rect class="tile" x="0" y="0" width="60" height="17" rx="5" />
+            <rect class="tile" x="0" y="20" width="16" height="40" rx="5" />
+            <rect class="brand" x="22" y="20" width="16" height="40" rx="5" />
+            <rect class="tile" x="44" y="20" width="16" height="40" rx="5" />
+          </svg>
+          <span>markdn</span>
+        </a>
         <a href="https://github.com/filipecabaco/markdn">Source</a>
         <a href="https://github.com/filipecabaco/markdn/releases">Releases</a>
         <a href="https://github.com/filipecabaco/markdn/blob/main/docs/DEVELOPMENT.md">Build it</a>
@@ -2045,7 +1654,7 @@
         },
         {
           src: '<Callout type="tip" title="Components">\n  Resolved from a registry, never evaluated.\n</Callout>',
-          html: '<div class="callout"><div class="callout__head">TIP · COMPONENTS</div><p>Resolved from a registry, never evaluated.</p></div>',
+          html: '<div class="callout"><div class="callout__head">Tip · Components</div><p>Resolved from a registry, never evaluated.</p></div>',
         },
         {
           src: "## Formats",
@@ -2276,7 +1885,7 @@
 
         let html = "";
         if (commands.length) {
-          html += '<div class="palette__section">COMMANDS</div>';
+          html += '<div class="palette__section">Commands</div>';
           html += commands
             .map(
               (command, i) =>
@@ -2288,7 +1897,7 @@
             .join("");
         }
         if (docs.length) {
-          html += `<div class="palette__section">${term === "" ? "RECENT" : "DOCUMENTS"}</div>`;
+          html += `<div class="palette__section">${term === "" ? "Recent" : "Documents"}</div>`;
           html += docs
             .map(
               (doc, i) =>

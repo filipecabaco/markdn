@@ -1,11 +1,12 @@
 #!/bin/sh
-# MarkDN installer.
+# markdn installer.
 #
 #   curl -fsSL https://raw.githubusercontent.com/filipecabaco/markdn/main/install.sh | sh
 #
 # Environment overrides:
 #   MARKDN_VERSION — install a specific release tag (e.g. "0.2.0")
-#   MARKDN_PREFIX  — where the Linux AppImage lands (default: ~/.local/bin)
+#   MARKDN_PREFIX  — where the `markdn` command lands (default: ~/.local/bin)
+#   MARKDN_LIB_DIR — where the Linux AppImage lands (default: ~/.local/lib/markdn)
 #
 # POSIX sh on purpose: this runs on whatever /bin/sh the machine has, before
 # anything of ours is installed.
@@ -15,6 +16,7 @@ REPO="filipecabaco/markdn"
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 BIN_DIR="${MARKDN_PREFIX:-${HOME}/.local/bin}"
+LIB_DIR="${MARKDN_LIB_DIR:-${HOME}/.local/lib/markdn}"
 
 die() {
   printf 'error: %s\n' "$1" >&2
@@ -71,7 +73,7 @@ verify_sha() {
   printf 'Checksum verified.\n'
 }
 
-printf 'Installing MarkDN %s\n' "${TAG}"
+printf 'Installing markdn %s\n' "${TAG}"
 
 # ── Install ──────────────────────────────────────────────────────────────────
 
@@ -105,14 +107,26 @@ case "${OS}" in
     cp -R "${APP}" /Applications/
     hdiutil detach "${MNT}" -quiet || true
 
-    # MarkDN ships unsigned (no Apple Developer ID yet). Without stripping the
+    # markdn ships unsigned (no Apple Developer ID yet). Without stripping the
     # quarantine flag Gatekeeper refuses to open it at all, with the misleading
-    # "MarkDN is damaged and can't be opened". The Homebrew cask does the same in
+    # "markdn is damaged and can't be opened". The Homebrew cask does the same in
     # its postflight. Remove both once the DMG is signed and notarised.
     xattr -dr com.apple.quarantine "/Applications/${NAME}" 2>/dev/null || true
 
+    # The `markdn` command ships inside the bundle; link it onto the PATH.
+    CLI="/Applications/${NAME}/Contents/Resources/cli/markdn"
+    if [ -f "${CLI}" ]; then
+      chmod +x "${CLI}"
+      mkdir -p "${BIN_DIR}"
+      ln -sf "${CLI}" "${BIN_DIR}/markdn"
+    fi
+
     printf '\n%s installed to /Applications.\n' "${NAME}"
-    printf 'Launch it from Spotlight, or: open -a "%s"\n' "${NAME%.app}"
+    if [ -f "${CLI}" ]; then
+      printf 'Open a document from a terminal with: markdn notes.md\n'
+    else
+      printf 'Launch it from Spotlight, or: open -a "%s"\n' "${NAME%.app}"
+    fi
     ;;
 
   Linux)
@@ -125,35 +139,58 @@ case "${OS}" in
     trap 'rm -rf "${TMP}"' EXIT INT TERM
 
     printf 'Downloading %s\n' "$(basename "${URL}")"
-    curl -fsSL --progress-bar "${URL}" -o "${TMP}/markdn"
-    verify_sha "${URL}" "${TMP}/markdn"
+    curl -fsSL --progress-bar "${URL}" -o "${TMP}/markdn.AppImage"
+    verify_sha "${URL}" "${TMP}/markdn.AppImage"
 
-    mkdir -p "${BIN_DIR}"
-    mv "${TMP}/markdn" "${BIN_DIR}/markdn"
+    APPIMAGE="${LIB_DIR}/markdn.AppImage"
+    mkdir -p "${LIB_DIR}" "${BIN_DIR}"
+    mv "${TMP}/markdn.AppImage" "${APPIMAGE}"
+    chmod +x "${APPIMAGE}"
+
+    # The `markdn` command. The AppImage takes paths itself (a running markdn
+    # gets them through its single-instance handoff), but started from a
+    # terminal it would hold that terminal for as long as the app runs, so the
+    # command starts it detached. This replaces the AppImage that older
+    # installers put at this path.
+    cat > "${BIN_DIR}/markdn" <<WRAPPER
+#!/bin/sh
+# markdn: open documents and folders in the markdn app from a terminal.
+#
+#   markdn                 bring markdn forward (starting it if needed)
+#   markdn notes.md        open a document
+#   markdn ~/notes         make a folder the root
+#
+# Written by install.sh; the app itself is ${APPIMAGE}.
+set -eu
+for arg in "\$@"; do
+  case "\${arg}" in
+    -h | --help) sed -n '2,7s/^# \\{0,1\\}//p' "\$0"; exit 0 ;;
+    -*) printf 'markdn: unknown option %s\\n' "\${arg}" >&2; exit 2 ;;
+  esac
+  [ -e "\${arg}" ] || { printf 'markdn: %s: no such file or directory\\n' "\${arg}" >&2; exit 1; }
+done
+nohup "${APPIMAGE}" "\$@" >/dev/null 2>&1 &
+WRAPPER
     chmod +x "${BIN_DIR}/markdn"
-    printf '\nMarkDN installed to %s/markdn\n' "${BIN_DIR}"
+    printf '\nmarkdn installed to %s, with the markdn command in %s\n' "${LIB_DIR}" "${BIN_DIR}"
 
-    # An AppImage sitting in ~/.local/bin is invisible to the desktop launcher,
-    # so give it an entry. Best-effort: a headless box has no applications dir.
+    # An AppImage sitting in a lib directory is invisible to the desktop
+    # launcher, so give it an entry. Best-effort: a headless box has no
+    # applications dir.
     DESKTOP_DIR="${HOME}/.local/share/applications"
     if mkdir -p "${DESKTOP_DIR}" 2>/dev/null; then
       cat > "${DESKTOP_DIR}/markdn.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=MarkDN
+Name=markdn
 Comment=Markdown and MDX viewer and editor
-Exec=${BIN_DIR}/markdn %f
+Exec=${APPIMAGE} %F
 Terminal=false
 Categories=Development;TextEditor;
 MimeType=text/markdown;
 DESKTOP
       printf 'Desktop entry written to %s/markdn.desktop\n' "${DESKTOP_DIR}"
     fi
-
-    case ":${PATH}:" in
-      *":${BIN_DIR}:"*) ;;
-      *) printf '\nAdd %s to your PATH to launch it from a terminal.\n' "${BIN_DIR}" ;;
-    esac
     ;;
 
   *)
@@ -163,7 +200,14 @@ DESKTOP
     ;;
 esac
 
-printf '\nWhile MarkDN is running it serves its UI and an MCP server on\n'
+if [ -e "${BIN_DIR}/markdn" ]; then
+  case ":${PATH}:" in
+    *":${BIN_DIR}:"*) ;;
+    *) printf '\nAdd %s to your PATH to use the markdn command.\n' "${BIN_DIR}" ;;
+  esac
+fi
+
+printf '\nWhile markdn is running it serves its UI and an MCP server on\n'
 printf '127.0.0.1:43118. To let an agent read and write the documents you have\n'
 printf 'open, point an MCP client at:\n'
 printf '\n    http://localhost:43118/mcp\n'

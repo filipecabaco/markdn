@@ -1,5 +1,4 @@
 import {
-  Fragment,
   createContext,
   useCallback,
   useContext,
@@ -11,7 +10,8 @@ import {
   type MouseEvent,
 } from "react";
 import { listDocuments, type Entry } from "../api";
-import { lineFor } from "../lines";
+import { ChevronRight, FileText, Folder, FolderOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * Lazily expanding document tree.
@@ -65,7 +65,7 @@ function explorerCommand(event: KeyboardEvent<HTMLElement>): EntryCommand | null
  */
 export function unreadable(message: string): string {
   return /permission denied|eperm|eacces/i.test(message)
-    ? "MarkDN isn't allowed to read this folder."
+    ? "markdn isn't allowed to read this folder."
     : `This folder couldn't be read: ${message}`;
 }
 
@@ -184,12 +184,9 @@ function Level({
   revision = 0,
   onEntryMenu,
   depth = 0,
-  tail = true,
   listRef,
   onKeyDown,
 }: Props & {
-  /** Whether this level ends its line: true unless a sibling follows its folder. */
-  tail?: boolean;
   listRef?: React.Ref<HTMLUListElement>;
   onKeyDown?: (event: KeyboardEvent<HTMLUListElement>) => void;
 }) {
@@ -233,22 +230,25 @@ function Level({
     onEntryMenu(entry, event.clientX, event.clientY);
   };
 
-  // At the root a note stands alone. Inside a folder it is a row on that folder's
-  // line, so the track runs into it, and ends there when nothing follows.
-  const note = (kind: "error" | "loading" | "empty", text: string) =>
-    depth === 0 ? (
-      <div className={`tree__${kind}`}>{text}</div>
+  const note = (kind: "error" | "loading" | "empty", text: string) => {
+    const line = (
+      <div
+        className={cn(
+          "py-1 pr-2 pl-[calc(var(--depth)*12px+30px)] text-xs text-muted-foreground",
+          kind === "error" && "text-destructive",
+        )}
+      >
+        {text}
+      </div>
+    );
+    return depth === 0 ? (
+      <div style={{ "--depth": -1 } as CSSProperties}>{line}</div>
     ) : (
-      <ul className="tree" role="group">
-        <li
-          className={`tree__item tree__${kind}`}
-          data-terminus={tail || undefined}
-          style={{ "--depth": depth } as CSSProperties}
-        >
-          <div className="tree__row tree__file tree__note">{text}</div>
-        </li>
+      <ul role="group">
+        <li style={{ "--depth": depth } as CSSProperties}>{line}</li>
       </ul>
     );
+  };
 
   if (error) return note("error", unreadable(error));
   if (!entries) return note("loading", "Loading…");
@@ -257,7 +257,7 @@ function Level({
   return (
     <ul
       ref={listRef}
-      className="tree"
+      className="flex flex-col"
       role={depth === 0 ? "tree" : "group"}
       aria-label={depth === 0 ? "Documents" : undefined}
       onKeyDown={onKeyDown}
@@ -265,53 +265,46 @@ function Level({
       {entries.map((entry, index) => {
         const directory = entry.type === "directory";
         const open = directory && expanded.has(entry.path);
+        const current = !directory && selected === entry.path;
         // The first row of the tree holds the Tab stop until something is focused.
         const tabbable = active ? active === entry.path : depth === 0 && index === 0;
-        // Documents at the root ride the main line, which gets a name board of
-        // its own like every folder's, so they never read as a folder's stations.
-        const mainLineStart =
-          depth === 0 && !directory && entries.findIndex((e) => e.type !== "directory") === index;
-        // A folder's line ends at its last station however deep that sits, so
-        // only the last row of the last nested level stops the track.
-        const last = index === entries.length - 1;
-        const terminus = depth > 0 && tail && last && !open;
+        const Icon = directory ? (open ? FolderOpen : Folder) : FileText;
 
         return (
-          <Fragment key={entry.path}>
-          {mainLineStart && (
-            <li className="tree__board" data-ink="scarlet" aria-hidden="true">
-              <div className="tree__row tree__dir">Main line</div>
-            </li>
-          )}
           <li
+            key={entry.path}
             role="treeitem"
-            className="tree__item"
+            className="outline-none [&:focus-visible>.tree__row]:ring-2 [&:focus-visible>.tree__row]:ring-sidebar-ring"
             aria-level={depth + 1}
             aria-expanded={directory ? open : undefined}
-            aria-selected={directory ? undefined : selected === entry.path}
+            aria-selected={directory ? undefined : current}
             tabIndex={tabbable ? 0 : -1}
             data-path={entry.path}
             data-name={entry.name}
             data-type={entry.type}
-            data-terminus={terminus || undefined}
-            // The station stays on its line at any depth; the name steps in.
             style={{ "--depth": depth } as CSSProperties}
-            // Each top-level folder is a line; everything inside it rides that
-            // line's ink, which nested levels inherit through the CSS variable.
-            data-ink={depth === 0 ? lineFor(directory ? `${entry.path}/` : entry.path) : undefined}
             onFocus={(event) => {
               if (event.target === event.currentTarget) setActive(entry.path);
             }}
           >
             <div
-              className={`tree__row ${directory ? "tree__dir" : "tree__file"}${
-                !directory && selected === entry.path ? " is-selected" : ""
-              }`}
+              className={cn(
+                "tree__row flex h-7 cursor-default items-center gap-1.5 rounded-md pr-2 pl-[calc(var(--depth)*12px+8px)] text-[0.8125rem] text-sidebar-foreground/85 select-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                current && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+              )}
               onClick={() => (directory ? toggle(entry.path) : onSelect(entry.path))}
               onContextMenu={menuFor(entry)}
             >
-              {directory && <span className="tree__chevron" aria-hidden="true" />}
-              <span className="tree__name">{entry.name}</span>
+              {directory ? (
+                <ChevronRight
+                  aria-hidden="true"
+                  className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", open && "rotate-90")}
+                />
+              ) : (
+                <span className="w-3.5 shrink-0" aria-hidden="true" />
+              )}
+              <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate">{entry.name}</span>
             </div>
             {open && (
               <Level
@@ -321,11 +314,9 @@ function Level({
                 revision={revision}
                 onEntryMenu={onEntryMenu}
                 depth={depth + 1}
-                tail={depth === 0 || (tail && last)}
               />
             )}
           </li>
-          </Fragment>
         );
       })}
     </ul>
