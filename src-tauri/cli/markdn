@@ -1,0 +1,39 @@
+#!/bin/sh
+# markdn: open documents and folders in the markdn app from a terminal.
+#
+#   markdn                 bring markdn forward (starting it if needed)
+#   markdn notes.md        open a document
+#   markdn ~/notes         make a folder the root
+#
+# Shipped inside markdn.app (Contents/Resources/cli/markdn) and linked onto the
+# PATH by the Homebrew cask and install.sh. It hands the paths to the app the
+# way Finder does, so a running markdn opens them in its window and one that is
+# not running starts with them. The app resolves them: see Markdn.Opener.
+set -eu
+
+BUNDLE_ID="app.markdn.desktop"
+
+usage() {
+  sed -n '2,7s/^# \{0,1\}//p' "$0"
+}
+
+for arg in "$@"; do
+  case "${arg}" in
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -*)
+      printf 'markdn: unknown option %s\n' "${arg}" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+
+  if [ ! -e "${arg}" ]; then
+    printf 'markdn: %s: no such file or directory\n' "${arg}" >&2
+    exit 1
+  fi
+done
+
+exec open -b "${BUNDLE_ID}" "$@"

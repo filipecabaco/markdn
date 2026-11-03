@@ -2,7 +2,7 @@ defmodule Markdn.Settings do
   @moduledoc """
   User settings, persisted as JSON in a settings directory outside the app bundle.
 
-  MarkDN ships as a signed-nothing desktop app with no preferences window in the
+  markdn ships as a signed-nothing desktop app with no preferences window in the
   OS sense, so settings live in one small file the user can also edit by hand:
 
       macOS  ~/Library/Application Support/app.markdn.desktop/settings.json

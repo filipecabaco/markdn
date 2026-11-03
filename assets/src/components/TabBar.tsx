@@ -1,3 +1,6 @@
+import { BookOpen, FolderTree, ListTree, Search, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 /**
  * The iPhone's tab bar: the app's four places, as iOS puts them, at the bottom
  * within thumb reach. Sections, never actions — Save and Edit live in the top
@@ -6,52 +9,11 @@
 
 export type PhoneTab = "read" | "documents" | "outline" | "search";
 
-const TABS: { id: PhoneTab; label: string; icon: React.ReactNode }[] = [
-  {
-    id: "read",
-    label: "Read",
-    icon: (
-      <>
-        <rect x="5" y="3" width="14" height="18" rx="2" />
-        <path d="M8.5 8h7M8.5 12h7M8.5 16h4" />
-      </>
-    ),
-  },
-  {
-    id: "documents",
-    label: "Documents",
-    icon: (
-      <>
-        <path d="M6 3v18" />
-        <circle cx="6" cy="6" r="2" />
-        <circle cx="6" cy="12" r="2" />
-        <circle cx="6" cy="18" r="2" />
-        <path d="M11 6h8M11 12h8M11 18h6" />
-      </>
-    ),
-  },
-  {
-    id: "outline",
-    label: "Outline",
-    icon: (
-      <>
-        <path d="M12 3v18" />
-        <circle cx="12" cy="7" r="2.5" />
-        <circle cx="12" cy="17" r="2.5" />
-        <path d="M12 12h6" />
-      </>
-    ),
-  },
-  {
-    id: "search",
-    label: "Search",
-    icon: (
-      <>
-        <circle cx="11" cy="11" r="6" />
-        <path d="m15.5 15.5 4.5 4.5" />
-      </>
-    ),
-  },
+const TABS: { id: PhoneTab; label: string; icon: LucideIcon }[] = [
+  { id: "read", label: "Read", icon: BookOpen },
+  { id: "documents", label: "Documents", icon: FolderTree },
+  { id: "outline", label: "Outline", icon: ListTree },
+  { id: "search", label: "Search", icon: Search },
 ];
 
 interface Props {
@@ -61,19 +23,23 @@ interface Props {
 
 export function TabBar({ active, onChange }: Props) {
   return (
-    <nav className="tabbar" aria-label="Sections">
-      {TABS.map((tab) => (
+    <nav
+      className="flex shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)]"
+      aria-label="Sections"
+    >
+      {TABS.map(({ id, label, icon: Icon }) => (
         <button
-          key={tab.id}
+          key={id}
           type="button"
-          className={`tabbar__item${active === tab.id ? " is-active" : ""}`}
-          aria-current={active === tab.id ? "page" : undefined}
-          onClick={() => onChange(tab.id)}
+          className={cn(
+            "flex h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-medium text-muted-foreground outline-none focus-visible:bg-muted",
+            active === id && "text-foreground",
+          )}
+          aria-current={active === id ? "page" : undefined}
+          onClick={() => onChange(id)}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            {tab.icon}
-          </svg>
-          <span>{tab.label}</span>
+          <Icon aria-hidden="true" className="size-5" strokeWidth={active === id ? 2.2 : 1.8} />
+          <span>{label}</span>
         </button>
       ))}
     </nav>

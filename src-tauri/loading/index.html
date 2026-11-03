@@ -9,24 +9,27 @@
   and where the log is.
 
   Self-contained on purpose: nothing it needs can come from the server it is
-  waiting for. The same enamel field and mark as the iOS loading page
-  (src-tauri/mobile), with DESIGN.md's tokens inlined.
+  waiting for, so it uses the system face rather than the bundled Geist. The same
+  mark and animation as the iOS loading page (src-tauri/mobile): the tiles of the
+  "m" sliding together, holding, and sliding on, in a loop.
 -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark" />
-    <title>MarkDN</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>markdn</title>
     <style>
-      :root {
-        --enamel: oklch(0.205 0.068 271);
-        --on-enamel: oklch(0.965 0.004 95);
-        --on-enamel-muted: oklch(0.8 0.025 268);
-        --font-sign: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
-        --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+      html {
+        background: #fff;
+        color: #18181b;
       }
-
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #0a0a0a;
+          color: #fafafa;
+        }
+      }
       html,
       body {
         height: 100%;
@@ -35,8 +38,7 @@
       body {
         display: grid;
         place-items: center;
-        background: var(--enamel);
-        color: var(--on-enamel-muted);
+        font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
         -webkit-user-select: none;
         user-select: none;
         cursor: default;
@@ -45,50 +47,94 @@
       .start {
         display: grid;
         justify-items: center;
-        gap: 16px;
+        gap: 14px;
         max-width: 44ch;
         padding: 24px;
         text-align: center;
       }
+      .status {
+        margin: 0;
+        color: #71717a;
+      }
+      .hint {
+        margin: 0;
+        color: #71717a;
+        opacity: 0.85;
+      }
+      @media (prefers-color-scheme: dark) {
+        .status,
+        .hint {
+          color: #a1a1aa;
+        }
+      }
 
-      /* The wordmark's four lines meeting at the interchange: starting is the
-         one thing in motion, so the ring is all that moves. */
       .mark {
         width: 56px;
         height: 56px;
       }
-      .line {
-        stroke-width: 3;
-        stroke-linecap: round;
+      .mark .tile {
+        fill: currentColor;
       }
-      .ring {
-        fill: var(--enamel);
-        stroke: var(--on-enamel);
-        stroke-width: 2.5;
-        transform-origin: 12px 12px;
-        animation: arrive 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+      .mark .brand {
+        fill: oklch(0.58 0.18 262);
       }
-      @keyframes arrive {
-        to {
-          transform: scale(1.25);
+      @media (prefers-color-scheme: dark) {
+        .mark .brand {
+          fill: oklch(0.68 0.16 260);
         }
       }
-
-      .status {
-        margin: 0;
-        font: 600 15px/1.3 var(--font-sign);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+      .mark rect {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: slide 2100ms cubic-bezier(0.16, 1, 0.3, 1) infinite both;
       }
-      .hint {
-        margin: 0;
-        font: 13px/1.5 var(--font-ui);
-        opacity: 0.85;
+      .mark rect[data-tile="0"] {
+        --from: translateY(-90%);
       }
-
+      .mark rect[data-tile="1"] {
+        --from: translateY(-45%);
+        animation-delay: 90ms;
+      }
+      .mark rect[data-tile="3"] {
+        --from: translateY(-45%);
+        animation-delay: 180ms;
+      }
+      /* The brand stem drops in last and completes the "m". */
+      .mark rect[data-tile="2"] {
+        --from: translateY(-70%);
+        animation-delay: 300ms;
+      }
+      @keyframes slide {
+        0% {
+          transform: var(--from);
+          opacity: 0;
+        }
+        24% {
+          transform: none;
+          opacity: 1;
+        }
+        68% {
+          transform: none;
+          opacity: 1;
+        }
+        86%,
+        100% {
+          transform: translateY(35%);
+          opacity: 0;
+        }
+      }
       @media (prefers-reduced-motion: reduce) {
-        .ring {
-          animation: none;
+        .mark rect {
+          animation: breathe 1600ms ease-in-out infinite alternate;
+          animation-delay: 0ms;
+        }
+        @keyframes breathe {
+          from {
+            opacity: 0.45;
+          }
+          to {
+            opacity: 1;
+          }
         }
       }
     </style>
@@ -96,14 +142,13 @@
   <!-- The native title bar is hidden, so the page is the window's handle. -->
   <body data-tauri-drag-region>
     <main class="start" data-tauri-drag-region>
-      <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true" data-tauri-drag-region>
-        <path class="line" stroke="oklch(0.585 0.215 27)" d="M3 3l9 9" />
-        <path class="line" stroke="oklch(0.585 0.205 262)" d="M21 3l-9 9" />
-        <path class="line" stroke="oklch(0.84 0.165 85)" d="M12 12h9" />
-        <path class="line" stroke="oklch(0.655 0.165 145)" d="M12 12v9" />
-        <circle class="ring" cx="12" cy="12" r="4" />
+      <svg class="mark" viewBox="-6 -6 72 72" aria-hidden="true" data-tauri-drag-region>
+        <rect data-tile="0" class="tile" x="0" y="0" width="60" height="17" rx="5" />
+        <rect data-tile="1" class="tile" x="0" y="20" width="16" height="40" rx="5" />
+        <rect data-tile="2" class="brand" x="22" y="20" width="16" height="40" rx="5" />
+        <rect data-tile="3" class="tile" x="44" y="20" width="16" height="40" rx="5" />
       </svg>
-      <p class="status" role="status" data-tauri-drag-region>Opening MarkDN</p>
+      <p class="status" role="status" data-tauri-drag-region>Opening markdn</p>
       <p class="hint" id="hint" hidden data-tauri-drag-region>
         The first launch unpacks the runtime and takes a few seconds. Later launches are
         quicker.

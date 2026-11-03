@@ -55,7 +55,7 @@ defmodule Markdn.MCP.HandlerTest do
                  "arguments" => %{"path" => "../../etc/passwd"}
                })
 
-      assert text =~ "outside the MarkDN root"
+      assert text =~ "outside the markdn root"
     end
 
     test "list_components matches the renderer registry" do

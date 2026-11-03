@@ -205,3 +205,26 @@ export function saveSession(patch: Partial<Session>): Promise<Session> {
     body: JSON.stringify(patch),
   });
 }
+
+/**
+ * A document someone asked the app to open from outside it — `markdn notes.md`
+ * in a terminal, Finder's Open With — held by the server until a window takes
+ * it, so a request made before the window connected is not lost.
+ *
+ * `document` is root-relative. `root` is set when the server had to move the
+ * root to reach what was asked for (a folder, or a file outside the old root);
+ * the window then treats it as a root change. `error` says why nothing opened.
+ */
+export interface OpenRequest {
+  document: string | null;
+  root: string | null;
+  error: string | null;
+}
+
+export function takeOpenRequest(): Promise<OpenRequest> {
+  return request("/api/open/take", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "{}",
+  });
+}

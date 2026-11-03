@@ -1,10 +1,15 @@
+import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 // The bundle is emitted straight into priv/static, which is what Francis serves
 // (config :francis, static:) and what the mix release copies into the desktop app.
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: { "@": path.resolve(import.meta.dirname, "./src") },
+  },
   build: {
     outDir: "../priv/static",
     // Cleared on every build: each one emits new hashed names, and keeping the

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Notice } from "./Notice";
 import { REGISTRY } from "./registry";
 
 /**
@@ -44,10 +45,9 @@ export function MdxNode({ children, ...rest }: MdxNodeProps) {
 
   if (!entry) {
     return (
-      <div className="mdx-unknown" role="note" {...position}>
-        <strong>Unknown component &lt;{name}&gt;</strong>
-        <span>Known components: {Object.keys(REGISTRY).join(", ")}</span>
-      </div>
+      <Notice title={`Unknown component <${name}>`} {...position}>
+        Known components: {Object.keys(REGISTRY).join(", ")}
+      </Notice>
     );
   }
 
@@ -56,10 +56,10 @@ export function MdxNode({ children, ...rest }: MdxNodeProps) {
   return (
     <div className="mdx-block" {...position}>
       {dropped.length > 0 && (
-        <div className="mdx-warning" role="note">
+        <Notice>
           Ignored non-JSON {dropped.length === 1 ? "prop" : "props"} on &lt;{name}&gt;:{" "}
           {dropped.join(", ")}
-        </div>
+        </Notice>
       )}
       <Component {...props}>{children}</Component>
     </div>

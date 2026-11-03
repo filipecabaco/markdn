@@ -42,9 +42,9 @@ setup_fixture() {
 {
   "tag_name": "v9.9.9",
   "assets": [
-    { "browser_download_url": "https://example.test/MarkDN_9.9.9_amd64.AppImage" },
-    { "browser_download_url": "https://example.test/MarkDN_9.9.9_amd64.AppImage.sha256" },
-    { "browser_download_url": "https://example.test/MarkDN_9.9.9_aarch64.dmg" }
+    { "browser_download_url": "https://example.test/markdn_9.9.9_amd64.AppImage" },
+    { "browser_download_url": "https://example.test/markdn_9.9.9_amd64.AppImage.sha256" },
+    { "browser_download_url": "https://example.test/markdn_9.9.9_aarch64.dmg" }
   ]
 }
 JSON
@@ -96,9 +96,16 @@ printf 'install.sh: happy path\n'
 setup_fixture false
 if output="$(run_installer 2>&1)"; then
   check "installer exits 0" true
-  check "binary installed"        "$([ -f "${WORK}/prefix/markdn" ] && echo true || echo false)"
-  check "binary is executable"    "$([ -x "${WORK}/prefix/markdn" ] && echo true || echo false)"
-  check "payload intact"          "$([ "$(cat "${WORK}/prefix/markdn")" = "PAYLOAD-v1" ] && echo true || echo false)"
+  appimage="${WORK}/home/.local/lib/markdn/markdn.AppImage"
+  check "AppImage installed"      "$([ -f "${appimage}" ] && echo true || echo false)"
+  check "AppImage is executable"  "$([ -x "${appimage}" ] && echo true || echo false)"
+  check "payload intact"          "$([ "$(cat "${appimage}")" = "PAYLOAD-v1" ] && echo true || echo false)"
+  check "markdn command installed" "$([ -x "${WORK}/prefix/markdn" ] && echo true || echo false)"
+  check "command is valid sh"     "$(sh -n "${WORK}/prefix/markdn" && echo true || echo false)"
+  check "command points at the AppImage" "$(grep -qF "${appimage}" "${WORK}/prefix/markdn" && echo true || echo false)"
+  check "command prints usage"    "$(sh "${WORK}/prefix/markdn" --help | grep -q 'markdn notes.md' && echo true || echo false)"
+  check "command refuses a missing path" "$(sh "${WORK}/prefix/markdn" "${WORK}/nope.md" 2>/dev/null && echo false || echo true)"
+  check "desktop entry launches the AppImage" "$(grep -qF "Exec=${appimage} %F" "${WORK}/home/.local/share/applications/markdn.desktop" && echo true || echo false)"
   check "desktop entry written"   "$([ -f "${WORK}/home/.local/share/applications/markdn.desktop" ] && echo true || echo false)"
   check "reports the resolved tag" "$(grep -q 'v9.9.9' <<<"${output}" && echo true || echo false)"
   check "reports verification"     "$(grep -q 'Checksum verified' <<<"${output}" && echo true || echo false)"
@@ -116,7 +123,7 @@ if output="$(run_installer 2>&1)"; then
 else
   check "installer rejects a checksum mismatch" true
   check "says why" "$(grep -q 'checksum mismatch' <<<"${output}" && echo true || echo false)"
-  check "installs nothing" "$([ ! -f "${WORK}/prefix/markdn" ] && echo true || echo false)"
+  check "installs nothing" "$([ ! -e "${WORK}/home/.local/lib/markdn/markdn.AppImage" ] && [ ! -e "${WORK}/prefix/markdn" ] && echo true || echo false)"
 fi
 
 printf '\n%d passed, %d failed\n' "${pass}" "${fail}"

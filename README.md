@@ -1,9 +1,9 @@
-# MarkDN
+# markdn
 
 **A markdown and MDX editor that renders the whole document.** Diagrams, code,
 components. Your folder, your files, on your machine.
 
-![MarkDN in split view](docs/screenshots/split-view.png)
+![markdn in split view](docs/screenshots/split-view.png)
 
 ## Install
 
@@ -20,8 +20,15 @@ brew install --cask markdn
 curl -fsSL https://raw.githubusercontent.com/filipecabaco/markdn/main/install.sh | sh
 ```
 
-MarkDN currently ships unsigned, so the installer clears the macOS quarantine
+markdn currently ships unsigned, so the installer clears the macOS quarantine
 flag for you — otherwise Gatekeeper refuses to open it.
+
+Every release also carries its own copy of the installer, so the latest one is
+always at
+`https://github.com/filipecabaco/markdn/releases/latest/download/install.sh`.
+Set `MARKDN_VERSION=0.4.0` (for example) to install a specific release.
+
+Both install a `markdn` command (the installer puts it in `~/.local/bin`).
 
 ## What you get
 
@@ -88,15 +95,28 @@ any file to rename it, copy its path, or move it to the Trash, where it can come
 back from. The tree works from the keyboard too: arrows to walk it, `Shift+F10`
 for the same menu.
 
-**Your assistant works on the same file you do.** MarkDN speaks MCP, so Claude
+**Your assistant works on the same file you do.** markdn speaks MCP, so Claude
 and other agents can list, read, and write the documents you have open — and the
 window updates the moment they do. If you have unsaved changes when they write,
-MarkDN asks whether to reload theirs or keep yours instead of replacing your text.
+markdn asks whether to reload theirs or keep yours instead of replacing your text.
 
 **Private by default.** Everything runs on your machine. Nothing leaves it, and
 MDX is rendered, never executed.
 
 ## Using it
+
+From a terminal:
+
+```bash
+markdn notes.md      # open a document
+markdn ~/notes       # open a folder as the root
+markdn               # bring markdn forward
+```
+
+A running markdn opens the file in its window, and one that is not running
+starts with it. A file outside the current root moves the root to the file's
+folder, unless `MARKDN_ROOT` pins it. On macOS, `open -a markdn notes.md` and
+Finder's Open With do the same.
 
 The keys are VS Code's, so the ones you already know work here.
 
@@ -125,7 +145,7 @@ The keys are VS Code's, so the ones you already know work here.
 
 ## Working with an assistant
 
-Point any MCP client at MarkDN while it is running:
+Point any MCP client at markdn while it is running:
 
 ```
 http://localhost:43118/mcp

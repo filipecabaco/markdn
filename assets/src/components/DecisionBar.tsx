@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
 
 /**
  * A question the app cannot answer for the user, asked in the status strip.
@@ -38,7 +39,7 @@ export function DecisionBar({ decision, onDone }: Props) {
   return (
     <div
       ref={bar}
-      className="banner banner--decision"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b bg-muted/60 px-3 py-2 text-sm"
       role="alertdialog"
       aria-label={decision.message}
       onKeyDown={(event) => {
@@ -48,18 +49,19 @@ export function DecisionBar({ decision, onDone }: Props) {
         choose(cancel.run);
       }}
     >
-      <span className="banner__dot" />
-      <span className="banner__message">{decision.message}</span>
-      <span className="banner__actions">
+      <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
+      <span className="min-w-0 flex-1">{decision.message}</span>
+      <span className="flex flex-wrap gap-1.5">
         {decision.actions.map((action, index) => (
-          <button
+          <Button
             key={action.label}
             type="button"
-            className={`button${index === 0 ? "" : " button--quiet"}`}
+            size="sm"
+            variant={index === 0 ? "default" : "outline"}
             onClick={() => choose(action.run)}
           >
             {action.label}
-          </button>
+          </Button>
         ))}
       </span>
     </div>

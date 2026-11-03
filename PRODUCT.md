@@ -7,7 +7,7 @@ product
 ## Users
 
 Developers and technical writers who live in markdown, first on an **iPad** held or
-propped up — touch first, a keyboard attached for longer writing — and on an
+propped up â touch first, a keyboard attached for longer writing â and on an
 **iPhone**, where they mostly read and make light edits: a typo, a line, a checkbox.
 The desktop window is the third place, and follows the same design. They arrive
 with a job already in mind: read a document, find their place in it, fix a
@@ -21,7 +21,7 @@ that legible rather than surprising.
 
 ## Product Purpose
 
-MarkDN is a markdown and MDX viewer and editor served by Francis into a Tauri
+markdn is a markdown and MDX viewer and editor served by Francis into a Tauri
 window. It renders what other previewers will not: registered MDX components,
 mermaid diagrams, syntax-highlighted code, all without evaluating anything from the
 document. It exposes the same documents over MCP so an agent and a person can work
@@ -32,10 +32,19 @@ which renders here renders the same way everywhere else it is published.
 
 ## Brand Personality
 
-Wayfinding. Clear, confident, built to be read at a glance and touched without
-aiming: a document is a line you can see your place on. Voice is terse and
-factual, as signage is: labels, not sentences; no exclamation, no encouragement,
-no personality in the chrome.
+Quiet and exact. The chrome is stock and recedes; the document is the only thing
+with presence. Voice is terse and factual: labels, not sentences; sentence case;
+no exclamation, no encouragement, no personality in the chrome.
+
+## Brand Commitments
+
+- Name: "markdn", always lowercase, in the app, the bundle, the docs and the
+  command (`markdn README.md`).
+- Logo: four rounded tiles forming an "m" — a top bar over three stems — with the
+  middle stem in the one brand blue and the rest in the text colour, so it sits in
+  any theme. A sibling of yaah’s tile "y".
+- Look: the same stock shadcn system as yaah (zinc neutrals, Geist, one radius),
+  so the two apps read as one family.
 
 ## Anti-references
 
@@ -44,7 +53,8 @@ no personality in the chrome.
 - **GitHub's markdown preview.** The default styled-markdown look every developer
   already has and does not need a second copy of.
 - **Glassy, neon or gradient surfaces.** Blurred panels, glow, gradient text.
-- Notion/Linear-adjacent SaaS softness: rounded cards, soft grays, purple accent.
+- **A bespoke visual world.** Themed metaphors, custom signage, decorative colour
+  coding. Every one of them is something to learn before the document can be read.
 
 ## Design Principles
 

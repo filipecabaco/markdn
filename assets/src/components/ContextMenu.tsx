@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * A right-click menu drawn by the app.
@@ -102,7 +103,7 @@ export function ContextMenu({ x, y, items, label, onClose }: Props) {
   return (
     <div
       ref={menu}
-      className="menu"
+      className="fixed z-50 min-w-48 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
       role="menu"
       aria-label={label}
       style={{ left: position.left, top: position.top }}
@@ -112,13 +113,16 @@ export function ContextMenu({ x, y, items, label, onClose }: Props) {
       {items.map((item, index) =>
         item === "separator" ? (
           // eslint-disable-next-line react/no-array-index-key -- separators are positional
-          <div key={`separator-${index}`} className="menu__separator" role="separator" />
+          <div key={`separator-${index}`} className="-mx-1 my-1 h-px bg-border" role="separator" />
         ) : (
           <button
             key={item.label}
             type="button"
             role="menuitem"
-            className={`menu__item${item.danger ? " is-danger" : ""}`}
+            className={cn(
+              "flex w-full cursor-default items-center gap-4 rounded-md px-2 py-1.5 text-left text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50",
+              item.danger && "text-destructive hover:text-destructive focus:text-destructive",
+            )}
             disabled={item.disabled}
             onClick={() => {
               onClose();
@@ -126,7 +130,9 @@ export function ContextMenu({ x, y, items, label, onClose }: Props) {
             }}
           >
             <span>{item.label}</span>
-            {item.hint && <kbd className="menu__hint">{item.hint}</kbd>}
+            {item.hint && (
+              <kbd className="ml-auto font-sans text-xs tracking-widest text-muted-foreground">{item.hint}</kbd>
+            )}
           </button>
         ),
       )}

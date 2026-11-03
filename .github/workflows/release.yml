@@ -184,7 +184,7 @@ jobs:
 
       # ── Version stamp ────────────────────────────────────────────────────────
       # Before anything reads these files:
-      #   * tauri.conf.json names the bundle (MarkDN_<version>_<arch>.dmg), and
+      #   * tauri.conf.json names the bundle (markdn_<version>_<arch>.dmg), and
       #     that name is what the Homebrew cask URL points at — stale here means a
       #     404 on `brew install`.
       #   * mix.exs sets the OTP app vsn reported by the running build.
@@ -340,6 +340,18 @@ jobs:
           fi
           echo "v${VERSION} is unpublished; safe to create."
 
+      # The installer rides along with the bundles, so every release has one at
+      # a stable link: releases/latest/download/install.sh. Kept out of dist/,
+      # whose names must all carry the version (checked above). It is the copy
+      # from this commit, matching the asset names this release was built with.
+      - name: Check out the installer
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: src
+          sparse-checkout: install.sh
+          sparse-checkout-cone-mode: false
+
       # target_commitish is explicit: the action otherwise tags the default
       # branch's *current* HEAD, and main can move while the bundles build.
       - name: Create GitHub Release
@@ -348,7 +360,9 @@ jobs:
           tag_name: v${{ needs.version.outputs.version }}
           target_commitish: ${{ github.sha }}
           name: v${{ needs.version.outputs.version }}
-          files: dist/*
+          files: |
+            dist/*
+            src/install.sh
           generate_release_notes: true
 
   # ── 4. Installer against the real release ────────────────────────────────────
@@ -373,20 +387,28 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
+      # The copy attached to the release, over the link the README gives, so a
+      # missing or stale installer asset fails here too.
       - name: Run the installer exactly as a user would
-        run: sh install.sh
+        run: |
+          curl -fsSL "https://github.com/${{ github.repository }}/releases/download/v${MARKDN_VERSION}/install.sh" | sh
 
       - name: Assert it landed
         shell: bash
         run: |
           set -euo pipefail
           if [ "$RUNNER_OS" = "macOS" ]; then
-            test -d "/Applications/MarkDN.app" || { echo "::error::MarkDN.app not installed"; exit 1; }
-            test -x "/Applications/MarkDN.app/Contents/MacOS/desktop" \
+            test -d "/Applications/markdn.app" || { echo "::error::markdn.app not installed"; exit 1; }
+            test -x "/Applications/markdn.app/Contents/MacOS/desktop" \
               || { echo "::error::sidecar missing from the installed bundle"; exit 1; }
-            echo "Installed $(defaults read /Applications/MarkDN.app/Contents/Info.plist CFBundleShortVersionString)"
+            test -x "/Applications/markdn.app/Contents/Resources/cli/markdn" \
+              || { echo "::error::markdn command missing from the installed bundle"; exit 1; }
+            test -L "$HOME/.local/bin/markdn" || { echo "::error::markdn command not linked"; exit 1; }
+            "$HOME/.local/bin/markdn" --help >/dev/null
+            echo "Installed $(defaults read /Applications/markdn.app/Contents/Info.plist CFBundleShortVersionString)"
           else
-            test -x "$HOME/.local/bin/markdn" || { echo "::error::AppImage not installed"; exit 1; }
+            test -x "$HOME/.local/lib/markdn/markdn.AppImage" || { echo "::error::AppImage not installed"; exit 1; }
+            test -x "$HOME/.local/bin/markdn" || { echo "::error::markdn command not installed"; exit 1; }
             test -f "$HOME/.local/share/applications/markdn.desktop" \
               || { echo "::error::desktop entry not written"; exit 1; }
           fi
@@ -451,7 +473,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           rm -rf sums
 
-      - name: Rewrite cask version, checksums and URLs
+      - name: Render the cask for this release
         shell: bash
         env:
           ARM_DMG: ${{ steps.dmgs.outputs.arm_dmg }}
@@ -461,35 +483,37 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import os, re
+          import os
 
           version = os.environ["VERSION"]
-          path = "Casks/markdn.rb"
-          src = open(path).read()
 
           def arch_of(dmg):
-              prefix, suffix = f"MarkDN_{version}_", ".dmg"
+              prefix, suffix = f"markdn_{version}_", ".dmg"
               if not (dmg.startswith(prefix) and dmg.endswith(suffix)):
                   raise SystemExit(f"unexpected DMG name: {dmg}")
               return dmg[len(prefix):-len(suffix)]
 
-          # on_arm precedes on_intel in the cask, so replacing each pair of matches
-          # in file order maps arm -> intel.
-          archs = iter([arch_of(os.environ["ARM_DMG"]), arch_of(os.environ["INTEL_DMG"])])
-          shas = iter([os.environ["ARM_SHA"], os.environ["INTEL_SHA"]])
+          # Rendered from the template rather than patched in place, so a change to
+          # the cask's static parts (the app name, a new stanza) ships in the same
+          # commit as the release whose DMGs it describes, never ahead of them.
+          src = open(".github/cask/markdn.rb").read()
+          values = {
+              "@VERSION@": version,
+              "@ARM_SHA@": os.environ["ARM_SHA"],
+              "@INTEL_SHA@": os.environ["INTEL_SHA"],
+              "@ARM_ARCH@": arch_of(os.environ["ARM_DMG"]),
+              "@INTEL_ARCH@": arch_of(os.environ["INTEL_DMG"]),
+          }
+          for placeholder, value in values.items():
+              if placeholder not in src:
+                  raise SystemExit(f"{placeholder} missing from .github/cask/markdn.rb")
+              src = src.replace(placeholder, value)
 
-          src = re.sub(r'version "[^"]*"', f'version "{version}"', src, count=1)
-          src = re.sub(r'sha256 "[^"]*"', lambda _: f'sha256 "{next(shas)}"', src, count=2)
-          src, n = re.subn(
-              r'(MarkDN_#\{version\}_)[^.]+(\.dmg)',
-              lambda m: f"{m.group(1)}{next(archs)}{m.group(2)}",
-              src,
-              count=2,
-          )
-          if n != 2:
-              raise SystemExit(f"expected 2 DMG URLs in the cask, rewrote {n}")
-
-          open(path, "w").write(src)
+          # The template's own header is about the template; the rendered cask
+          # points back at it instead.
+          body = src[src.index('cask "markdn" do'):]
+          header = "# Generated from .github/cask/markdn.rb by the release workflow. Edit that file.\n"
+          open("Casks/markdn.rb", "w").write(header + body)
           PY
           git --no-pager diff -- Casks/markdn.rb || true
 

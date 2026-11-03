@@ -11,7 +11,7 @@ use std::sync::mpsc;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-const APP_NAME: &str = "MarkDN";
+const APP_NAME: &str = "markdn";
 
 // Flipped to false when the app is quitting. The channel threads stop sending
 // heartbeats once this is false, which lets the sidecar detect heartbeat loss
@@ -97,6 +97,49 @@ fn send_channel_event(name: &str, payload: serde_json::Value) {
     send_channel_message(message.to_string());
 }
 
+// markdn: files and folders to open, from `markdn <path>` (this process's argv,
+// or a second launch's, forwarded by the single-instance plugin) and from macOS
+// open-file events (`open -a markdn <path>`, Finder's Open With). They are sent
+// to the backend as an "open_paths" event, where Markdn.Opener resolves them.
+// Paths that arrive before the channel is up wait here, and the channel thread
+// sends them the moment it connects; the lock is held across the check and the
+// push, so a path is never queued after that flush has already run.
+static PENDING_OPEN: Mutex<Vec<String>> = Mutex::new(Vec::new());
+
+fn open_paths(paths: Vec<String>) {
+    if paths.is_empty() {
+        return;
+    }
+
+    let Ok(mut pending) = PENDING_OPEN.lock() else { return };
+    let connected = CHANNEL_TX.lock().map(|tx| tx.is_some()).unwrap_or(false);
+
+    if connected {
+        send_channel_event("open_paths", serde_json::json!({ "paths": paths }));
+    } else {
+        pending.extend(paths);
+    }
+}
+
+fn flush_open_paths() {
+    let Ok(mut pending) = PENDING_OPEN.lock() else { return };
+    if !pending.is_empty() {
+        let paths: Vec<String> = pending.drain(..).collect();
+        send_channel_event("open_paths", serde_json::json!({ "paths": paths }));
+    }
+}
+
+// The paths in a command line: every argument but the program itself and flags
+// (macOS adds -psn_… when Finder launches an app), made absolute against the
+// directory the command ran in, since the backend runs somewhere else.
+fn paths_from_args(args: &[String], cwd: &std::path::Path) -> Vec<String> {
+    args.iter()
+        .skip(1)
+        .filter(|arg| !arg.starts_with('-'))
+        .map(|arg| cwd.join(arg).to_string_lossy().into_owned())
+        .collect()
+}
+
 fn main() {
     // A panic in setup or a callback otherwise ends the app with nothing in the
     // log — a packaged app has no terminal for the default hook to print to.
@@ -107,9 +150,11 @@ fn main() {
     }));
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            // Opening the app again brings the running one forward.
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            // Opening the app again brings the running one forward, with
+            // whatever it was asked to open (`markdn notes.md` while running).
             show_main_window(app);
+            open_paths(paths_from_args(&args, std::path::Path::new(&cwd)));
         }))
         .plugin(tauri_plugin_shell::init())
         .plugin(
@@ -151,6 +196,12 @@ fn main() {
             Menu::with_items(handle, &[&app_menu, &edit_menu])
         })
         .setup(|app| {
+            // markdn: `markdn notes.md` when the app was not running yet.
+            if let Ok(cwd) = std::env::current_dir() {
+                let args: Vec<String> = std::env::args().collect();
+                open_paths(paths_from_args(&args, &cwd));
+            }
+
             let port = resolve_port();
             let handle = app.handle().clone();
             // Everything after this runs on a worker thread. `setup` runs on the
@@ -217,6 +268,18 @@ fn main() {
             // Clicking the Dock icon brings the window back.
             #[cfg(target_os = "macos")]
             tauri::RunEvent::Reopen { .. } => show_main_window(app_handle),
+            // markdn: `open -a markdn notes.md` and Finder's Open With. Arrives
+            // at launch too, before the backend is up; open_paths holds it.
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Opened { urls } => {
+                show_main_window(app_handle);
+                open_paths(
+                    urls.iter()
+                        .filter_map(|url| url.to_file_path().ok())
+                        .map(|path| path.to_string_lossy().into_owned())
+                        .collect(),
+                );
+            }
             _ => {}
         });
 }
@@ -877,6 +940,8 @@ fn start_channel(app: tauri::AppHandle) {
             if let Ok(mut guard) = CHANNEL_TX.lock() {
                 *guard = Some(tx.clone());
             }
+            // markdn: whatever was asked to open while the backend was starting.
+            flush_open_paths();
 
             // Ticker: queue a heartbeat every 100ms, and say so when the sleep
             // overran. macOS App Nap throttles this thread's timer once the
@@ -1150,5 +1215,29 @@ fn set_tray(app: &tauri::AppHandle, payload: serde_json::Value) {
             "error",
             serde_json::json!({"message": format!("Failed to build tray: {}", error)}),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::paths_from_args;
+    use std::path::Path;
+
+    #[test]
+    fn paths_from_args_skips_the_program_and_flags_and_resolves_against_cwd() {
+        let args: Vec<String> = ["/Applications/markdn.app/Contents/MacOS/markdn", "-psn_0_123", "notes.md", "/abs/doc.mdx", "../up"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+
+        assert_eq!(
+            paths_from_args(&args, Path::new("/home/me")),
+            vec!["/home/me/notes.md", "/abs/doc.mdx", "/home/me/../up"]
+        );
+    }
+
+    #[test]
+    fn paths_from_args_is_empty_for_a_plain_launch() {
+        assert!(paths_from_args(&["markdn".to_string()], Path::new("/")).is_empty());
     }
 }

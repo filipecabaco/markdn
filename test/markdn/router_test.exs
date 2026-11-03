@@ -102,6 +102,20 @@ defmodule Markdn.RouterTest do
     assert conn.resp_body == ""
   end
 
+  test "a file handed to the app from outside is taken once", %{root: root} do
+    Markdn.Opener.take()
+    fixture(root, "from-cli.md", "# hi")
+    :ok = Markdn.Opener.request([Path.join(root, "from-cli.md")])
+
+    first = call(:post, "/api/open/take", %{})
+    assert first.status == 200
+
+    assert %{"document" => "from-cli.md", "root" => nil, "error" => nil} =
+             Jason.decode!(first.resp_body)
+
+    assert %{"document" => nil} = Jason.decode!(call(:post, "/api/open/take", %{}).resp_body)
+  end
+
   describe "LocalGuard" do
     test "rejects a request with a non-loopback Host" do
       conn = Markdn.call(conn(:get, "http://evil.test/api/health"), @opts)

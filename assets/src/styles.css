@@ -1,1026 +1,250 @@
 /*
- * MarkDN — Midnight Line.
+ * markdn — stock shadcn on Tailwind 4, the same system as yaah: zinc neutrals,
+ * Geist, one radius, and a single brand colour that only the mark wears.
  *
- * A document is a line. The shell is a transit diagram fired in midnight-blue
- * enamel: every top-level folder is a line in one of four inks, documents are its
- * stations, and the open document's headings are a line of their own, with the
- * section in view as the lit interchange. The document itself sits on a
- * porcelain card inset in the enamel — deep enamel in the dark appearance.
- *
- * Two palettes, kept apart on purpose. The enamel tokens paint the shell and
- * are the same in both appearances; the document tokens (canvas, panel,
- * surface, ink…) paint the card and everything that floats over it, and are
- * redefined for dark. Line inks are only ever lines, station rings and state.
+ * What is still hand-written below is what Tailwind cannot say well: the
+ * source pane (a transparent textarea over a highlighted layer, which must
+ * agree glyph for glyph), the rendered document's prose, and the code palette
+ * Shiki writes as CSS variables.
  */
 
-@font-face {
-  font-family: "Barlow Condensed";
-  src: url("/fonts/BarlowCondensed-Medium.ttf") format("truetype");
-  font-weight: 500;
-  font-display: swap;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+/* The radix state variants the shadcn primitives are written against. */
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
+  }
 }
-@font-face {
-  font-family: "Barlow Condensed";
-  src: url("/fonts/BarlowCondensed-SemiBold.ttf") format("truetype");
-  font-weight: 600;
-  font-display: swap;
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
+}
+@custom-variant data-checked {
+  &:where([data-state="checked"]),
+  &:where([data-checked]:not([data-checked="false"])) {
+    @slot;
+  }
+}
+@custom-variant data-unchecked {
+  &:where([data-state="unchecked"]),
+  &:where([data-unchecked]:not([data-unchecked="false"])) {
+    @slot;
+  }
+}
+@custom-variant data-disabled {
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-brand: var(--brand);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
 :root {
-  /* The shell: midnight enamel, porcelain type. The same in both appearances. */
-  --enamel: oklch(0.205 0.068 271);
-  --enamel-raised: oklch(0.26 0.066 270);
-  --enamel-line: oklch(0.39 0.052 270);
-  --on-enamel: oklch(0.965 0.004 95);
-  --on-enamel-muted: oklch(0.80 0.025 268);
-
-  /* Line inks. Lines, station rings and state; never decoration. */
-  --scarlet: oklch(0.585 0.215 27);
-  --cobalt: oklch(0.585 0.205 262);
-  --amber: oklch(0.84 0.165 85);
-  --green: oklch(0.655 0.165 145);
-  --line-ink: var(--scarlet);
-  --line-ink-on: oklch(0.985 0.003 95);
-
-  /* The document card: porcelain. */
-  --canvas: oklch(0.935 0.006 265);
-  --panel: oklch(0.925 0.008 265);
-  --surface: oklch(0.968 0.004 95);
-  --line: oklch(0.875 0.01 265);
-  --line-strong: oklch(0.775 0.014 265);
-  /* The border that identifies an interactive control: 3:1 against the card
-     (WCAG 1.4.11), which the decorative hairlines above deliberately are not. */
-  --line-control: oklch(0.565 0.025 265);
-
-  --ink: oklch(0.235 0.04 268);
-  --ink-muted: oklch(0.455 0.03 268);
-  --ink-faint: oklch(0.48 0.025 268);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --warning: oklch(0.55 0.13 70);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  /* The one brand colour: the middle stem of the mark. Never a UI accent. */
+  --brand: oklch(0.58 0.18 262);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 
   /* Source syntax: low chroma, so a highlighted document reads as a document. */
-  --syn-marker: oklch(0.6 0.02 268);
-  --syn-heading: oklch(0.235 0.04 268);
+  --syn-marker: oklch(0.62 0 0);
+  --syn-heading: oklch(0.145 0 0);
   --syn-code: oklch(0.45 0.08 150);
   --syn-link: oklch(0.45 0.11 262);
   --syn-url: oklch(0.52 0.06 262);
   --syn-html: oklch(0.47 0.08 310);
-
-  /* Scarlet is state: the primary action, unsaved edits, a search hit. */
-  --signal: oklch(0.54 0.205 27);
-  --signal-ink: oklch(0.985 0.003 95);
-  --signal-tint: oklch(0.54 0.205 27 / 0.12);
-  --signal-tint-soft: oklch(0.54 0.205 27 / 0.06);
-  /* Cobalt is focus, as the diagram's active input is. */
-  --focus: oklch(0.53 0.21 262);
-
-  /* Amber: a warning, and an agent's change. Text-weight on porcelain. */
-  --caution: oklch(0.5 0.11 70);
-  --caution-tint: oklch(0.84 0.165 85 / 0.22);
-
-  --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-sign: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-
-  /* Sized for glass first: 17 is iOS body, 15 the UI, 13 the smallest label. */
-  --t-micro: 0.75rem;
-  --t-small: 0.8125rem;
-  --t-base: 0.9375rem;
-  --t-body: 1.0625rem;
-
-  --radius-card: 14px;
-  --radius-control: 10px;
-  /* One target for every control on glass; a pointer gets a tighter one. */
-  --target: 44px;
-
-  --ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out-quart */
-  --fast: 120ms;
-  --base: 180ms;
-
+  --hit: oklch(0.85 0.12 90 / 0.55);
   color-scheme: light;
 }
 
-@media (pointer: fine) {
-  :root {
-    --target: 34px;
-  }
-}
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --warning: oklch(0.82 0.14 85);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --brand: oklch(0.68 0.16 260);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --canvas: oklch(0.185 0.055 270);
-    --panel: oklch(0.265 0.055 270);
-    --surface: oklch(0.235 0.052 270);
-    --line: oklch(0.33 0.048 270);
-    --line-strong: oklch(0.42 0.045 270);
-    --line-control: oklch(0.6 0.04 268);
-
-    --ink: oklch(0.945 0.006 95);
-    --ink-muted: oklch(0.79 0.022 268);
-    --ink-faint: oklch(0.75 0.022 268);
-
-    --syn-marker: oklch(0.6 0.025 268);
-    --syn-heading: oklch(0.96 0.005 95);
-    --syn-code: oklch(0.8 0.1 150);
-    --syn-link: oklch(0.78 0.11 262);
-    --syn-url: oklch(0.72 0.06 262);
-    --syn-html: oklch(0.8 0.09 310);
-
-    --signal: oklch(0.66 0.2 27);
-    --signal-ink: oklch(0.18 0.05 270);
-    --signal-tint: oklch(0.66 0.2 27 / 0.18);
-    --signal-tint-soft: oklch(0.66 0.2 27 / 0.09);
-    --focus: oklch(0.72 0.16 262);
-
-    --caution: oklch(0.85 0.15 85);
-    --caution-tint: oklch(0.84 0.165 85 / 0.16);
-
-    color-scheme: dark;
-  }
-}
-
-/* The same palette again, forced. The block above only answers "follow the
-   system"; picking Dark in settings has to win on a machine set to light, and
-   CSS has no way to share one declaration list between a media query and an
-   attribute selector — so the two move together or the themes drift apart. */
-:root[data-theme="dark"] {
-  --canvas: oklch(0.185 0.055 270);
-  --panel: oklch(0.265 0.055 270);
-  --surface: oklch(0.235 0.052 270);
-  --line: oklch(0.33 0.048 270);
-  --line-strong: oklch(0.42 0.045 270);
-  --line-control: oklch(0.6 0.04 268);
-
-  --ink: oklch(0.945 0.006 95);
-  --ink-muted: oklch(0.79 0.022 268);
-  --ink-faint: oklch(0.75 0.022 268);
-
-  --syn-marker: oklch(0.6 0.025 268);
-  --syn-heading: oklch(0.96 0.005 95);
+  --syn-marker: oklch(0.58 0 0);
+  --syn-heading: oklch(0.985 0 0);
   --syn-code: oklch(0.8 0.1 150);
   --syn-link: oklch(0.78 0.11 262);
-  --syn-url: oklch(0.72 0.06 262);
-  --syn-html: oklch(0.8 0.09 310);
-
-  --signal: oklch(0.66 0.2 27);
-  --signal-ink: oklch(0.18 0.05 270);
-  --signal-tint: oklch(0.66 0.2 27 / 0.18);
-  --signal-tint-soft: oklch(0.66 0.2 27 / 0.09);
-  --focus: oklch(0.72 0.16 262);
-
-  --caution: oklch(0.85 0.15 85);
-  --caution-tint: oklch(0.84 0.165 85 / 0.16);
-
+  --syn-url: oklch(0.72 0.07 262);
+  --syn-html: oklch(0.78 0.09 310);
+  --hit: oklch(0.7 0.12 90 / 0.35);
   color-scheme: dark;
 }
 
-/* A line's ink, wherever something rides it: a tree item, the open document's
-   line, the panes' sync rail. Amber is light, so it carries enamel type. */
-[data-ink="scarlet"] {
-  --line-ink: var(--scarlet);
-  --line-ink-on: oklch(0.985 0.003 95);
-}
-[data-ink="cobalt"] {
-  --line-ink: var(--cobalt);
-  --line-ink-on: oklch(0.985 0.003 95);
-}
-[data-ink="amber"] {
-  --line-ink: var(--amber);
-  --line-ink-on: var(--enamel);
-}
-[data-ink="green"] {
-  --line-ink: var(--green);
-  --line-ink-on: var(--enamel);
-}
-
-/* Browser surfaces carry the palette too. Selection is state, so it is signal;
-   checkboxes in task lists and settings follow it. */
-:root {
-  accent-color: var(--signal);
-}
-::selection {
-  background: var(--signal-tint);
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/* Read by assistive technology, not drawn. */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-
-html,
-body {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--enamel);
-  color: var(--ink);
-  font: var(--t-base) / 1.5 var(--font-ui);
-  -webkit-font-smoothing: antialiased;
-}
-
-:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    overflow: hidden;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--foreground) 16%, transparent);
   }
 }
 
-/* ── Shell ─────────────────────────────────────────────────────────────── */
+/* ── The mark ──────────────────────────────────────────────────────────── */
 
-/* The enamel frame. Safe areas are the shell's to clear: on an iPhone the
-   notch and the home indicator sit over enamel, never over the document. */
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
-  background: var(--enamel);
-  color: var(--on-enamel);
+/* `loading`: the tiles slide together, hold and slide on, in a loop. */
+.markdn-mark[data-loading] rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: markdn-slide 2100ms cubic-bezier(0.16, 1, 0.3, 1) infinite both;
 }
-
-.app__header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  padding: 6px 12px 6px 16px;
-  background: var(--enamel);
-  color: var(--on-enamel);
-  flex-shrink: 0;
+.markdn-mark[data-loading] rect[data-tile="0"] {
+  --from: translateY(-60%);
 }
-
-/* With the native title bar hidden, this header is the title bar. The left
-   inset clears the traffic lights parked over it (main.tsx marks the shell); dragging comes from
-   data-tauri-drag-region on the header itself, since WKWebView has no
-   -webkit-app-region. */
-.is-desktop .app__header {
-  padding-left: 80px;
+.markdn-mark[data-loading] rect[data-tile="1"] {
+  --from: translateY(45%);
+  animation-delay: 90ms;
 }
-
-.wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  user-select: none;
-  flex-shrink: 0;
+.markdn-mark[data-loading] rect[data-tile="3"] {
+  --from: translateY(45%);
+  animation-delay: 180ms;
 }
-.wordmark__line {
-  stroke-width: 3;
-  stroke-linecap: round;
+/* The brand stem drops in last and completes the "m". */
+.markdn-mark[data-loading] rect[data-tile="2"] {
+  --from: translateY(-110%);
+  animation-delay: 300ms;
 }
-.wordmark__line--scarlet {
-  stroke: var(--scarlet);
-}
-.wordmark__line--cobalt {
-  stroke: var(--cobalt);
-}
-.wordmark__line--amber {
-  stroke: var(--amber);
-}
-.wordmark__line--green {
-  stroke: var(--green);
-}
-.wordmark__ring {
-  fill: var(--enamel);
-  stroke: var(--on-enamel);
-  stroke-width: 2.5;
-}
-.wordmark__text {
-  font-family: var(--font-sign);
-  font-size: 1.375rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-/* The document as a sign: the line it rides, then its station. */
-.app__doc {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  margin-left: 8px;
-}
-.app__line {
-  flex-shrink: 0;
-  padding: 3px 10px 2px;
-  border-radius: 999px;
-  background: var(--line-ink);
-  color: var(--line-ink-on);
-  font-family: var(--font-sign);
-  font-size: var(--t-small);
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-.app__path {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-sign);
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-.app__state {
-  flex-shrink: 0;
-  font-family: var(--font-sign);
-  font-size: var(--t-small);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--on-enamel-muted);
-}
-.app__state.is-dirty {
-  color: var(--on-enamel);
-}
-.app__state.is-dirty::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: var(--scarlet);
-  vertical-align: 1px;
-}
-
-/* Segmented control: the platform's, in enamel. The selected segment is a
-   porcelain plate, so the view in use reads at a glance from across the room. */
-.segmented {
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--enamel-line);
-  border-radius: var(--radius-control);
-  flex-shrink: 0;
-}
-.segmented__item {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: calc(var(--target) - 8px);
-  min-width: 72px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--on-enamel-muted);
-  font-family: var(--font-sign);
-  font-size: var(--t-base);
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
-}
-.segmented__item:hover:not(:disabled) {
-  background: var(--enamel-raised);
-  color: var(--on-enamel);
-}
-.segmented__item:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.segmented__item.is-active {
-  background: var(--on-enamel);
-  color: var(--enamel);
-}
-.segmented__key,
-.button__key {
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  font-weight: 400;
-  letter-spacing: 0;
-  opacity: 0.8;
-}
-
-/* Buttons on the document: hairline outline, one radius, one target. */
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: var(--target);
-  padding: 0 16px;
-  border: 1px solid var(--line-control);
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--t-base);
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition:
-    border-color var(--fast) var(--ease),
-    background var(--fast) var(--ease),
-    color var(--fast) var(--ease);
-}
-.button:hover:not(:disabled) {
-  border-color: var(--ink);
-}
-.button:active:not(:disabled) {
-  background: var(--signal-tint);
-}
-.button:disabled {
-  color: var(--ink-faint);
-  cursor: default;
-  opacity: 0.6;
-}
-.button--quiet {
-  border-color: transparent;
-  color: var(--ink-muted);
-}
-.button--quiet:hover:not(:disabled) {
-  border-color: var(--line-control);
-  color: var(--ink);
-}
-
-/* In the enamel header the same controls speak signage: uppercase condensed,
-   porcelain outline, and Save as the one scarlet plate when there is something
-   to save. */
-.app__header .button {
-  border-color: var(--enamel-line);
-  color: var(--on-enamel);
-  font-family: var(--font-sign);
-  font-size: var(--t-base);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-.app__header .button:hover:not(:disabled) {
-  border-color: var(--on-enamel);
-  background: var(--enamel-raised);
-}
-.app__header .button--quiet {
-  border-color: transparent;
-  color: var(--on-enamel-muted);
-}
-.app__header .button--quiet:hover:not(:disabled) {
-  color: var(--on-enamel);
-}
-.app__header .button--quiet[aria-pressed="true"] {
-  border-color: var(--on-enamel);
-  color: var(--on-enamel);
-}
-.app__header .button:not(.button--quiet):not(:disabled) {
-  background: var(--scarlet);
-  border-color: var(--scarlet);
-  color: oklch(0.985 0.003 95);
-}
-.app__header .button:not(.button--quiet):not(:disabled):hover {
-  background: oklch(0.54 0.215 27);
-}
-.app__header .button:disabled {
-  color: var(--on-enamel-muted);
-  opacity: 0.55;
-}
-
-/* A notice on the line: an enamel strip under the bar, its dot the ink of what
-   it reports. */
-.banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: var(--target);
-  margin: 0 12px 8px;
-  padding: 6px 8px 6px 14px;
-  border: 1px solid var(--enamel-line);
-  border-radius: var(--radius-control);
-  background: var(--enamel-raised);
-  color: var(--on-enamel);
-  font-size: var(--t-base);
-}
-.banner__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--amber);
-  flex-shrink: 0;
-}
-/* A question rather than a report: the actions carry the weight. */
-.banner--decision {
-  flex-wrap: wrap;
-}
-.banner--decision .button {
-  border-color: var(--enamel-line);
-  color: var(--on-enamel);
-}
-.banner--decision .button:first-child {
-  background: var(--on-enamel);
-  border-color: var(--on-enamel);
-  color: var(--enamel);
-}
-.banner__message {
-  min-width: 0;
-}
-.banner__actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-.banner__dismiss {
-  margin-left: auto;
-  min-height: var(--target);
-  padding: 0 10px;
-  border: 0;
-  background: none;
-  color: var(--on-enamel-muted);
-  font-family: var(--font-sign);
-  font-size: var(--t-base);
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.banner__dismiss:hover {
-  color: var(--on-enamel);
-}
-
-/* The card is inset in the enamel on every edge but the rail's. */
-.app__body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  padding: 0 12px 12px 0;
-}
-
-/* ── Rail ──────────────────────────────────────────────────────────────── */
-
-.sidebar {
-  width: 300px;
-  flex-shrink: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 4px 16px 24px;
-  background: var(--enamel);
-  color: var(--on-enamel);
-  color-scheme: dark;
-}
-/* Where the system shows classic scrollbars (a mouse attached, or Show scroll
-   bars: Always), the default was a light grey bar down the rail's edge. On
-   enamel it is a thin enamel thumb on no track. */
-.sidebar::-webkit-scrollbar,
-.phone-panel::-webkit-scrollbar {
-  width: 10px;
-}
-.sidebar::-webkit-scrollbar-track,
-.phone-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-.sidebar::-webkit-scrollbar-thumb,
-.phone-panel::-webkit-scrollbar-thumb {
-  border: 3px solid var(--enamel);
-  border-radius: 5px;
-  background: var(--enamel-line);
-}
-.sidebar::-webkit-scrollbar-thumb:hover,
-.phone-panel::-webkit-scrollbar-thumb:hover {
-  background: var(--on-enamel-muted);
-}
-/* Collapsed outright, not animated: easing the width would re-lay out both
-   panes on every frame. */
-.sidebar[hidden] {
-  display: none;
-}
-
-.sidebar-toggle {
-  display: inline-grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: var(--target);
-  height: var(--target);
-  margin-right: -4px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--on-enamel-muted);
-  cursor: pointer;
-  transition:
-    border-color var(--fast) var(--ease),
-    color var(--fast) var(--ease);
-}
-.sidebar-toggle:hover {
-  border-color: var(--enamel-line);
-  color: var(--on-enamel);
-}
-.sidebar-toggle svg {
-  width: 20px;
-  height: 20px;
-}
-.sidebar-toggle__frame {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.4;
-}
-.sidebar-toggle__pane {
-  fill: currentColor;
-  opacity: 0;
-  transition: opacity var(--fast) var(--ease);
-}
-.sidebar-toggle[aria-expanded="true"] .sidebar-toggle__pane {
-  opacity: 0.45;
-}
-/* iPad portrait and split screen: the rail slides over the card, above a scrim
-   that closes it, so the document keeps its full width. */
-@media (min-width: 600px) and (max-width: 1023px) {
-  .app__body {
-    position: relative;
-    padding-left: 12px;
+@keyframes markdn-slide {
+  0% {
+    transform: var(--from);
+    opacity: 0;
   }
-  .sidebar {
-    position: absolute;
-    z-index: 20;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: min(340px, 86vw);
-    border-right: 1px solid var(--enamel-line);
-    border-radius: 0 var(--radius-card) var(--radius-card) 0;
-    animation: rail-in var(--base) var(--ease);
+  24%,
+  68% {
+    transform: none;
+    opacity: 1;
   }
-}
-@keyframes rail-in {
-  from {
-    transform: translateX(-24px);
+  86%,
+  100% {
+    transform: translateY(35%);
     opacity: 0;
   }
 }
-.rail-scrim {
-  position: absolute;
-  z-index: 10;
-  inset: 0;
-  padding: 0;
-  border: 0;
-  background: oklch(0.205 0.068 271 / 0.55);
-  cursor: pointer;
+@media (prefers-reduced-motion: reduce) {
+  .markdn-mark[data-loading] rect {
+    animation: markdn-breathe 1600ms ease-in-out infinite alternate;
+    animation-delay: 0ms;
+  }
+  @keyframes markdn-breathe {
+    from {
+      opacity: 0.45;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
-/* Where the documents live, said once and quietly above the network. */
-.sidebar__root {
-  margin: 18px 2px 6px;
-  font-size: var(--t-small);
-  color: var(--on-enamel-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* One row: the palette field, then search and New as square controls. */
-.sidebar__controls {
-  display: flex;
-  gap: 8px;
-}
-.sidebar__controls .sidebar__search {
-  flex: 1;
-  min-width: 0;
-  margin-bottom: 0;
-}
-.sidebar__icon,
-.app__icon {
-  display: inline-grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: var(--target);
-  height: var(--target);
-  padding: 0;
-  border: 1px solid var(--enamel-line);
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--on-enamel-muted);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    border-color var(--fast) var(--ease),
-    color var(--fast) var(--ease),
-    background var(--fast) var(--ease);
-}
-.app__icon {
-  border-color: transparent;
-}
-.sidebar__icon:hover,
-.sidebar__icon.is-active,
-.app__icon:hover {
-  border-color: var(--on-enamel);
-  color: var(--on-enamel);
-  background: var(--enamel-raised);
-}
-.sidebar__icon svg,
-.app__icon svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
-
-/* The documents as lines. Every row rides its folder's line: a 5px rule down
-   its left edge and a porcelain station on it; the open document is the
-   interchange ring. Folders are the line's name board. */
-.tree {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.tree .tree {
-  padding-left: 0 !important;
-}
-.tree__dir,
-.tree__file {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-height: var(--target);
-  /* Depth steps the name in; the station stays on the line at 10px. */
-  padding: 4px 10px 4px calc(40px + var(--depth, 0) * 16px);
-  border: 0;
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--on-enamel-muted);
-  font: inherit;
-  font-size: var(--t-base);
-  text-align: left;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
-}
-.tree__file::before,
-.tree__dir::before {
-  content: "";
-  position: absolute;
-  left: 15px;
-  top: 0;
-  bottom: 0;
-  width: 5px;
-  background: var(--line-ink);
-}
-.tree__file::after {
-  content: "";
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  width: 15px;
-  height: 15px;
-  margin-top: -7.5px;
-  border-radius: 50%;
-  background: var(--on-enamel);
-  border: 3px solid var(--line-ink);
-  transition: transform var(--base) var(--ease);
-}
-/* The line's name board: the folder sits on its own line as a square terminus. */
-.tree__dir {
-  color: var(--on-enamel);
-  font-family: var(--font-sign);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.tree__dir::after {
-  content: "";
-  position: absolute;
-  left: 9px;
-  top: 50%;
-  width: 17px;
-  height: 17px;
-  margin-top: -8.5px;
-  border-radius: 4px;
-  background: var(--line-ink);
-}
-/* Every folder is a line of its own, and the documents at the root share the
-   main line: a run of the same line is drawn unbroken, and each line starts and
-   ends at its first and last station, with a gap before the next one. */
-.tree[role="tree"] > .tree__item + .tree__item:is([data-type="directory"], [data-type="file"]:not([data-type="file"] + *)) {
-  margin-top: 12px;
-}
-.tree[role="tree"] > .tree__item[data-type="file"] + .tree__item[data-type="file"] {
-  margin-top: 0;
-}
-.tree[role="tree"] > .tree__item[data-type="directory"] > .tree__dir::before,
-.tree[role="tree"] > .tree__item[data-type="file"]:not([data-type="file"] + *) > .tree__file::before {
-  top: 50%;
-}
-.tree[role="tree"] > .tree__item[data-type="file"]:not(:has(+ [data-type="file"])) > .tree__file::before,
-.tree__item[data-terminus] > .tree__row::before {
-  bottom: 50%;
-}
-/* A folder inside a line is a stop on it, not a second terminus: the track
-   runs straight through, and the stop is a small square station. */
-.tree .tree .tree__dir {
-  color: var(--on-enamel-muted);
-  font-size: var(--t-small);
-}
-.tree .tree .tree__dir::after {
-  left: 10px;
-  width: 15px;
-  height: 15px;
-  margin-top: -7.5px;
-  border-radius: 3px;
-  background: var(--on-enamel);
-  border: 3px solid var(--line-ink);
-}
-.tree[role="tree"] > .tree__board {
-  margin-top: 12px;
-}
-.tree[role="tree"] > .tree__board:first-child {
-  margin-top: 0;
-}
-.tree__board > .tree__dir {
-  cursor: default;
-}
-.tree__board > .tree__dir:hover {
-  background: transparent;
-}
-.tree__board > .tree__dir::before {
-  top: 50%;
-}
-.tree[role="tree"] > .tree__board + .tree__item[data-type="file"] {
-  margin-top: 0;
-}
-.tree[role="tree"] > .tree__board + .tree__item[data-type="file"] > .tree__file::before {
-  top: 0;
-}
-/* A closed folder is a terminus with no track: its line is folded away. */
-.tree[role="tree"] > .tree__item[data-type="directory"]:not([aria-expanded="true"]) > .tree__dir::before {
-  display: none;
-}
-.tree__dir:hover,
-.tree__file:hover {
-  background: var(--enamel-raised);
-  color: var(--on-enamel);
-}
-.tree__file.is-selected {
-  color: var(--on-enamel);
-  font-weight: 600;
-}
-.tree__file.is-selected::after {
-  transform: scale(1.45);
-  background: var(--enamel);
-  border: 3.5px solid var(--on-enamel);
-}
-.tree__item:focus-visible {
-  outline: none;
-}
-.tree__item:focus-visible > .tree__row {
-  outline: 2px solid var(--focus);
-  outline-offset: -2px;
-}
-/* Deep in a folder the name has less room than it wants; it gives way, not the
-   chevron, which would otherwise be pushed out past the rail. */
-.tree__name {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.tree__chevron {
-  display: inline-block;
-  flex: none;
-  width: 0;
-  height: 0;
-  margin-left: auto;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 7px solid var(--on-enamel-muted);
-  order: 2;
-  transition: transform var(--fast) var(--ease);
-}
-.tree__item[aria-expanded="true"] > .tree__row .tree__chevron {
-  transform: rotate(90deg);
-}
-div.tree__loading,
-div.tree__empty,
-div.tree__error {
-  color: var(--on-enamel-muted);
-  font-size: var(--t-base);
-  padding: 8px 2px;
-}
-div.tree__error {
-  color: var(--amber);
-}
-/* Inside a folder, a note rides the folder's line with no station of its own:
-   it says something about the line, it is not a place on it. */
-.tree__note {
-  cursor: default;
-  font-size: var(--t-small);
-  font-style: italic;
-}
-.tree__note::after {
-  display: none;
-}
-.tree__note:hover {
-  background: transparent;
-  color: var(--on-enamel-muted);
-}
-
-/* The open document's own line, first in the rail, headed by its line and
-   name as the top bar signs it. */
-.sidebar__now {
-  margin: 4px 0 18px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--enamel-line);
-}
-.sidebar__heading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 2px 2px 10px;
-  font-size: inherit;
-  font-weight: inherit;
-}
-.sidebar__heading-name {
-  font-family: var(--font-sign);
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--on-enamel);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ── Panes ─────────────────────────────────────────────────────────────── */
-
-/* The document card, inset in the enamel. */
-.panes {
-  flex: 1;
-  display: grid;
-  min-width: 0;
-  overflow: hidden;
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  color: var(--ink);
-}
-.panes--split {
-  grid-template-columns: minmax(0, 1fr) 21px minmax(0, 1fr);
-}
-.panes--editor,
-.panes--preview {
-  grid-template-columns: minmax(0, 1fr);
-}
-/* The multibuffer takes the pane area over. The panes are hidden rather than
-   unmounted, so coming back lands on the same caret and the same scroll
-   position; `display: grid` above would otherwise win over [hidden]. */
-.panes[hidden] {
-  display: none;
-}
-
-.editor {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* The textarea suppresses its own outline — a ring around a full-height pane
-   reads as a box, not as focus. The pane is indexed at its top edge instead, so
-   a keyboard user can still see which of the two panes has the caret. */
-.editor::after {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 2px;
-  background: var(--signal);
-  opacity: 0;
-  transition: opacity var(--fast) var(--ease);
-}
-.editor:focus-within::after {
-  opacity: 1;
-}
 /* ── Source surface ────────────────────────────────────────────────────── */
 
 /* A textarea with its own text painted transparent, over a layer holding the
@@ -1040,10 +264,9 @@ div.tree__error {
 .source__input {
   margin: 0;
   border: 0;
-  padding: var(--source-pad, 18px 20px 40px);
+  padding: var(--source-pad, 20px 24px 48px);
   font-family: var(--font-mono);
-  /* Set on :root from settings; the token default keeps a plain page honest. */
-  font-size: var(--source-size, var(--editor-font-size, var(--t-base)));
+  font-size: var(--source-size, var(--editor-font-size, 0.875rem));
   line-height: 1.7;
   tab-size: 2;
   white-space: pre-wrap;
@@ -1058,13 +281,13 @@ div.tree__error {
 .source__layer {
   position: absolute;
   inset: 0;
-  color: var(--ink);
+  color: var(--foreground);
   pointer-events: none;
   /* Its own scrollbar is never used — the sync sets scrollTop — but the gutter
      it reserves has to exist, because the textarea's does. Where scrollbars
-     take layout width (anything but macOS overlay scrollbars), a gutter on one
-     box and not the other narrows one of them, and every wrapped line lands a
-     few pixels off the text under it. Hence `scroll` on both, not `auto`. */
+     take layout width, a gutter on one box and not the other narrows one of
+     them, and every wrapped line lands a few pixels off. Hence `scroll` on
+     both, not `auto`. */
   overflow-x: hidden;
   overflow-y: scroll;
   scrollbar-color: transparent transparent;
@@ -1078,12 +301,11 @@ div.tree__error {
   background: transparent;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  caret-color: var(--ink);
+  caret-color: var(--foreground);
   overflow-x: auto;
   overflow-y: scroll;
 }
-/* An excerpt is sized to its content and never scrolls vertically, so neither
-   box reserves a gutter; not wrapping, a horizontal one cannot move a glyph. */
+/* An excerpt is sized to its content and never scrolls vertically. */
 .source--nowrap .source__layer,
 .source--nowrap .source__input {
   overflow-y: hidden;
@@ -1094,25 +316,25 @@ div.tree__error {
   content: "\200b";
 }
 /* Past the size where highlighting pays for itself the layer is dropped and the
-   textarea paints its own text again. Nothing else changes. */
+   textarea paints its own text again. */
 .source--plain .source__layer {
   display: none;
 }
 .source--plain .source__input {
-  color: var(--ink);
+  color: var(--foreground);
   -webkit-text-fill-color: currentColor;
 }
 .source__input::placeholder {
-  color: var(--ink-faint);
-  -webkit-text-fill-color: var(--ink-faint);
+  color: var(--muted-foreground);
+  -webkit-text-fill-color: var(--muted-foreground);
 }
-.source__input::selection {
-  background: var(--signal-tint);
+/* Excerpts in the search: tighter, and on the muted ground of a result. */
+.source--excerpt {
+  --source-pad: 6px 12px;
+  --source-size: 0.8125rem;
 }
 
-/* Syntax. Colour and, in a monospace family where bold and italic keep the same
-   advance width, weight — never anything that would move a character out from
-   under the caret sitting on it. */
+/* Syntax. Colour and weight only — nothing that moves a character. */
 .md-marker,
 .md-rule {
   color: var(--syn-marker);
@@ -1128,7 +350,7 @@ div.tree__error {
   font-style: italic;
 }
 .md-strike {
-  color: var(--ink-muted);
+  color: var(--muted-foreground);
   text-decoration: line-through;
 }
 .md-code {
@@ -1144,121 +366,37 @@ div.tree__error {
 .md-html {
   color: var(--syn-html);
 }
-/* A search hit. Signal, because a match is state. */
 .source__hit {
-  background: var(--signal-tint);
-  box-shadow: 0 0 0 1px var(--signal-tint);
-}
-
-/* Line readout. An instrument shows its index. */
-/* Tab-moves-focus mode, in the readout's own style at the opposite corner. */
-.editor__mode {
-  position: absolute;
-  left: 10px;
-  bottom: 8px;
-  z-index: 2;
-  padding: 1px 6px;
-  border: 1px solid var(--line);
+  background: var(--hit);
   border-radius: 2px;
-  background: var(--surface);
-  color: var(--ink-faint);
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  pointer-events: none;
-}
-.editor__meter {
-  position: absolute;
-  right: 10px;
-  bottom: 8px;
-  display: flex;
-  gap: 3px;
-  padding: 1px 6px;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  background: var(--surface);
-  color: var(--ink-faint);
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-  /* Above the textarea, so a long line scrolling past the corner runs under the
-     readout instead of printing its glyphs across the numbers. */
-  z-index: 2;
-}
-.editor__meter-sep {
-  color: var(--line-control);
 }
 
-/* ── Sync rail ─────────────────────────────────────────────────────────── */
-
-/* Between the panes, the same line the document rides: a rule in its ink, each
-   block a tick across it, the caret's block a station. */
-.rail {
-  position: relative;
-  overflow: hidden;
-  background: var(--surface);
-  border-left: 1px solid var(--line);
-  border-right: 1px solid var(--line);
-}
-.rail::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  margin-left: -1.5px;
-  background: var(--line-ink);
-  opacity: 0.35;
-}
-.rail__strip {
-  position: absolute;
-  inset: 0;
-  will-change: transform;
-}
-.rail__tick {
-  position: absolute;
-  left: 50%;
-  height: 2px;
-  transform: translateX(-50%);
-  background: var(--line-ink);
-  opacity: 0.8;
-  transition: opacity var(--fast) var(--ease);
-}
-.rail__tick.is-active {
-  width: 13px !important;
-  height: 13px;
-  margin-top: -5.5px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 3px solid var(--line-ink);
-  opacity: 1;
-}
-
-/* ── Preview ───────────────────────────────────────────────────────────── */
+/* ── Rendered document ─────────────────────────────────────────────────── */
 
 .preview {
   overflow-y: auto;
-  padding: 18px 26px 60px;
+  padding: 24px 32px 64px;
   min-width: 0;
-  background: var(--surface);
-  font-size: var(--t-body);
-  line-height: 1.65;
+  font-size: 1rem;
+  line-height: 1.7;
 }
 .preview > :first-child {
   margin-top: 0;
 }
-
+@media (max-width: 599px) {
+  .preview {
+    padding: 16px 18px 48px;
+  }
+}
 /* Prose measure. Data and code may run wider. */
 .preview > p,
 .preview > ul,
 .preview > ol,
-.preview > blockquote {
-  max-width: 68ch;
+.preview > blockquote,
+.preview .mdx-block {
+  max-width: 70ch;
 }
-
-/* Position wrappers. They exist only to carry data-line for the rail, so they
-   must not introduce a box of their own. */
+/* Position wrappers carry data-line for scroll sync; they add no box. */
 .preview .block > :last-child,
 .preview .mdx-block > :last-child {
   margin-bottom: 0;
@@ -1267,199 +405,150 @@ div.tree__error {
 .preview .mdx-block {
   margin: 0 0 1em;
 }
-/* Match the component inside it, or the active-block tint paints a band across
-   the empty half of the pane. */
-.preview .mdx-block {
-  max-width: 68ch;
-}
-
-/* Active block: the caret's block, tinted. The rail carries the precise index;
-   this is only enough to find your place at a glance. */
-/* The caret's block: a wash of the document's own line ink. */
+/* The caret's block in split view, washed so the reader finds their place. */
 .preview [data-line].is-active-block {
-  background: color-mix(in oklch, var(--line-ink) 9%, transparent);
-  box-shadow: 0 0 0 8px color-mix(in oklch, var(--line-ink) 9%, transparent);
+  background: var(--muted);
+  box-shadow: 0 0 0 8px var(--muted);
   border-radius: 4px;
 }
 
-/* Document typography. Wrapped in :where() so it carries no class weight: a
-   component's own class (`.mdx-card__title`, a code block's `pre > code`) always
-   wins over "a heading in the preview", rather than the prose rules leaking a
-   28px heading margin or an inline-code box into the component. */
+/* Wrapped in :where() so it carries no class weight: a component's own classes
+   always win over "a heading in the preview". */
 :where(.preview) h1,
 :where(.preview) h2,
 :where(.preview) h3,
 :where(.preview) h4 {
   line-height: 1.25;
-  letter-spacing: -0.012em;
-  margin: 1.7em 0 0.5em;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+  margin: 1.6em 0 0.5em;
 }
 :where(.preview) h1 {
-  font-size: 1.6rem;
-  font-weight: 650;
+  font-size: 1.75rem;
 }
 :where(.preview) h2 {
-  font-size: 1.25rem;
-  font-weight: 620;
-  padding-bottom: 0.25em;
-  border-bottom: 1px solid var(--line);
+  font-size: 1.35rem;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
 }
 :where(.preview) h3 {
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: 1.1rem;
 }
 :where(.preview) h4 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--ink-muted);
+  font-size: 1rem;
+  color: var(--muted-foreground);
 }
 :where(.preview) p,
 :where(.preview) ul,
 :where(.preview) ol {
   margin: 0 0 0.9em;
 }
+:where(.preview) ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+:where(.preview) ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+:where(.preview) li + li {
+  margin-top: 0.2em;
+}
 :where(.preview) a {
-  color: var(--ink);
-  text-decoration-color: var(--signal);
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 2px;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--foreground) 35%, transparent);
+  text-underline-offset: 3px;
 }
 :where(.preview) a:hover {
-  color: var(--signal);
+  text-decoration-color: currentColor;
+}
+:where(.preview) strong {
+  font-weight: 600;
 }
 :where(.preview) hr {
   border: 0;
-  border-top: 1px solid var(--line);
-  margin: 1.8em 0;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
 }
 :where(.preview) blockquote {
   margin: 0 0 1em;
-  padding: 0.1em 0 0.1em 1em;
-  border-left: 1px solid var(--line-strong);
-  color: var(--ink-muted);
+  padding-left: 1em;
+  border-left: 2px solid var(--border);
+  color: var(--muted-foreground);
 }
 :where(.preview) table {
   border-collapse: collapse;
   display: block;
   overflow-x: auto;
   margin-bottom: 1em;
-  font-size: var(--t-base);
+  font-size: 0.875rem;
 }
 :where(.preview) th,
 :where(.preview) td {
-  border: 1px solid var(--line);
-  padding: 5px 10px;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
   text-align: left;
 }
 :where(.preview) th {
-  background: var(--panel);
+  background: var(--muted);
   font-weight: 600;
-  font-size: var(--t-small);
-  letter-spacing: 0.02em;
 }
 :where(.preview) kbd {
   display: inline-block;
-  padding: 0.05em 0.4em;
-  border: 1px solid var(--line-control);
-  border-radius: 2px;
-  background: var(--panel);
-  font-family: var(--font-mono);
-  font-size: 0.82em;
-  line-height: 1.5;
+  padding: 0 0.4em;
+  border-radius: calc(var(--radius) * 0.6);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  font-weight: 500;
+  line-height: 1.6;
 }
 :where(.preview) :not(pre) > code {
-  padding: 0.1em 0.3em;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  background: var(--panel);
+  padding: 0.15em 0.35em;
+  border-radius: calc(var(--radius) * 0.6);
+  background: var(--muted);
   font-family: var(--font-mono);
-  font-size: 0.86em;
+  font-size: 0.85em;
 }
-
+:where(.preview) img {
+  max-width: 100%;
+}
 /* GFM task lists: the checkbox is the marker, so the bullet goes. */
 :where(.preview) .contains-task-list {
-  padding-left: 0.4em;
-}
-:where(.preview) .task-list-item {
   list-style: none;
+  padding-left: 0.2em;
 }
 :where(.preview) .task-list-item > input[type="checkbox"] {
   margin: 0 0.5em 0 0;
   vertical-align: -0.1em;
 }
 
-/* An image that did not load says which one, in the same hairline language as
-   a pending diagram, instead of the browser's broken-image glyph. */
-.preview__missing {
-  display: block;
-  margin: 0 0 1em;
-  padding: 10px 12px;
-  border: 1px dashed var(--line-strong);
-  border-radius: 3px;
-  color: var(--ink-muted);
-  font-size: var(--t-small);
-}
-.preview__missing code {
-  font-family: var(--font-mono);
-  color: var(--ink);
-  overflow-wrap: anywhere;
-}
-
-.preview__image {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 0 1em;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  background: var(--panel);
-}
-
 .code-block {
   overflow-x: auto;
   margin: 0 0 1em;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  background: var(--panel);
+  border-radius: var(--radius);
+  background: var(--muted);
 }
 .code-block pre {
   margin: 0;
-  padding: 10px 13px;
+  padding: 12px 16px;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: var(--t-base);
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 .code-block--plain {
-  padding: 10px 13px;
+  padding: 12px 16px;
   font-family: var(--font-mono);
-  font-size: var(--t-base);
-}
-.mermaid {
-  overflow-x: auto;
-  margin: 0 0 1em;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  background: var(--panel);
-}
-.mermaid-pending {
-  color: var(--ink-faint);
-  font-size: var(--t-small);
-  padding: 14px;
-  border: 1px dashed var(--line);
-  border-radius: 3px;
-  margin-bottom: 1em;
+  font-size: 0.8125rem;
 }
 
-/* Rendered code speaks the source pane's syntax palette, so a fenced block reads
-   the same on both sides of the split and follows the theme with the rest of the
-   tokens. Shiki's css-variables theme writes `var(--code-token-*)`; this is the
-   whole mapping. Comments take ink-muted, not syn-marker: marker is tuned to be
-   the quietest thing in the source pane and fails 4.5:1 on this panel. Signal
-   red is never a syntax colour. */
+/* Rendered code speaks the source pane's palette, so a fenced block reads the
+   same on both sides of the split. Shiki's css-variables theme writes
+   `var(--code-token-*)`; this is the whole mapping. */
 .code-block {
-  --code-foreground: var(--ink);
+  --code-foreground: var(--foreground);
   --code-background: transparent;
   --code-token-keyword: var(--syn-html);
   --code-token-function: var(--syn-link);
@@ -1467,1164 +556,20 @@ div.tree__error {
   --code-token-string: var(--syn-code);
   --code-token-string-expression: var(--syn-code);
   --code-token-constant: var(--syn-url);
-  --code-token-parameter: var(--ink);
-  --code-token-comment: var(--ink-muted);
-  --code-token-punctuation: var(--ink-muted);
+  --code-token-parameter: var(--foreground);
+  --code-token-comment: var(--muted-foreground);
+  --code-token-punctuation: var(--muted-foreground);
 }
 
-/* ── MDX components ────────────────────────────────────────────────────── */
-
-/* Full hairline boxes with a tinted header strip. Deliberately not a coloured
-   left border: that pattern is banned, and it reads as decoration rather than
-   as a labelled instrument panel. */
-.mdx-alert {
+.mermaid {
+  overflow-x: auto;
   margin: 0 0 1em;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  overflow: hidden;
-  max-width: 68ch;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
-.mdx-alert__header {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 11px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-  font-size: var(--t-micro);
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
-.mdx-alert__body {
-  padding: 10px 11px;
-  font-size: var(--t-base);
-}
-.mdx-alert__body > :last-child {
+
+/* MDX component bodies are markdown; their last block sets no trailing gap. */
+.mdx-body > :last-child {
   margin-bottom: 0;
-}
-/* Info and success stay neutral: neither asks for anything. Warning and error
-   are the two that do, and they must not be mistaken for each other — amber
-   caution and signal red, each with its own glyph. */
-.mdx-alert--warning .mdx-alert__header {
-  background: var(--caution-tint);
-  color: var(--caution);
-}
-.mdx-alert--error .mdx-alert__header {
-  background: var(--signal-tint);
-  color: var(--signal);
-}
-.mdx-alert__icon {
-  flex-shrink: 0;
-  width: 12px;
-  height: 12px;
-}
-
-.mdx-callout {
-  margin: 0 0 1em;
-  padding: 10px 12px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  max-width: 68ch;
-}
-.mdx-callout__title {
-  font-size: var(--t-micro);
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  margin-bottom: 5px;
-}
-.mdx-callout__body {
-  font-size: var(--t-base);
-}
-.mdx-callout__body > :last-child {
-  margin-bottom: 0;
-}
-
-.mdx-card {
-  margin: 0 0 1em;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  overflow: hidden;
-  max-width: 68ch;
-}
-.mdx-card__header {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  padding: 7px 12px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
-.mdx-card__title {
-  margin: 0;
-  font-size: var(--t-body);
-  font-weight: 600;
-}
-.mdx-card__subtitle {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-}
-.mdx-card__body {
-  padding: 11px 12px;
-  font-size: var(--t-base);
-}
-.mdx-card__body > :last-child {
-  margin-bottom: 0;
-}
-
-.mdx-tabs {
-  margin: 0 0 1em;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  overflow: hidden;
-  max-width: 68ch;
-}
-.mdx-tabs__bar {
-  display: flex;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
-.mdx-tabs__tab {
-  border: 0;
-  border-right: 1px solid var(--line);
-  background: transparent;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: var(--t-small);
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
-}
-.mdx-tabs__tab:hover {
-  color: var(--ink);
-}
-.mdx-tabs__tab.is-active {
-  color: var(--ink);
-  background: var(--surface);
-  box-shadow: inset 0 -1px 0 var(--signal);
-}
-.mdx-tabs__panel {
-  padding: 11px 12px;
-  font-size: var(--t-base);
-}
-.mdx-tabs__panel > :last-child {
-  margin-bottom: 0;
-}
-
-.mdx-unknown,
-.mdx-warning {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin: 0 0 1em;
-  padding: 9px 12px;
-  border: 1px dashed var(--signal);
-  border-radius: 3px;
-  background: var(--signal-tint-soft);
-  font-size: var(--t-base);
-  max-width: 68ch;
-}
-.mdx-unknown strong,
-.mdx-warning strong {
-  font-weight: 600;
-}
-.mdx-unknown span,
-.mdx-warning span {
-  color: var(--ink-muted);
-  font-size: var(--t-small);
-}
-.mdx-warning pre {
-  margin: 0;
-  white-space: pre-wrap;
-  font-size: var(--t-small);
-  color: var(--ink-muted);
-}
-
-/* ── Component picker ──────────────────────────────────────────────────── */
-
-.picker__backdrop {
-  position: fixed;
-  inset: 0;
-  background: oklch(0.2 0.01 70 / 0.4);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 14vh;
-  z-index: 50;
-}
-.picker {
-  width: min(400px, 90vw);
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  overflow: hidden;
-  animation: picker-in var(--base) var(--ease);
-}
-@keyframes picker-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-.picker__title {
-  margin: 0;
-  padding: 7px 12px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-  font-size: var(--t-micro);
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
-.picker__option {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: background var(--fast) var(--ease);
-}
-.picker__option:last-child {
-  border-bottom: 0;
-}
-.picker__option:hover,
-.picker__option:focus {
-  background: var(--signal-tint-soft);
-  outline: none;
-}
-.picker__option:focus {
-  box-shadow: inset 0 0 0 2px var(--focus);
-}
-.picker__name {
-  font-family: var(--font-mono);
-  font-size: var(--t-base);
-  font-weight: 600;
-  flex-shrink: 0;
-}
-.picker__description {
-  color: var(--ink-faint);
-  font-size: var(--t-small);
-}
-
-/* ── Rail controls ─────────────────────────────────────────────────────── */
-
-/* Buttons that read as fields: the palette is the one search surface; a real
-   input here would be a second one that behaved differently on every keystroke. */
-.sidebar__search {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  min-height: var(--target);
-  margin-bottom: 8px;
-  padding: 0 14px;
-  background: transparent;
-  border: 1px solid var(--enamel-line);
-  border-radius: var(--radius-control);
-  color: var(--on-enamel-muted);
-  font: inherit;
-  font-size: var(--t-base);
-  text-align: left;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    border-color var(--fast) var(--ease),
-    color var(--fast) var(--ease),
-    background var(--fast) var(--ease);
-}
-.sidebar__search:hover,
-.sidebar__search.is-active {
-  border-color: var(--on-enamel);
-  color: var(--on-enamel);
-  background: var(--enamel-raised);
-}
-.sidebar__search kbd {
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  color: var(--on-enamel-muted);
-}
-/* One line at every rail width; the full text stays in the accessible name. */
-.sidebar__search > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ── New document ──────────────────────────────────────────────────────── */
-
-/* Takes the place of its button, at the same size, so the tree below does not
-   jump when it opens. */
-.newdoc {
-  margin-bottom: 8px;
-}
-.newdoc__input {
-  width: 100%;
-  padding: 5px 8px;
-  background: var(--surface);
-  border: 1px solid var(--signal);
-  border-radius: 3px;
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-  outline: none;
-  box-shadow: 0 0 0 3px var(--signal-tint);
-}
-.newdoc__input:disabled {
-  opacity: 0.6;
-}
-.newdoc__hint {
-  padding: 4px 2px 0;
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-}
-.newdoc__hint kbd {
-  font-family: var(--font-mono);
-}
-.newdoc__error {
-  color: var(--signal);
-}
-
-/* ── Command palette ───────────────────────────────────────────────────── */
-
-.palette {
-  display: flex;
-  flex-direction: column;
-  width: min(560px, 92vw);
-  max-height: 62vh;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  overflow: hidden;
-  animation: picker-in var(--base) var(--ease);
-}
-.palette__input {
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  outline: none;
-  padding: 11px 14px;
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--t-body);
-}
-.palette__input::placeholder {
-  color: var(--ink-faint);
-}
-.palette__list {
-  overflow-y: auto;
-  /* The list is what scrolls, not the dialog: the query field stays put while
-     50 results move under it. */
-  overscroll-behavior: contain;
-}
-.palette__section {
-  padding: 7px 14px 3px;
-  font-size: var(--t-micro);
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.palette__row {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  padding: 6px 14px;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.palette__row.is-active {
-  background: var(--signal-tint);
-}
-.palette__label {
-  flex-shrink: 0;
-  font-size: var(--t-base);
-}
-.palette__path {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  /* Truncated from the left: the tail of a path identifies it. */
-  direction: rtl;
-  text-align: left;
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-  color: var(--ink-faint);
-}
-.palette__hit {
-  background: transparent;
-  color: var(--signal);
-  font-weight: 600;
-}
-.palette__hint {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-}
-.palette__empty {
-  padding: 14px;
-  color: var(--ink-faint);
-  font-size: var(--t-small);
-}
-.palette__footer {
-  display: flex;
-  gap: 14px;
-  padding: 6px 14px;
-  border-top: 1px solid var(--line);
-  background: var(--panel);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-}
-.palette__footer kbd {
-  margin-right: 3px;
-  font-family: var(--font-mono);
-}
-
-/* ── Settings ──────────────────────────────────────────────────────────── */
-
-.settings {
-  display: flex;
-  flex-direction: column;
-  width: min(620px, 94vw);
-  max-height: 80vh;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  overflow: hidden;
-  animation: picker-in var(--base) var(--ease);
-}
-.settings__body {
-  overflow-y: auto;
-  padding: 4px 0;
-}
-.settings__row {
-  display: grid;
-  grid-template-columns: 1fr minmax(0, 260px);
-  gap: 16px;
-  align-items: start;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--line);
-}
-.settings__row:last-of-type {
-  border-bottom: 0;
-}
-@media (max-width: 620px) {
-  .settings__row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-}
-.settings__label {
-  display: block;
-  font-size: var(--t-base);
-  font-weight: 600;
-}
-.settings__note {
-  display: block;
-  margin-top: 3px;
-  font-weight: 400;
-  font-size: var(--t-small);
-  color: var(--ink-faint);
-}
-.settings__note--warn {
-  color: var(--signal);
-}
-.settings__note code,
-.settings__footer code {
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-}
-.settings__control {
-  display: flex;
-  justify-content: flex-end;
-}
-.settings__control--stack {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
-}
-.settings__control--inline {
-  align-items: center;
-  gap: 10px;
-}
-.settings__inline {
-  display: flex;
-  gap: 6px;
-}
-.settings__input {
-  flex: 1;
-  min-width: 0;
-  padding: 4px 7px;
-  background: var(--canvas);
-  border: 1px solid var(--line-control);
-  border-radius: 3px;
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-}
-.settings__input:disabled {
-  color: var(--ink-faint);
-  cursor: not-allowed;
-}
-.settings__value {
-  min-width: 62px;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-  color: var(--ink-muted);
-}
-.settings__error {
-  margin: 0;
-  padding: 10px 16px;
-  color: var(--signal);
-  font-size: var(--t-small);
-}
-.settings__footer {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: baseline;
-  gap: 6px;
-  padding: 7px 16px;
-  border-top: 1px solid var(--line);
-  background: var(--panel);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-  /* The point of naming the file is that it can be opened, so it must be
-     selectable even where the rest of the chrome is not. */
-  user-select: text;
-  overflow: hidden;
-}
-.settings__footer > span {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.settings__footer code {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.settings input[type="range"] {
-  flex: 1;
-  accent-color: var(--signal);
-}
-.settings input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-  accent-color: var(--signal);
-}
-
-/* ── Auto-scroll readout ───────────────────────────────────────────────── */
-
-.autoscroll {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px 5px 10px;
-  background: var(--panel);
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  font-size: var(--t-small);
-  animation: picker-in var(--base) var(--ease);
-}
-.autoscroll__pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--signal);
-  animation: autoscroll-pulse 1.6s var(--ease) infinite;
-}
-/* Held reads as held, not stopped: the dot stays, drained of colour and of
-   motion, so the difference is visible without reading the label. Paused is a
-   decision and goes fully grey; a nudge hold is momentary and only dims. */
-.autoscroll.is-paused .autoscroll__pulse {
-  background: var(--ink-faint);
-  animation: none;
-}
-.autoscroll.is-nudging .autoscroll__pulse {
-  animation: none;
-  opacity: 0.45;
-}
-@keyframes autoscroll-pulse {
-  50% {
-    opacity: 0.25;
-  }
-}
-/* The pulse says "still running"; for a reader who cannot see that, the label
-   and the speed already say it, so the animation is the part that goes. */
-@media (prefers-reduced-motion: reduce) {
-  .autoscroll__pulse {
-    animation: none;
-  }
-}
-.autoscroll__label {
-  color: var(--ink-muted);
-}
-.autoscroll__speed {
-  min-width: 58px;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-}
-.autoscroll__step {
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--line-control);
-  border-radius: 3px;
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-  line-height: 1;
-  cursor: pointer;
-}
-.autoscroll__step:hover {
-  border-color: var(--signal);
-}
-.autoscroll__control {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-left: 2px;
-  padding: 3px 7px;
-  border: 1px solid var(--line-control);
-  border-radius: 3px;
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--t-small);
-  cursor: pointer;
-}
-.autoscroll__control:hover {
-  border-color: var(--signal);
-}
-.autoscroll__control kbd {
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-}
-
-/* ── Multibuffer ───────────────────────────────────────────────────────── */
-
-/* Project-wide search whose results are the editor. It replaces the panes
-   rather than floating over them: this is a place to work, not a dialog to
-   dismiss, and an overlay would put the thing being edited behind a scrim. */
-.multibuffer {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  background: var(--surface);
-}
-
-.mb__bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 7px 12px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
-.mb__field {
-  flex: 1 1 180px;
-  min-width: 0;
-  padding: 4px 8px;
-  border: 1px solid var(--line-control);
-  border-radius: 2px;
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-}
-.mb__field::placeholder {
-  color: var(--ink-faint);
-}
-.mb__field--replace {
-  flex: 1 1 140px;
-}
-.mb__toggle {
-  padding: 3px 7px;
-  border: 1px solid var(--line-control);
-  border-radius: 2px;
-  background: var(--surface);
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: var(--t-small);
-  cursor: pointer;
-  transition:
-    border-color var(--fast) var(--ease),
-    color var(--fast) var(--ease);
-}
-.mb__toggle.is-active {
-  border-color: var(--signal);
-  color: var(--signal);
-}
-.mb__count {
-  margin-left: auto;
-  color: var(--ink-faint);
-  font-size: var(--t-micro);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Unsaved edits are state, so the strip carries signal. It is the only place in
-   the multibuffer that does. */
-.mb__notice {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--signal-tint-soft);
-  border-bottom: 1px solid var(--line);
-  font-size: var(--t-small);
-}
-.mb__notice > span {
-  flex: 1;
-  min-width: 0;
-}
-
-.mb__results {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-}
-.mb__empty {
-  max-width: 68ch;
-  margin: 0;
-  color: var(--ink-faint);
-  font-size: var(--t-small);
-}
-
-.mb__file {
-  margin-bottom: 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.mb__file-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
-.mb__path {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-  cursor: pointer;
-}
-.mb__path:hover {
-  color: var(--signal);
-}
-.mb__dirty {
-  color: var(--signal);
-  font-size: var(--t-micro);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-/* Elided lines. A hairline says "there is more here" without pretending to
-   summarise what it is. */
-.mb__gap {
-  border-top: 1px dashed var(--line);
-}
-
-.mb__excerpt {
-  display: flex;
-  align-items: stretch;
-  background: var(--surface);
-}
-.mb__gutter {
-  display: flex;
-  flex-direction: column;
-  padding: 6px 8px;
-  border-right: 1px solid var(--line);
-  color: var(--ink-faint);
-  font-family: var(--font-mono);
-  font-size: var(--t-small);
-  line-height: 1.7;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  user-select: none;
-}
-/* Matches the gutter exactly: same size, same line-height, same vertical
-   padding. An excerpt does not wrap, so one line is one row in both. */
-.source--excerpt {
-  --source-pad: 6px 10px;
-  --source-size: var(--t-small);
-}
-
-/* ── Context menu ──────────────────────────────────────────────────────── */
-
-/* Same surface and edge as the palette and picker, so it reads as part of the
-   app rather than an OS menu that drifted in. Focus is the palette's inset
-   signal bar, which is also what the arrow keys move. */
-.menu {
-  position: fixed;
-  z-index: 60;
-  min-width: 196px;
-  padding: 4px 0;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  animation: menu-in var(--fast) var(--ease);
-}
-@keyframes menu-in {
-  from {
-    opacity: 0;
-    transform: translateY(-2px);
-  }
-}
-.menu__item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  padding: 4px 12px;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--t-base);
-  text-align: left;
-  cursor: pointer;
-}
-.menu__item:hover,
-.menu__item:focus {
-  background: var(--signal-tint-soft);
-  outline: none;
-}
-.menu__item:focus {
-  box-shadow: inset 0 0 0 2px var(--focus);
-}
-.menu__item:disabled {
-  color: var(--ink-faint);
-  cursor: default;
-}
-.menu__item.is-danger {
-  color: var(--signal);
-}
-.menu__hint {
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-}
-.menu__separator {
-  height: 1px;
-  margin: 4px 0;
-  background: var(--line);
-}
-@media (prefers-reduced-motion: reduce) {
-  .menu {
-    animation: none;
-  }
-}
-
-/* ── The document's line ───────────────────────────────────────────────── */
-
-/* Headings as stations, evenly spaced: order, not distance, is what a reader
-   navigates by. The line is a 6px rule in the document's ink; level-1 and 2
-   headings are stations, level 3 a tick across the line; the section in view is
-   the lit interchange, and an agent's change an amber service alert. */
-.doc-line__stops {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.doc-line__stop {
-  position: relative;
-}
-.doc-line__stop::before {
-  content: "";
-  position: absolute;
-  left: 15px;
-  top: 0;
-  bottom: 0;
-  width: 6px;
-  background: var(--line-ink);
-}
-.doc-line__stop:first-child::before {
-  top: 50%;
-}
-.doc-line__stop:last-child::before {
-  bottom: 50%;
-}
-.doc-line__station {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: var(--target);
-  padding: 6px 10px 6px 44px;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--on-enamel-muted);
-  font: inherit;
-  font-size: var(--t-base);
-  line-height: 1.3;
-  text-align: left;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
-}
-.doc-line__station:hover {
-  background: var(--enamel-raised);
-  color: var(--on-enamel);
-}
-.doc-line__station:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: -2px;
-}
-.doc-line__marker {
-  position: absolute;
-  left: 9px;
-  top: 50%;
-  width: 18px;
-  height: 18px;
-  margin-top: -9px;
-  border-radius: 50%;
-  background: var(--on-enamel);
-  border: 4px solid var(--line-ink);
-  transition:
-    transform var(--base) var(--ease),
-    background var(--base) var(--ease),
-    border-color var(--base) var(--ease);
-}
-.doc-line__stop--h1 .doc-line__station {
-  color: var(--on-enamel);
-  font-weight: 600;
-}
-/* A minor station: a tick across the line rather than a stop on it. */
-.doc-line__stop--h3 .doc-line__marker {
-  left: 11px;
-  width: 14px;
-  height: 4px;
-  margin-top: -2px;
-  border: 0;
-  border-radius: 2px;
-}
-.doc-line__stop--h3 .doc-line__station {
-  font-size: var(--t-small);
-}
-.doc-line__name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-.doc-line__station.is-here {
-  color: var(--on-enamel);
-  font-weight: 600;
-}
-.doc-line__station.is-here .doc-line__marker {
-  transform: scale(1.4);
-  background: var(--enamel);
-  border: 3.5px solid var(--on-enamel);
-}
-.doc-line__stop--h3 .doc-line__station.is-here .doc-line__marker {
-  transform: none;
-  left: 9px;
-  width: 18px;
-  height: 18px;
-  margin-top: -9px;
-  border-radius: 50%;
-}
-.doc-line__station.has-alert .doc-line__marker {
-  border-color: var(--amber);
-}
-.doc-line__alert {
-  flex-shrink: 0;
-  display: inline-grid;
-  margin-left: auto;
-}
-.doc-line__alert svg {
-  width: 18px;
-  height: 18px;
-}
-.doc-line__alert path:first-child {
-  fill: var(--amber);
-  stroke: var(--amber);
-  stroke-linejoin: round;
-  stroke-width: 1.5;
-}
-.doc-line__alert-mark {
-  fill: none;
-  stroke: var(--enamel);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
-.doc-line__empty {
-  margin: 0;
-  padding: 8px 2px;
-  color: var(--on-enamel-muted);
-  font-size: var(--t-base);
-}
-
-/* ── iPhone ────────────────────────────────────────────────────────────── */
-
-/* The app's places, at the bottom, within thumb reach. The active one is lit
-   porcelain with a scarlet rule under its label, the diagram's selected tab. */
-.tabbar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  flex-shrink: 0;
-  padding: 4px 4px env(safe-area-inset-bottom);
-  background: var(--enamel);
-  border-top: 1px solid var(--enamel-line);
-}
-.tabbar__item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  min-height: 52px;
-  padding: 4px 0 6px;
-  border: 0;
-  background: transparent;
-  color: var(--on-enamel-muted);
-  font-family: var(--font-sign);
-  font-size: var(--t-small);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.tabbar__item svg {
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.tabbar__item span {
-  padding-bottom: 3px;
-  border-bottom: 2px solid transparent;
-}
-.tabbar__item.is-active {
-  color: var(--on-enamel);
-}
-.tabbar__item.is-active span {
-  border-bottom-color: var(--scarlet);
-}
-.tabbar__item:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: -4px;
-  border-radius: var(--radius-control);
-}
-
-/* Off the Read tab the bar names the place, as a navigation bar does. */
-.app__title {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-family: var(--font-sign);
-  font-size: 1.375rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-/* Documents and Outline take the whole space above the tab bar. */
-.phone-panel {
-  flex: 1;
-  min-width: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 8px 16px 24px;
-  background: var(--enamel);
-  color-scheme: dark;
-}
-.phone-panel__title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 4px 2px 16px;
-  font-family: var(--font-sign);
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-@media (max-width: 599px) {
-  .app__header {
-    gap: 8px;
-    padding: 4px 16px;
-  }
-  .wordmark__text,
-  .app__state,
-  .sidebar-toggle,
-  .app__settings {
-    display: none;
-  }
-  .app__doc {
-    margin-left: 2px;
-    gap: 8px;
-  }
-  .app__path {
-    font-size: 1.125rem;
-  }
-  /* Reading on a phone is the whole width, edge to edge under the bar. */
-  .app__body {
-    padding: 0;
-  }
-  .panes {
-    border-radius: 0;
-  }
-  .sidebar {
-    width: 100%;
-    padding-top: 8px;
-  }
-  .banner {
-    margin: 0 8px 8px;
-  }
-}
-
-/* Key hints mean nothing without a keyboard; on glass they are noise. */
-@media (hover: none) and (pointer: coarse) {
-  .segmented__key,
-  .button__key,
-  .sidebar__search kbd {
-    display: none;
-  }
 }

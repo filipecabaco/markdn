@@ -14,15 +14,31 @@ stamps the resolved number into both before building.
 
 ### Changed
 
+- **A new look, and the name in lowercase.** markdn now looks like a stock
+  shadcn app: zinc neutrals, Geist, sentence case and one brand colour, kept for
+  the mark (an "m" of four tiles). The transit-map design is gone: the file tree
+  and outline are plain lists. The app is now `markdn.app` and the release
+  assets are `markdn_<version>_<arch>.dmg`. The cask is rendered from
+  `.github/cask/markdn.rb` at release time, so the tap only switches names
+  together with the release that carries them. On Linux the installer puts the
+  AppImage in `~/.local/lib/markdn/` and a `markdn` command in `~/.local/bin`
+  that starts it without holding the terminal.
+
 - **One packager for the desktop and iOS.** The desktop backend is packed by
   ampoule instead of Burrito: one binary running the BEAM as WebAssembly, on
   OTP 28 like the iOS build. No Zig, nothing unpacked on first launch, and no
   stale backend left behind by an earlier build. Settings, the documents root
   and Move to Trash work as before; the backend log is now in
-  `~/Library/Logs/MarkDN/`.
+  `~/Library/Logs/markdn/`.
 
 ### Added
 
+- **`markdn` opens files from a terminal.** `markdn notes.md` opens a document in
+  the running app, or starts it with that document; `markdn ~/notes` makes a
+  folder the root. A file outside the root moves the root to its folder unless
+  `MARKDN_ROOT` pins it. The command ships inside the app and is linked onto the
+  PATH by the Homebrew cask and by `install.sh`. On macOS, `open -a markdn` and
+  Finder's Open With work too (`.md`, `.markdown` and `.mdx` are registered).
 - **The window comes back where you were.** The open document, the view and any
   unsaved edits are kept in `session.json` beside the settings, and a window that
   loads — after iOS reclaims a suspended app or ends it, or after a restart —

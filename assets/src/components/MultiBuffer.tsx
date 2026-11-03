@@ -9,6 +9,10 @@ import {
   type Segment,
 } from "../multibuffer";
 import { SourceArea } from "./SourceArea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
+import { cn } from "@/lib/utils";
 
 /**
  * Project-wide search whose results are editable in place.
@@ -203,10 +207,10 @@ export function MultiBuffer({ ref, onSave, onOpen, onClose }: Props) {
   };
 
   return (
-    <section className="multibuffer" aria-label="Search across documents">
-      <div className="mb__bar">
-        <input
-          className="mb__field"
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col" aria-label="Search across documents">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2">
+        <Input
+          className="w-56 flex-1 md:max-w-72"
           value={query}
           autoFocus
           spellCheck={false}
@@ -224,29 +228,29 @@ export function MultiBuffer({ ref, onSave, onOpen, onClose }: Props) {
           }}
         />
 
-        <button
+        <Button
           type="button"
-          className={`mb__toggle${caseSensitive ? " is-active" : ""}`}
+          variant="outline"
+          size="icon"
+          className={cn("font-mono text-xs", caseSensitive && "bg-accent text-accent-foreground")}
           aria-pressed={caseSensitive}
           title="Match case"
           onClick={() => setCaseSensitive((current) => !current)}
         >
           Aa
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
-          className="button"
           onClick={search}
           disabled={query.trim() === "" || dirty.length > 0}
           title={dirty.length > 0 ? "Save or discard the current edits first" : undefined}
         >
           Search
-          <kbd className="button__key">↵</kbd>
-        </button>
+        </Button>
 
-        <input
-          className="mb__field mb__field--replace"
+        <Input
+          className="w-56 flex-1 md:max-w-72"
           value={replacement}
           spellCheck={false}
           placeholder="Replace with…"
@@ -254,16 +258,16 @@ export function MultiBuffer({ ref, onSave, onOpen, onClose }: Props) {
           onChange={(event) => setReplacement(event.target.value)}
         />
 
-        <button
+        <Button
           type="button"
-          className="button button--quiet"
+          variant="outline"
           onClick={replace}
           disabled={!applied || matchCount === 0}
         >
           Replace all
-        </button>
+        </Button>
 
-        <span className="mb__count">
+        <span className="ml-auto text-xs text-muted-foreground">
           {applied === null
             ? "no search yet"
             : `${matchCount} ${matchCount === 1 ? "match" : "matches"} in ${files.length} ${
@@ -271,15 +275,15 @@ export function MultiBuffer({ ref, onSave, onOpen, onClose }: Props) {
               }${truncated ? " (truncated)" : ""}`}
         </span>
 
-        <button type="button" className="button button--quiet" onClick={close}>
+        <Button type="button" variant="ghost" onClick={close}>
           Close
-          <kbd className="button__key">esc</kbd>
-        </button>
+          <Kbd>esc</Kbd>
+        </Button>
       </div>
 
       {(dirty.length > 0 || error) && (
-        <div className="mb__notice" role="status">
-          <span>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b bg-muted/60 px-3 py-2 text-sm" role="status">
+          <span className={cn("mr-auto", error && "text-destructive")}>
             {error ??
               (leaving
                 ? `Close and lose edits to ${dirty.length} ${
@@ -288,42 +292,34 @@ export function MultiBuffer({ ref, onSave, onOpen, onClose }: Props) {
                 : `${dirty.length} ${dirty.length === 1 ? "file" : "files"} edited, not saved.`)}
           </span>
 
-          <button type="button" className="button" onClick={saveAll} disabled={busy}>
+          <Button type="button" size="sm" onClick={saveAll} disabled={busy}>
             Save all
-            <kbd className="button__key">⌘S</kbd>
-          </button>
+            <Kbd className="bg-primary-foreground/15 text-primary-foreground">⌘S</Kbd>
+          </Button>
 
-          <button
-            type="button"
-            className="button button--quiet"
-            onClick={leaving ? onClose : discard}
-          >
+          <Button type="button" size="sm" variant="outline" onClick={leaving ? onClose : discard}>
             Discard
-          </button>
+          </Button>
 
           {leaving && (
-            <button
-              type="button"
-              className="button button--quiet"
-              onClick={() => setLeaving(false)}
-            >
+            <Button type="button" size="sm" variant="ghost" onClick={() => setLeaving(false)}>
               Keep editing
-            </button>
+            </Button>
           )}
         </div>
       )}
 
-      <div className="mb__results">
-        {busy && files.length === 0 && <p className="mb__empty">Searching…</p>}
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        {busy && files.length === 0 && <p className="mx-auto max-w-md py-10 text-center text-sm text-muted-foreground">Searching…</p>}
 
         {!busy && applied !== null && files.length === 0 && (
-          <p className="mb__empty">
+          <p className="mx-auto max-w-md py-10 text-center text-sm text-muted-foreground">
             No document contains <strong>{applied.query}</strong>.
           </p>
         )}
 
         {applied === null && !busy && (
-          <p className="mb__empty">
+          <p className="mx-auto max-w-md py-10 text-center text-sm text-muted-foreground">
             Search every markdown document under the root. Results are editable here; one save
             writes them all.
           </p>
@@ -357,12 +353,16 @@ function FileGroup({ file, applied, onOpen, onEdit }: FileGroupProps) {
   let line = 1;
 
   return (
-    <article className="mb__file">
-      <header className="mb__file-head">
-        <button type="button" className="mb__path" onClick={() => onOpen(file.path)}>
+    <article className="mb-3 overflow-hidden rounded-lg border">
+      <header className="flex items-center gap-2 border-b bg-muted/50 px-3 py-1.5">
+        <button
+          type="button"
+          className="min-w-0 truncate text-left font-mono text-xs font-medium hover:underline"
+          onClick={() => onOpen(file.path)}
+        >
           {file.path}
         </button>
-        {file.dirty && <span className="mb__dirty">edited</span>}
+        {file.dirty && <span className="text-xs text-muted-foreground">edited</span>}
       </header>
 
       {file.segments.map((segment, index) => {
@@ -371,7 +371,7 @@ function FileGroup({ file, applied, onOpen, onEdit }: FileGroupProps) {
 
         if (segment.kind === "gap") {
           return index === 0 || index === file.segments.length - 1 ? null : (
-            <div key={index} className="mb__gap" aria-hidden="true" />
+            <div key={index} className="h-px border-t border-dashed" aria-hidden="true" />
           );
         }
 
@@ -405,8 +405,11 @@ function Excerpt({ text, firstLine, applied, onChange }: ExcerptProps) {
   const lines = lineCount(text);
 
   return (
-    <div className="mb__excerpt">
-      <div className="mb__gutter" aria-hidden="true">
+    <div className="flex">
+      <div
+        className="flex shrink-0 flex-col py-1.5 pr-2 pl-3 text-right font-mono text-[0.8125rem] leading-[1.7] text-muted-foreground/70 tabular-nums select-none"
+        aria-hidden="true"
+      >
         {Array.from({ length: lines }, (_, offset) => (
           <span key={offset}>{firstLine + offset}</span>
         ))}
