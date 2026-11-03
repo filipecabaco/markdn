@@ -23,6 +23,11 @@ curl -fsSL https://raw.githubusercontent.com/filipecabaco/markdn/main/install.sh
 markdn currently ships unsigned, so the installer clears the macOS quarantine
 flag for you — otherwise Gatekeeper refuses to open it.
 
+Every release also carries its own copy of the installer, so the latest one is
+always at
+`https://github.com/filipecabaco/markdn/releases/latest/download/install.sh`.
+Set `MARKDN_VERSION=0.4.0` (for example) to install a specific release.
+
 Both install a `markdn` command (the installer puts it in `~/.local/bin`).
 
 ## What you get
