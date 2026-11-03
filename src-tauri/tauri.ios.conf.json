@@ -10,7 +10,15 @@
     },
     "resources": {
       "cli/markdn": null,
-      "../burrito_out/ios/backend": "ex_tauri/backend"
+      "../_build/ex_tauri_ios/release/": "ex_tauri/release/"
+    }
+  },
+  "plugins": {
+    "ex-tauri": {
+      "appLikePage": true,
+      "dismissKeyboardOnSwipe": true,
+      "formAccessoryBar": false,
+      "keyboardResize": true
     }
   }
 }

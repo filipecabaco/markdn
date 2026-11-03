@@ -37,3 +37,7 @@ custom-protocol = [ "tauri/custom-protocol" ]
 # Desktop only: the iOS build does not use it, and it does not build there.
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"
+
+# iOS plugins, registered in the shell by `mix ex_tauri.ios init` (src-tauri/plugins/*, config :ex_tauri, :ios_plugins).
+[target.'cfg(target_os = "ios")'.dependencies]
+tauri-plugin-ex-tauri = { path = "../deps/ex_tauri/priv/ios_shell" }

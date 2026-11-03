@@ -6,21 +6,69 @@ defmodule Markdn.RouterTest do
 
   @opts Markdn.init([])
 
+  # The launch token, as the shell would hand it over. ExTauri.Token keeps it in
+  # a persistent_term read from the environment, hence async: false above.
+  @token String.duplicate("f00d", 16)
+
+  setup do
+    System.put_env("EX_TAURI_TOKEN", @token)
+    :persistent_term.erase({ExTauri.Token, :token})
+
+    on_exit(fn ->
+      System.delete_env("EX_TAURI_TOKEN")
+      :persistent_term.erase({ExTauri.Token, :token})
+    end)
+  end
+
   # Plug.Test defaults the host to www.example.com, which LocalGuard rejects, so
-  # every request here is addressed to localhost like a real webview request.
+  # every request here is addressed to localhost like a real webview request,
+  # and carries the window's token, as its cookie does.
   defp call(method, path, body \\ nil) do
-    conn =
-      case body do
-        nil ->
-          conn(method, "http://localhost#{path}")
+    method
+    |> request(path, body)
+    |> put_req_header("authorization", "Bearer " <> @token)
+    |> Markdn.call(@opts)
+  end
 
-        body ->
-          method
-          |> conn("http://localhost#{path}", Jason.encode!(body))
-          |> put_req_header("content-type", "application/json")
-      end
+  defp request(method, path, nil), do: conn(method, "http://localhost#{path}")
 
-    Markdn.call(conn, @opts)
+  defp request(method, path, body) do
+    method
+    |> conn("http://localhost#{path}", Jason.encode!(body))
+    |> put_req_header("content-type", "application/json")
+  end
+
+  describe "the window token" do
+    test "the document API refuses a program without it" do
+      assert %{status: 401} = Markdn.call(request(:get, "/api/health", nil), @opts)
+
+      assert %{status: 401} =
+               :get
+               |> request("/api/health", nil)
+               |> put_req_header("authorization", "Bearer wrong")
+               |> Markdn.call(@opts)
+    end
+
+    test "the window's first load trades it for a cookie" do
+      conn = Markdn.call(request(:get, "/?ex_tauri_token=#{@token}", nil), @opts)
+
+      assert conn.status == 303
+      assert get_resp_header(conn, "location") == ["/"]
+      assert %{value: @token, http_only: true} = conn.resp_cookies["ex_tauri_80"]
+
+      api =
+        :get
+        |> request("/api/health", nil)
+        |> put_req_cookie("ex_tauri_80", @token)
+        |> Markdn.call(@opts)
+
+      assert api.status == 200
+    end
+
+    test "MCP stays open to other programs" do
+      body = %{jsonrpc: "2.0", id: 1, method: "tools/list"}
+      assert %{status: 200} = Markdn.call(request(:post, "/mcp", body), @opts)
+    end
   end
 
   test "health reports the active root", %{root: root} do
@@ -137,6 +185,7 @@ defmodule Markdn.RouterTest do
         :get
         |> conn("http://localhost/api/health")
         |> put_req_header("origin", "http://localhost:43118")
+        |> put_req_header("authorization", "Bearer " <> @token)
         |> Markdn.call(@opts)
 
       assert conn.status == 200

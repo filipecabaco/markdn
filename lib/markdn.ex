@@ -35,6 +35,14 @@ defmodule Markdn do
   # Runs before every route. Must be declared before the route macros.
   plug(Markdn.Plugs.LocalGuard)
 
+  # LocalGuard stops web pages; this stops other programs on the machine, which
+  # set whatever Host and Origin they like. The document API and the live socket
+  # answer only the app's own window: the shell opens it with this launch's
+  # token, which the plug trades for a cookie. /mcp stays open, since MCP
+  # clients are other programs by design, and so do the SPA and its assets. A
+  # backend started without the shell logs the link, token included, to open.
+  plug(ExTauri.Token.Plug, only: ["/api", "/ws"])
+
   @impl true
   def start(_type, _args) do
     if desktop_sidecar?(), do: redirect_logs_to_file()

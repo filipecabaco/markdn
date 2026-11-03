@@ -2,9 +2,13 @@
 # OTP 28, pinned to the exact patch ampoule embeds: the desktop sidecar and the
 # iOS backend are both packed by ampoule (ExTauri.Packager), whose runtime runs
 # a release only from the OTP it was built with (`ampoule version` prints its
-# ERTS; 0.1.8 is ERTS 16.4.0.4, OTP 28.5.0.4). Bump the two together.
+# ERTS; 0.1.13 is ERTS 16.4.0.4, OTP 28.5.0.4). Bump the three together: this
+# file and AMPOULE_VERSION in ci.yml and release.yml.
 erlang = "28.5.0.4"
 elixir = "1.20.4-otp-28"
+# The packer, from its GitHub release, with its runtimes beside it (and since
+# 0.1.13 `ampoule release --target` fetches any it lacks).
+"github:filipecabaco/ampoule" = "0.1.13"
 node = "26"
 # Project-scoped so it overrides the global pnpm pin only here. Matches the
 # pnpm/action-setup major in both workflows.
