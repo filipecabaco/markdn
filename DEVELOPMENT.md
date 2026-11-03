@@ -141,12 +141,31 @@ mix ex_tauri.build --ci --target aarch64-apple-darwin
 
 `mix ex_tauri.build` needs `ampoule` on `PATH` (or `config :ex_tauri,
 :ampoule_path`). CI installs a pinned release with
-`.github/scripts/install-ampoule.sh`; locally, download the same one from the
+`.github/scripts/install-ampoule.sh`; locally, `mise install` fetches the same
+one, with its runtimes, from the
 [ampoule releases](https://github.com/filipecabaco/ampoule/releases).
+
+On macOS the first launch writes ampoule's compiled engine (about 17 MiB) to the
+per-user cache outside the home (`/var/folders/…/C/ampoule`), and later
+launches map it instead of decompressing it into the backend's own memory
+(ampoule 0.1.10+, set up by the ex_tauri 0.7 shell). On Linux the engine still
+loads in memory, and the log says so.
+
+### The window token
+
+Any program on the machine can reach the backend's loopback port, so the
+document API (`/api`) and the live socket (`/ws`) answer only markdn's own
+window (`ExTauri.Token.Plug` in `lib/markdn.ex`). The shell makes a token at
+every launch, hands it to the backend as `EX_TAURI_TOKEN` and opens the window
+at `/?ex_tauri_token=…`, which the plug trades for an `HttpOnly` cookie. `/mcp`
+stays open to MCP clients. A backend started without the shell (`mix run`,
+`mix francis.server`) makes its own token and logs the link to open in a
+browser; set `EX_TAURI_TOKEN` (32+ characters) to choose it, and send
+`Authorization: Bearer <token>` from scripts.
 
 **OTP is pinned to the exact patch ampoule embeds, and that is load-bearing.**
 ampoule's runtime runs a release only from the OTP it was built with:
-`ampoule version` prints its ERTS (0.1.8 embeds ERTS 16.4.0.4, OTP 28.5.0.4).
+`ampoule version` prints its ERTS (0.1.13 embeds ERTS 16.4.0.4, OTP 28.5.0.4).
 `mise.toml`, `ci.yml` and `release.yml` pin that patch; bump them together with
 `AMPOULE_VERSION`.
 
