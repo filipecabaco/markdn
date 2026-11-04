@@ -1,15 +1,15 @@
 # Generated from .github/cask/markdn.rb by the release workflow. Edit that file.
 cask "markdn" do
-  version "0.4.2"
+  version "0.4.3"
 
   on_arm do
-    sha256 "7462cd1fe3682a97f135e5475a25564acd3ebfcb9afb54a79e14fcfd18612f25"
+    sha256 "ba21656f2a9a67bf4be268284db4c25497f8fb3831f1e8def43152b322574319"
 
     url "https://github.com/filipecabaco/markdn/releases/download/v#{version}/markdn_#{version}_aarch64.dmg",
         verified: "github.com/filipecabaco/markdn/"
   end
   on_intel do
-    sha256 "9ad8f36a52cac3c07e284088dd6a4005e5b2bb8c3e5fc58bbd660788335ecadb"
+    sha256 "734195ba1262f53fd960df2b8d3cae2ab8ce05feb85295d8be5bf90f152762cf"
 
     url "https://github.com/filipecabaco/markdn/releases/download/v#{version}/markdn_#{version}_x64.dmg",
         verified: "github.com/filipecabaco/markdn/"
