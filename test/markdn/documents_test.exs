@@ -293,6 +293,32 @@ defmodule Markdn.DocumentsTest do
       assert [%{path: "readme.md"}] = Documents.search("readme")
     end
 
+    test "skips cache and vendored directories", %{root: root} do
+      fixture(root, "coverage/readme.md", "c")
+      fixture(root, "vendor/lib/readme.md", "v")
+      fixture(root, "__pycache__/readme.md", "p")
+      fixture(root, "readme.md", "r")
+
+      assert [%{path: "readme.md"}] = Documents.search("readme")
+    end
+
+    test "still walks directories whose names carry a dot", %{root: root} do
+      fixture(root, "socket.io/guide.md", "s")
+      fixture(root, "v1.0/guide.md", "v")
+
+      assert ["socket.io/guide.md", "v1.0/guide.md"] =
+               "guide" |> Documents.search() |> Enum.map(& &1.path) |> Enum.sort()
+    end
+
+    # The price of judging by name: a directory named like a source file is
+    # taken for one. Pinned so the trade-off is a decision, not an accident.
+    test "does not descend into a directory named like a source file", %{root: root} do
+      fixture(root, "types.ts/notes.md", "t")
+      fixture(root, "notes.md", "n")
+
+      assert [%{path: "notes.md"}] = Documents.search("notes")
+    end
+
     test "does not follow symlinks out of the root", %{root: root} do
       outside =
         Path.join(System.tmp_dir!(), "markdn-outside-#{System.unique_integer([:positive])}")

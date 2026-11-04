@@ -37,4 +37,34 @@ describe("CommandPalette", () => {
     await user.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalled();
   });
+
+  // Inside the desktop app the first search of a large tree takes seconds;
+  // saying "nothing matches" before the server has answered is a false result.
+  it("says it is searching until the server answers, not that nothing matched", async () => {
+    let answer!: (value: Awaited<ReturnType<typeof searchDocuments>>) => void;
+    vi.mocked(searchDocuments).mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    const user = userEvent.setup();
+    render(<CommandPalette commands={[]} onOpenFile={vi.fn()} onClose={vi.fn()} />);
+
+    await user.keyboard("presence");
+    expect(await screen.findByText("Searching documents…")).toBeInTheDocument();
+    expect(screen.queryByText("No documents or commands match.")).not.toBeInTheDocument();
+
+    answer({
+      query: "presence",
+      results: [{ name: "presence.mdx", path: "guides/presence.mdx", score: 1, matches: [] }],
+    });
+
+    expect(await screen.findByRole("option", { name: /presence\.mdx/ })).toBeInTheDocument();
+    expect(screen.queryByText("Searching documents…")).not.toBeInTheDocument();
+  });
+
+  it("says nothing matched once the server answers with nothing", async () => {
+    vi.mocked(searchDocuments).mockResolvedValue({ query: "zzz", results: [] });
+    const user = userEvent.setup();
+    render(<CommandPalette commands={[]} onOpenFile={vi.fn()} onClose={vi.fn()} />);
+
+    await user.keyboard("zzz");
+    expect(await screen.findByText("No documents or commands match.")).toBeInTheDocument();
+  });
 });

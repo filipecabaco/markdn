@@ -75,6 +75,10 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  // True from the keystroke until the server answers. The first walk of a large
+  // tree takes seconds inside the desktop app, and "nothing matches" said while
+  // the answer is still on its way is a wrong answer, not a pending one.
+  const [searching, setSearching] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const listId = useId();
@@ -106,18 +110,24 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
   useEffect(() => {
     if (commandMode) {
       setHits([]);
+      setSearching(false);
       return;
     }
 
+    setSearching(true);
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       searchDocuments(term, FILE_LIMIT, controller.signal)
         .then((result) => {
           setHits(result.results);
           setError(null);
+          setSearching(false);
         })
         .catch((err: Error) => {
-          if (err.name !== "AbortError") setError(err.message);
+          // An abort means a newer keystroke owns the pending state now.
+          if (err.name === "AbortError") return;
+          setError(err.message);
+          setSearching(false);
         });
     }, DEBOUNCE_MS);
 
@@ -215,7 +225,9 @@ export function CommandPalette({ commands, commandsOnly = false, onOpenFile, onC
         <div className="min-h-0 flex-1 overflow-y-auto p-1" ref={listRef} role="listbox" id={listId}>
           {error && <div className="px-3 py-6 text-center text-sm text-muted-foreground">{error}</div>}
           {!error && items.length === 0 && (
-            <div className="px-3 py-6 text-center text-sm text-muted-foreground">No documents or commands match.</div>
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground" role="status">
+              {searching ? "Searching documents…" : "No documents or commands match."}
+            </div>
           )}
 
           {items.map((item, index) => {
