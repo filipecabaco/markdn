@@ -22,6 +22,51 @@ describe("Preview", () => {
     expect(screen.getByText(/Alert, Callout, Card, Tabs, Tab/)).toBeInTheDocument();
   });
 
+  it("keeps the content of an unregistered component", () => {
+    render(<Preview content={'<Accordion title="x">\n\nInside the accordion.\n\n</Accordion>'} />);
+    expect(screen.getByText(/Unknown component <Accordion>/)).toBeInTheDocument();
+    expect(screen.getByText("Inside the accordion.")).toBeInTheDocument();
+  });
+
+  // Supabase's docs wrap content in `<$Show if="…">`. Not capitalised, but not an
+  // HTML element either: handed to the DOM it threw InvalidCharacterError and
+  // dropped the whole document to plain markdown.
+  it("treats a $-prefixed tag as a component, not as an HTML element", () => {
+    render(
+      <Preview
+        documentPath="guide.mdx"
+        content={'<$Show if="sdk:js">\n\nOnly for JavaScript.\n\n</$Show>\n\n<$Partial path="note.mdx" />'}
+      />,
+    );
+    expect(screen.queryByText(/MDX could not be parsed/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Unknown component <\$Show>/)).toBeInTheDocument();
+    expect(screen.getByText(/Unknown component <\$Partial>/)).toBeInTheDocument();
+    expect(screen.getByText("Only for JavaScript.")).toBeInTheDocument();
+  });
+
+  it("still renders camelCase SVG elements as elements", () => {
+    const { container } = render(
+      <Preview content={'<svg><defs><linearGradient id="g" /></defs></svg>'} />,
+    );
+    expect(screen.queryByText(/Unknown component/)).not.toBeInTheDocument();
+    expect(container.querySelector("lineargradient, linearGradient")).not.toBeNull();
+  });
+
+  it.each([
+    ["MDX", "guide.mdx", "\n\n<Alert>Hi</Alert>"],
+    ["plain markdown", "guide.md", ""],
+  ])("leaves YAML frontmatter out of the %s preview", (_kind, documentPath, tail) => {
+    render(
+      <Preview
+        documentPath={documentPath}
+        content={`---\ntitle: 'Presence'\ndescription: 'Share state.'\n---\n\n# Presence${tail}`}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Presence" })).toBeInTheDocument();
+    expect(screen.queryByText(/title:/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+  });
+
   it("renders inline HTML tags as HTML, not as unknown components", () => {
     render(<Preview content={"Press <kbd>Cmd</kbd>."} />);
     expect(screen.getByText("Cmd").tagName).toBe("KBD");

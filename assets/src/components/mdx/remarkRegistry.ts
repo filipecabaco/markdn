@@ -31,6 +31,14 @@ interface MdxJsxNode extends Node {
 
 const JSX_NODE_TYPES = new Set(["mdxJsxFlowElement", "mdxJsxTextElement"]);
 
+// An HTML or SVG element name: an ASCII letter-and-digit name starting
+// lowercase, optionally dash-separated as custom elements are (`kbd`, `h2`,
+// `my-widget`, and SVG's camelCase `linearGradient`). This is what the DOM will
+// accept from `createElement`. "Not capitalised" is not the same test: JSX also allows
+// `$Show`, `_Note` or `ui.Card`, and handing one of those to the DOM throws
+// InvalidCharacterError, which takes the whole document down to plain markdown.
+const HTML_ELEMENT_NAME = /^[a-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$/;
+
 function readValue(value: MdxJsxAttribute["value"]): unknown {
   // `<Alert dismissible />` — a valueless attribute is boolean true.
   if (value === null || value === undefined) return true;
@@ -57,11 +65,11 @@ export const remarkComponentRegistry: Plugin = () => {
       // A fragment (`<>`) has a null name and carries no component identity.
       if (!jsx.name) return;
 
-      // JSX capitalisation rules: a lowercase name is an intrinsic HTML element
-      // (`<kbd>`, `<sup>`), not a component. Routing those through the registry
-      // would report every inline HTML tag as an unknown component, so they are
-      // passed straight through to hast as themselves.
-      if (!/^[A-Z]/.test(jsx.name)) {
+      // An HTML element name (`<kbd>`, `<sup>`) is an intrinsic element, not a
+      // component. Routing those through the registry would report every inline
+      // HTML tag as an unknown component, so they are passed straight through to
+      // hast as themselves. Anything else — capitalised or not — is a component.
+      if (HTML_ELEMENT_NAME.test(jsx.name)) {
         const attributes: Record<string, string> = {};
 
         for (const attribute of jsx.attributes ?? []) {
