@@ -51,7 +51,14 @@ defmodule Markdn do
       [
         # Duplicate keys: every connected websocket registers under :all so a save
         # can be fanned out to the other windows.
-        {Registry, keys: :duplicate, name: Markdn.Sockets}
+        {Registry, keys: :duplicate, name: Markdn.Sockets},
+        # Runs the index's walks, so a walk that crashes is reported to the
+        # index rather than taking it down.
+        {Task.Supervisor, name: Markdn.TaskSupervisor},
+        # Only the desktop sidecar walks at boot: there a walk takes seconds,
+        # and the first palette open should not be the one to pay for it. Tests
+        # and `mix francis.server` point the root elsewhere per run.
+        {Markdn.DocumentIndex, prewarm: desktop_sidecar?()}
       ] ++
         shutdown_manager() ++
         [

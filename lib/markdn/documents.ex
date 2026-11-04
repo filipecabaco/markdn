@@ -11,6 +11,7 @@ defmodule Markdn.Documents do
 
   require Logger
 
+  alias Markdn.DocumentIndex
   alias Markdn.Fuzzy
   alias Markdn.Settings
 
@@ -25,9 +26,29 @@ defmodule Markdn.Documents do
   @default_limit 50
 
   # Directories that are never worth walking for documents and are expensive to
-  # walk: dependency and build trees, plus macOS's ~/Library, which is enormous
-  # and is not hidden, so the dotfile rule below does not catch it.
-  @skip_dirs ~w(node_modules _build deps target dist build .git .svn .hg Library)
+  # walk: dependency, build and cache trees, plus macOS's ~/Library, which is
+  # enormous and is not hidden, so the dotfile rule below does not catch it.
+  @skip_dirs ~w(node_modules _build deps target dist build coverage vendor
+                __pycache__ Pods .git .svn .hg Library)
+
+  # Names that are files and never documents, known from the name alone. In a
+  # source tree most entries are these — three in four, in the Supabase
+  # monorepo — and each would otherwise cost an `lstat` just to learn it is not
+  # a directory to descend into. Inside the packed sidecar an `lstat` crosses
+  # the WebAssembly boundary, so these were most of a walk's time, and spent its
+  # entry budget before it reached the documents. A directory named like one of
+  # these (`types.ts/`) is skipped too; that is the price, and it is a rare one.
+  # Ambiguous suffixes a directory really does carry (`socket.io`, `v1.0`,
+  # `example.com`) are deliberately not listed.
+  @not_documents ~w(
+    .ts .tsx .js .jsx .mjs .cjs .mts .cts .vue .svelte .astro .css .scss .sass .less
+    .json .jsonc .yaml .yml .toml .lock .sql .graphql .gql .prisma .xml .csv .tsv
+    .ex .exs .heex .eex .erl .hrl .rs .go .py .rb .php .java .kt .kts .swift .m .h
+    .c .cc .cpp .hpp .cs .dart .lua .sh .bash .zsh .ps1 .tf .hcl .proto
+    .png .jpg .jpeg .gif .webp .avif .svg .ico .bmp .tiff .heic .psd
+    .mp4 .mov .webm .mp3 .wav .ogg .woff .woff2 .ttf .otf .eot
+    .pdf .zip .gz .tgz .tar .wasm .map .snap .log .txt .html .htm .env
+  )
 
   # Images a document may reference. Kept separate from @extensions: the document
   # API must not hand back arbitrary binaries, and the image API must not hand
@@ -160,8 +181,11 @@ defmodule Markdn.Documents do
   def write(path, contents) when is_binary(contents) do
     with {:ok, abs} <- safe_path(path),
          :ok <- check_extension(abs),
-         :ok <- File.mkdir_p(Path.dirname(abs)) do
-      File.write(abs, contents)
+         :ok <- File.mkdir_p(Path.dirname(abs)),
+         :ok <- File.write(abs, contents) do
+      # A save can create the file, and always moves its mtime — which is the
+      # order the palette lists recent documents in.
+      indexed([abs])
     end
   end
 
@@ -187,6 +211,7 @@ defmodule Markdn.Documents do
          :ok <- check_extension(abs),
          :ok <- File.mkdir_p(Path.dirname(abs)),
          :ok <- File.write(abs, contents, [:exclusive]) do
+      indexed([abs])
       {:ok, relative(abs)}
     end
   end
@@ -213,6 +238,7 @@ defmodule Markdn.Documents do
          :ok <- check_free(source, target),
          :ok <- File.mkdir_p(Path.dirname(target)),
          :ok <- File.rename(source, target) do
+      indexed([source, target])
       {:ok, relative(target)}
     end
   end
@@ -240,8 +266,9 @@ defmodule Markdn.Documents do
   def trash(path) when is_binary(path) do
     with {:ok, abs} <- safe_path(path),
          :ok <- check_extension(abs),
-         :ok <- check_regular(abs) do
-      run_trash(abs)
+         :ok <- check_regular(abs),
+         :ok <- run_trash(abs) do
+      indexed([abs])
     end
   end
 
@@ -356,7 +383,17 @@ defmodule Markdn.Documents do
 
   # Dotfiles are noise in a document tree by default, but a notes directory that
   # lives in a dotfolder is a real thing, so it is a setting rather than a rule.
-  defp hidden?(name), do: String.starts_with?(name, ".") and not Settings.get("showHiddenFiles")
+  defp hidden?(name), do: hidden?(name, Settings.get("showHiddenFiles"))
+  defp hidden?(name, show_hidden), do: String.starts_with?(name, ".") and not show_hidden
+
+  # What a walk never descends into or lists, decided from the name alone so it
+  # costs no `lstat` and nothing from the entry budget. The setting is passed in
+  # rather than read per entry: a walk visits thousands of names.
+  defp skipped?(name, show_hidden) do
+    hidden?(name, show_hidden) or name in @skip_dirs or not_document?(name)
+  end
+
+  defp not_document?(name), do: String.downcase(Path.extname(name)) in @not_documents
 
   @doc """
   Fuzzy-searches markdown documents anywhere under the root.
@@ -387,16 +424,66 @@ defmodule Markdn.Documents do
   @doc """
   Every markdown document under the root, as `%{name:, path:, mtime:}`.
 
-  Bounded by depth and by an entry budget, and never follows a symlink, so the
-  cost is the same whether the root is a project checkout or a home directory.
-  Public because content search walks the same tree the fuzzy finder does —
-  duplicating the brakes in a second module is how the two drift apart.
+  Answered by `Markdn.DocumentIndex`, which walks once and shares the result:
+  inside the packed sidecar a walk costs seconds, and this is asked on every
+  keystroke. Public because content search lists the same tree the fuzzy finder
+  does — duplicating the brakes in a second module is how the two drift apart.
   """
   @spec walk() :: [%{name: String.t(), path: String.t(), mtime: integer()}]
-  def walk do
-    root()
-    |> crawl("", @max_depth, {[], @max_entries})
+  def walk, do: DocumentIndex.documents(index_key())
+
+  @doc """
+  What a walk depends on: the root, and whether hidden files are shown.
+
+  Changing either is a different list, so the index keys on both.
+  """
+  @spec index_key() :: DocumentIndex.key()
+  def index_key, do: {root(), Settings.get("showHiddenFiles")}
+
+  @doc """
+  Walks the tree for `key` — the uncached work behind `walk/0`.
+
+  Bounded by depth and by an entry budget, and never follows a symlink, so the
+  cost is the same whether the root is a project checkout or a home directory.
+  """
+  @spec scan(DocumentIndex.key()) :: [%{name: String.t(), path: String.t(), mtime: integer()}]
+  def scan({root, show_hidden}) do
+    root
+    |> crawl("", @max_depth, show_hidden, {[], @max_entries})
     |> elem(0)
+  end
+
+  @doc """
+  The index entry for one root-relative `path`, as a walk of `key` would list it.
+
+  `:none` when a walk would not list it: gone, not markdown, a symlink, too deep,
+  or under a hidden or skipped directory. This is how a change the app made is
+  folded into the index without walking again.
+  """
+  @spec index_entry(DocumentIndex.key(), String.t()) ::
+          {:ok, %{name: String.t(), path: String.t(), mtime: integer()}} | :none
+  def index_entry({root, show_hidden}, path) do
+    segments = Path.split(path)
+    name = List.last(segments)
+
+    # A walk descends @max_depth directories below the root, so a file is listed
+    # with at most @max_depth + 1 segments.
+    listed? =
+      length(segments) <= @max_depth + 1 and markdown?(name) and
+        not Enum.any?(segments, &skipped?(&1, show_hidden))
+
+    with true <- listed?,
+         {:ok, %File.Stat{type: :regular, mtime: mtime}} <-
+           File.lstat(Path.join(root, path), time: :posix) do
+      {:ok, %{name: name, path: path, mtime: mtime}}
+    else
+      _ -> :none
+    end
+  end
+
+  # Tells the index what the app just changed, by the paths a walk would list.
+  defp indexed(abs_paths) do
+    DocumentIndex.changed(index_key(), Enum.map(abs_paths, &relative/1))
   end
 
   defp rank(documents, "") do
@@ -427,21 +514,21 @@ defmodule Markdn.Documents do
     end
   end
 
-  defp crawl(_dir, _rel, depth, acc) when depth < 0, do: acc
+  defp crawl(_dir, _rel, depth, _show_hidden, acc) when depth < 0, do: acc
 
-  defp crawl(dir, rel, depth, acc) do
+  defp crawl(dir, rel, depth, show_hidden, acc) do
     case File.ls(dir) do
-      {:ok, names} -> Enum.reduce(names, acc, &visit(&1, dir, rel, depth, &2))
+      {:ok, names} -> Enum.reduce(names, acc, &visit(&1, dir, rel, depth, show_hidden, &2))
       # An unreadable directory (permissions, a dangling mount) must not abort the
       # search — the rest of the tree is still worth returning.
       {:error, _} -> acc
     end
   end
 
-  defp visit(_name, _dir, _rel, _depth, {_found, 0} = acc), do: acc
+  defp visit(_name, _dir, _rel, _depth, _show_hidden, {_found, 0} = acc), do: acc
 
-  defp visit(name, dir, rel, depth, {found, budget} = acc) do
-    if hidden?(name) or name in @skip_dirs do
+  defp visit(name, dir, rel, depth, show_hidden, {found, budget} = acc) do
+    if skipped?(name, show_hidden) do
       acc
     else
       full = Path.join(dir, name)
@@ -452,7 +539,7 @@ defmodule Markdn.Documents do
       # editor would refuse to open anyway.
       case File.lstat(full, time: :posix) do
         {:ok, %File.Stat{type: :directory}} ->
-          crawl(full, relative, depth - 1, {found, budget - 1})
+          crawl(full, relative, depth - 1, show_hidden, {found, budget - 1})
 
         {:ok, %File.Stat{type: :regular, mtime: mtime}} ->
           if markdown?(name),

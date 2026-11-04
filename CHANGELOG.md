@@ -21,6 +21,26 @@ stamps the resolved number into both before building.
   `/mcp` stays open to MCP clients, and the `markdn` command is unaffected.
 - Bandit 1.14.1, for an HTTP/2 memory amplification (CVE-2026-116078).
 
+### Fixed
+
+- **Finding a document works in the desktop app.** In a large folder the
+  palette said "No documents or commands match" for files that were there. The
+  packed backend walks the tree about ten times slower than the plain BEAM, and
+  every keystroke started a fresh walk that kept running after the palette gave
+  up on it, so the walks queued and no answer arrived. The document list is now
+  walked once and shared (started at launch, refreshed in the background, and
+  updated in place when markdn saves, creates, renames or trashes a file), so a
+  search answers from memory in milliseconds. The palette says "Searching
+  documents…" while it waits instead of claiming nothing matched. The backend
+  also stops promptly on quit instead of being killed.
+- **Search finds every document in a large source tree.** A walk spent its
+  20,000-entry budget looking at source files, images and fonts, and stopped
+  before it reached some documents (in the Supabase monorepo it found 1,675 of
+  1,868). Names that can only be files that are never documents — `.ts`, `.png`,
+  `.json` and the like — are now skipped without a filesystem call, as are
+  `coverage`, `vendor`, `__pycache__` and `Pods`. The same walk is three times
+  faster natively.
+
 ### Changed
 
 - **ampoule 0.1.13 and ex_tauri 0.7.1.** On macOS, launches after the first map
