@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
+import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdx from "remark-mdx";
 import { SCHEMA } from "./components/Preview";
@@ -146,7 +147,7 @@ export async function notionHtml(content: string): Promise<string> {
 function render({ renderToStaticMarkup }: Server, content: string): string {
   try {
     return renderToStaticMarkup(
-      <Markdown remarkPlugins={[remarkGfm, remarkMdx, remarkComponentRegistry]} components={COMPONENTS}>
+      <Markdown remarkPlugins={[remarkFrontmatter, remarkGfm, remarkMdx, remarkComponentRegistry]} components={COMPONENTS}>
         {content}
       </Markdown>,
     );
@@ -155,7 +156,7 @@ function render({ renderToStaticMarkup }: Server, content: string): string {
     // raw HTML sanitised exactly as it is on screen.
     return renderToStaticMarkup(
       <Markdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkFrontmatter, remarkGfm]}
         rehypePlugins={[rehypeRaw, [rehypeSanitize, SCHEMA]]}
         components={COMPONENTS}
       >

@@ -23,6 +23,17 @@ stamps the resolved number into both before building.
 
 ### Fixed
 
+- **MDX with `$`-prefixed tags renders as MDX.** Supabase's docs wrap content in
+  `<$Show if="…">` and include `<$Partial path="…">`. Neither is capitalised,
+  so markdn took them for HTML elements, and the browser refused the name
+  ("The string contains invalid characters"), which dropped the whole document
+  to plain markdown. Only real HTML and SVG element names now go to the DOM
+  as-is; anything else is a component. An unknown component still shows its
+  notice, and now renders the content inside it instead of dropping it.
+- **YAML frontmatter is left out of the preview.** The `---` block at the top of
+  a document rendered as a rule and a large heading of its keys. It is now
+  recognised (`remark-frontmatter`) in the preview and the Notion export, and
+  stays visible in the source pane.
 - **Finding a document works in the desktop app.** In a large folder the
   palette said "No documents or commands match" for files that were there. The
   packed backend walks the tree about ten times slower than the plain BEAM, and

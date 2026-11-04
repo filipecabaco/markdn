@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useState, type ReactNode, type Ref, type RefObject } from "react";
 import { resolveAssetUrl } from "../resolveAssetUrl";
 import Markdown from "react-markdown";
+import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdx from "remark-mdx";
 import rehypeRaw from "rehype-raw";
@@ -186,7 +187,7 @@ export function Preview({
   const plain = useMemo(
     () => (
       <Markdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkFrontmatter, remarkGfm]}
         rehypePlugins={[rehypeRaw, [rehypeSanitize, SCHEMA], rehypeSourcePositions]}
         components={components}
       >
@@ -203,7 +204,7 @@ export function Preview({
   const mdx = useMemo(
     () => (
       <Markdown
-        remarkPlugins={[remarkGfm, remarkMdx, remarkComponentRegistry]}
+        remarkPlugins={[remarkFrontmatter, remarkGfm, remarkMdx, remarkComponentRegistry]}
         rehypePlugins={[rehypeSourcePositions]}
         components={components}
       >

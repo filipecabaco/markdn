@@ -43,11 +43,18 @@ export function MdxNode({ children, ...rest }: MdxNodeProps) {
 
   const entry = REGISTRY[name];
 
+  // The notice says the component is unknown; the content inside it still
+  // renders. A wrapper like `<$Show if="…">` or `<TabPanel>` is usually most of
+  // the document, and dropping it would be exactly the quiet loss of content the
+  // notice exists to prevent.
   if (!entry) {
     return (
-      <Notice title={`Unknown component <${name}>`} {...position}>
-        Known components: {Object.keys(REGISTRY).join(", ")}
-      </Notice>
+      <div className="mdx-block" {...position}>
+        <Notice title={`Unknown component <${name}>`}>
+          Known components: {Object.keys(REGISTRY).join(", ")}
+        </Notice>
+        {children}
+      </div>
     );
   }
 
